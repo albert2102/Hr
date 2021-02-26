@@ -1,0 +1,24 @@
+SocketEvents
+nsp ==> /utils
+1) 'NewUser'  return user when connect socket send new user
+2) 'Company'  return compang when connect on socket and any update in company
+3) 'TripsCount' return count of my trips 
+4) 'NotificationsCount'  return count of Notifications
+5) 'NotRatedTrips' return array of trips that are not NotRatedTrips
+6) 'NewTrip' retun new trip 
+7) 'TripChangeStatus' return trip if ang change in trip status
+8) 'NumberOfOrders' number of trips for the driver 
+
+///////////////////////////////////////////////////////////////
+nsp ===> /tracking 
+1) 'NewLocation' emit on this event and send data={lat,long,trip}
+2) 'UpdateLocation'  whene driver want to update its location
+
+///////////////////////////////////////////////////////////////
+nsp ===> /chat
+1) 'Typing' if user typing in specic trip send {trip,to} where the trip is the id of the trip and to is id of other person
+1) 'StopTyping' if user stoptyping in specic trip send {trip,to} where the trip is the id of the trip and to is id of other person
+2) 'NewMessage'  when you recive new message in specific trip 
+
+///////////////////////////////////////////////////////////
+
