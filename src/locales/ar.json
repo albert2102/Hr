@@ -198,5 +198,6 @@
 	"taxesRequired": "taxesRequired",
 	"serialNumberRequired": "serialNumberRequired",
 	"invalidColorOrSize": "invalidColorOrSize",
-	"sizeNotFound": "sizeNotFound"
+	"sizeNotFound": "sizeNotFound",
+	"iconRequired": "iconRequired"
 }

@@ -10,7 +10,6 @@ const router = express.Router();
 router.route('/user/openActiveChatHead').put(requireAuth,userController.openActiveChatHead)
 router.route('/user/closeActiveChatHead').put(requireAuth, userController.closeActiveChatHead)
 
-router.route('/visitor/signup').post( userController.validateVisitorSignUp(), userController.visitorSignUp)
 router.route('/signup')
     .post(multerSaveTo('users').single('image'), userController.validateUserCreateBody(), userController.userSignUp);
 

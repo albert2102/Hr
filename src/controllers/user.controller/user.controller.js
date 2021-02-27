@@ -15,9 +15,6 @@ import socketEvents from '../../socketEvents'
 import { twilioSend, twilioVerify } from '../../services/twilo'
 import checkValidCoordinates from 'is-valid-coordinates';
 import NotificationController from '../notif.controller/notif.controller';
-import Country from '../../models/country.model/country.model';
-import City from '../../models/city.model/city.model';
-import Region from '../../models/region.model/region.model';
 import Address from '../../models/address.model/address.model';
 
 const checkUserExistByEmail = async (email) => {
@@ -28,9 +25,8 @@ const checkUserExistByEmail = async (email) => {
 }
 let populateQuery = [
     { path: 'rules', model: 'assignRule' },
-    { path: 'country', model: 'country' },
-    { path: 'city', model: 'city', populate: [{ path: 'country', model: 'country' }] },
-    { path: 'region', model: 'region', populate: [{ path: 'city', model: 'city', populate: [{ path: 'country', model: 'country' }] }] },
+    { path: 'category', model: 'category' },
+    // { path: 'city', model: 'city', populate: [{ path: 'country', model: 'country' }] },
 ];
 
 export default {
@@ -122,8 +118,8 @@ export default {
     async signIn(req, res, next) {
         try {
             const validatedBody = checkValidations(req);
-            var query = { deleted: false,type:{$in:['CLIENT','VISITOR']} };
-            query.$or = [{phone: validatedBody.phone.trim()},{name: validatedBody.phone.trim()}]
+            var query = { deleted: false,type:{$in:['CLIENT']} };
+            query.phone = validatedBody.phone.trim();
 
             let user = await User.findOne(query).populate(populateQuery);
             if (user) {
@@ -176,18 +172,6 @@ export default {
             }),
             body('countryCode').not().isEmpty().withMessage(() => { return i18n.__('countryCodeRequired') }),
             body('countryKey').not().isEmpty().withMessage(() => { return i18n.__('countryKeyRequired') }),
-            body('country').optional().not().isEmpty().withMessage(() => { return i18n.__('countryRequired') }).custom(async (val, { req }) => {
-                await checkExist(val, Country, { deleted: false });
-                return true;
-            }),
-            body('city').optional().not().isEmpty().withMessage(() => { return i18n.__('cityRequired') }).custom(async (val, { req }) => {
-                await checkExist(val, City, { deleted: false });
-                return true;
-            }),
-            body('region').optional().not().isEmpty().withMessage(() => { return i18n.__('regionRequired') }).custom(async (val, { req }) => {
-                await checkExist(val, Region, { deleted: false });
-                return true;
-            })
 
         ];
         return validations;
@@ -203,16 +187,7 @@ export default {
                 let image = await handleImg(req, { attributeName: 'image', isUpdate: false });
                 validatedBody.image = image;
             }
-            if (validatedBody.city && !validatedBody.country && !validatedBody.region) {
-                let city = await City.findById(validatedBody.city)
-                validatedBody.country = city.country;
-            }
-            else if (validatedBody.region && !validatedBody.country && !validatedBody.city) {
-                let region = await Region.findById(validatedBody.region).populate('city')
-                validatedBody.city = region.city.id;
-                validatedBody.country = region.city.country
-            }
-            console.log(validatedBody)
+            
             let createdUser = await User.create(validatedBody);
             res.status(200).send({ user: createdUser, token: generateToken(createdUser.id) })
             adminNSP.to('room-admin').emit(socketEvents.NewSignup, { user: createdUser });
@@ -280,18 +255,7 @@ export default {
             body('currentPassword').optional().not().isEmpty().withMessage(() => { return i18n.__('CurrentPasswordRequired') }),
             body('countryCode').optional().not().isEmpty().withMessage(() => { return i18n.__('countryCodeRequired') }),
             body('countryKey').optional().not().isEmpty().withMessage(() => { return i18n.__('countryKeyRequired') }),
-            body('country').optional().not().isEmpty().withMessage(() => { return i18n.__('countryRequired') }).custom(async (val, { req }) => {
-                await checkExist(val, Country, { deleted: false });
-                return true;
-            }),
-            body('city').optional().not().isEmpty().withMessage(() => { return i18n.__('cityRequired') }).custom(async (val, { req }) => {
-                await checkExist(val, City, { deleted: false });
-                return true;
-            }),
-            body('region').optional().not().isEmpty().withMessage(() => { return i18n.__('regionRequired') }).custom(async (val, { req }) => {
-                await checkExist(val, Region, { deleted: false });
-                return true;
-            })
+            
         ];
 
         return validations;
@@ -307,15 +271,6 @@ export default {
             if (req.file) {
                 let image = await handleImg(req, { attributeName: 'image', isUpdate: false });
                 validatedBody.image = image;
-            }
-            if (validatedBody.city && !validatedBody.country && !validatedBody.region) {
-                let city = await City.findById(validatedBody.city)
-                validatedBody.country = city.country;
-            }
-            else if (validatedBody.region && !validatedBody.country && !validatedBody.city) {
-                let region = await Region.findById(validatedBody.region).populate('city')
-                validatedBody.city = region.city.id;
-                validatedBody.country = region.city.country
             }
             if (validatedBody.newPassword) {
 
@@ -669,9 +624,6 @@ export default {
             await ConfirmationCode.deleteMany({ email: user.email });
             user.deleted = true;
             await user.save();
-            if (user.type == 'FAMILY') {
-                notificationNSP.to('room-' + userId).emit(socketEvents.LogOut, { user })
-            }
             res.status(200).send('Deleted Successfully');
         } catch (error) {
             next(error);
@@ -720,28 +672,4 @@ export default {
         return validations;
     },
 
-    async visitorSignUp(req, res, next) {
-        try {
-            const validatedBody = checkValidations(req);
-            // let oldUser = await User.findOne({
-            //     deleted: false,
-            //     tokens: { $elemMatch: { token: validatedBody.token, type: validatedBody.type } },
-            //     type: 'VISITOR'
-            // });
-            let oldUser ;
-            if (!oldUser) {
-                let tokens = [];
-                if (validatedBody.token && validatedBody.type ) {
-                    tokens = [{token:validatedBody.token, type: validatedBody.type}] ;
-                }
-                oldUser = await User.create({
-                    tokens: tokens,
-                    type : 'VISITOR'
-                });
-            }
-            res.status(200).send({ user: oldUser, token: generateToken(oldUser.id) })
-        } catch (error) {
-            next(error);
-        }
-    }
 };

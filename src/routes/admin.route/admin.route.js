@@ -2,6 +2,9 @@ import express from 'express';
 import { requireSignIn, requireAuth } from '../../services/passport';
 import { multerSaveTo } from '../../services/multer-service';
 import adminController from '../../controllers/admin.controller/admin.controller';
+import { parseObject } from '../../controllers/shared.controller/shared.controller';
+
+const parseArray = ['location']
 
 const router = express.Router();
 
@@ -20,7 +23,7 @@ router.put('/updateProfile',
 router.route('/addUser')
     .post(multerSaveTo('users').single('image'),
         requireAuth, adminController.validateAddUserBody(), adminController.addUser);
-      
+
 router.get('/userInfo', requireAuth, adminController.userInformation)
 
 router.put('/activate', requireAuth, adminController.validateAdminActivateUser(), adminController.adminActivateUser);
@@ -29,9 +32,31 @@ router.route('/account').delete(requireAuth, adminController.validateDeleteUserA
 router.put('/updateUser',
     requireAuth,
     multerSaveTo('users').single('image'),
+    parseObject(parseArray),
     adminController.validateAdminChangeUser(),
     adminController.adminUpdateUser);
 
 router.route('/deleteFromArchive').delete(requireAuth, adminController.validateDeleteFromArchive(), adminController.deleteFromArchive);
+
+router.route('/driver')
+    .post(multerSaveTo('users').single('image'),
+        parseObject(parseArray),
+        requireAuth, adminController.validateAddDriverBody(), adminController.addDriver)
+
+    .put(multerSaveTo('users').single('image'),
+        parseObject(parseArray),
+        requireAuth, adminController.validateAdminChangeDriver(), adminController.adminUpdateUser);
+
+
+router.route('/institution')
+    .post(multerSaveTo('users').single('image'),
+        parseObject(parseArray),
+        requireAuth, adminController.validateAddInstitutionBody(), adminController.addInstitution)
+
+    .put(multerSaveTo('users').single('image'),
+        parseObject(parseArray),
+        requireAuth, adminController.validateAdminChangeInstitution(), adminController.adminUpdateUser);
+
+router.post('/uploadImage', requireAuth, multerSaveTo('admins').single('image'), adminController.uploadImage)
 
 export default router;

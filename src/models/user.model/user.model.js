@@ -128,7 +128,13 @@ const userSchema = new Schema({
     commercialRegister:{
         type: String
     },
-    
+    geoLocation: {
+        type: { type: String, enum: ['Point'], default: 'Point' },
+        coordinates: { type: [Number], default: [30.98758, 30.867589] }
+    },
+    responsibleName:{
+        type: String
+    }
 
 }, { timestamps: true });
 
@@ -159,7 +165,9 @@ userSchema.set('toJSON', {
         delete ret.__v;
     }
 });
+
 autoIncrement.initialize(mongoose.connection);
+userSchema.index({ geolocation: "2dsphere" });
 userSchema.plugin(mongooseI18n, {locales: ['en', 'ar']});
 userSchema.plugin(autoIncrement.plugin, { model: 'user', startAt: 1 });
 export default mongoose.model('user', userSchema);

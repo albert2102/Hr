@@ -1,14 +1,15 @@
 import express from 'express';
 const router = express.Router();
 
-// import ruleRoute from './rule.route/rule.route';
-// import assignRuleRoute from './assignRule.route/assignRule.route';
-// import contactUsRoute from './contactUs.route/contactUs.route';
-// import adminRoute from './admin.route/admin.route';
-// import userRoute from './user.route/user.route';
+import ruleRoute from './rule.route/rule.route';
+import assignRuleRoute from './assignRule.route/assignRule.route';
+import contactUsRoute from './contactUs.route/contactUs.route';
+import adminRoute from './admin.route/admin.route';
+import userRoute from './user.route/user.route';
+import categoryRouter from './category.route/category.route';
+
 // import countryRouter from './country.route/country.route';
 // import cityRouter from './city.route/city.route';
-// import categoryRouter from './category.route/category.route';
 // import subcategoryRouter from './sub-category.route/sub-category.route';
 // import companyRoute from './company.route/company.route';
 // import branchesRoute from './branches.route/branches.route';
@@ -22,14 +23,15 @@ const router = express.Router();
 // import advertismentsRoute from './advertisment.route/advertisment.route';
 
 
-// router.use('/',userRoute);
-// router.use('/admin',adminRoute);
-// router.use('/rules',ruleRoute);
-// router.use('/assigRule',assignRuleRoute);
-// router.use('/contactUs',contactUsRoute);
+router.use('/',userRoute);
+router.use('/admin',adminRoute);
+router.use('/rules',ruleRoute);
+router.use('/assigRule',assignRuleRoute);
+router.use('/contactUs',contactUsRoute);
+router.use('/category',categoryRouter)
+
 // router.use('/country',countryRouter)
 // router.use('/city',cityRouter)
-// router.use('/category',categoryRouter)
 // router.use('/sub-category',subcategoryRouter)
 // router.use('/companies',companyRoute);
 // // router.use('/product',productRoute);

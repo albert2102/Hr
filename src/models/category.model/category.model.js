@@ -11,19 +11,9 @@ const CategorySchema = new Schema({
         // required: true,
         i18n: true
     },
-    images:{
+    icon:{
         type: String,
         // required: true,
-    },
-    image:{
-        type: String,
-        // required: true,
-    },
-    slider:{
-        type: [String]
-    },
-    hasChild:{
-        type: Boolean
     },
     parent:{
         type: Number,
@@ -33,10 +23,6 @@ const CategorySchema = new Schema({
         type: Boolean,
         default: false
     },
-    type:{
-        type: String,
-        enum: ['FIRST_CATEGORY','SECOND_CATEGORY','THIRD_CATEGORY']
-    }
 }, { timestamps: true });
 
 CategorySchema.set('toJSON', {
