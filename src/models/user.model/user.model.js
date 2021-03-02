@@ -114,9 +114,21 @@ const userSchema = new Schema({
         type: String
     },
     internallyCarImage:{// صورة السيارة داخليا
+        type: [String]
+    },
+    frontCarImage:{// صورة السيارة من الامام
         type: String
     },
-    carPlateImage:{// صورة لوحة السيارة 
+    backCarImage:{// صورة السيارة من الخلف
+        type: String
+    },
+    frontCarPlateImage:{// صورة لوحة السيارة مع اللوحة من الامام
+        type: String
+    },
+    backCarPlateImage:{// صورة لوحة السيارة مع اللوحة من الخلف
+        type: String
+    },
+    carPlateWithYouImage:{// صورة لك مع لوحة السيارة 
         type: String
     },
     carInsuranceImage:{// صورة تفويض السيارة
