@@ -7,7 +7,7 @@ import app from '../src/app';
 var socketIO = require('socket.io');
 var fs = require('fs')
 var debug = require('debug')('ather:server');
-var http = require('https');
+var http = require('http');
 var os = require('os');
 var cluster = require('cluster');
 
@@ -25,17 +25,17 @@ var cluster = require('cluster');
   });
 
 } else {*/
-  var server = http.createServer({
+  var server = http.createServer(/*{
   key: fs.readFileSync('catchit.sa.key'),
   cert: fs.readFileSync('server.cert')
-  },
+  },*/
   app);
 
   /**
    * Get port from environment and store in Express.
    */
 
-  var port = normalizePort(process.env.PORT || '9000');
+  var port = normalizePort(process.env.PORT || '4000');
   app.set('port', port);
 
   /**
