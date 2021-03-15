@@ -8,6 +8,7 @@ import adminRoute from './admin.route/admin.route';
 import userRoute from './user.route/user.route';
 import categoryRouter from './category.route/category.route';
 import productCategoryRouter from './product-category.route/product-category.route';
+import productRouter from './product.route/product.route';
 
 // import countryRouter from './country.route/country.route';
 // import cityRouter from './city.route/city.route';
@@ -31,6 +32,7 @@ router.use('/assigRule',assignRuleRoute);
 router.use('/contactUs',contactUsRoute);
 router.use('/category',categoryRouter);
 router.use('/product-category',productCategoryRouter);
+router.use('/product',productRouter);
 
 // router.use('/country',countryRouter)
 // router.use('/city',cityRouter)

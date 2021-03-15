@@ -3,44 +3,24 @@ import ApiError from "../../helpers/ApiError";
 import { checkExist, checkExistThenGet } from "../../helpers/CheckMethods";
 import { checkValidations, fieldhandleImg, handleImg, deleteImages } from "../shared.controller/shared.controller";
 import { body } from "express-validator/check";
-import TradeMark from "../../models/tradeMark.model/tradeMark.model";
 import Product from "../../models/product.model/product.model";
 import Category from "../../models/category.model/category.model";
 import Favorites from '../../models/favorites.model/favorites.model';
-import Region from "../../models/region.model/region.model";
-import Country from "../../models/country.model/country.model";
-import City from "../../models/city.model/city.model";
-import Company from "../../models/company.model/company.model";
-import Subscription from '../../models/subscription.model/subscription.model';
-import Order from '../../models/order.model/order.model';
+
+
 import Rate from "../../models/rate.model/rate.model";
-import User from "../../models/user.model/user.model";
+
 import i18n from 'i18n'
 import moment from 'moment'
 import dotObject from 'dot-object';
-import Color from '../../models/color.model/color.model';
-import Size from '../../models/size.model/size.model';
-import { sendEmail } from '../../services/emailMessage.service'
+
 
 let populateQuery = [
     { path: 'trader', model: 'user' },
     { path: 'productCategory', model: 'productCategory' }
 ];
 
-let sendToSubscriptions = async (product) => { // twilio
-    try {
-        let text = 'تم اضافة خصم على هذا منتج ' + product.name.ar + ' ' + 'يمكنك الاستمتاع بهذا الخصم الان '
-        let subscriptions = await Subscription.find({ deleted: false });
-        for (let index = 0; index < subscriptions.length; index++) {
-            if (subscriptions[index].email) {
-                await sendEmail(subscriptions[index].email, text)
-            }
-            // add if phone twilio
-        }
-    } catch (error) {
-        throw error;
-    }
-}
+
 
 let createPromise = (query) => {
     let newPromise = new Promise(async (resolve, reject) => {
@@ -79,53 +59,16 @@ let checkinFavorites = async (list, userId) => {
 
 }
 
-let getProducts = async (list) => {
-    try {
-        let promises = [];
-        let result = [];
-        for (let index = 0; index < list.length; index++) {
-            let aggregateQuery = [{ $match: { deleted: false, 'products.product': +list[index], status: 'DELIVERED' } },
-            { $group: { _id: { product: '$products' } } },
-            { $unwind: '$_id.product' },
-            { $match: { '_id.product.product': +list[index] } },
-            { $group: { _id: "$_id.product.product", totalQuantity: { $sum: "$_id.product.quantity" }, totalPrice: { $sum: { $multiply: ["$_id.product.quantity", "$_id.product.priceAfterOffer"] } } } },
-            { $sort: { "totalQuantity": -1 } },
-            {
-                $lookup: {
-                    from: Product.collection.name,
-                    localField: "_id",
-                    foreignField: "_id",
-                    as: "product"
-                }
-            },
-            { $unwind: '$product' },
-            ]
 
-            promises.push(createPromise(Order.aggregate(aggregateQuery)));
-        }
-        let finalResult = await Promise.all(promises);
-        for (let index = 0; index < finalResult.length; index++) {
-            if (finalResult[index].length > 0) {
-                delete finalResult[index][0]._id;
-                result.push(finalResult[index][0].product._id)
-            }
-        }
-
-        return result;
-    } catch (error) {
-        throw error;
-    }
-
-}
 export default {
 
     async findAll(req, res, next) {
         try {
             let page = +req.query.page || 1, limit = +req.query.limit || 20;
             let { name, unit, description, price, offer, hasOffer,
-                quantity, rate, month, year, category, tradeMark, color, size, allSizes,
-                sortByPrice, userId, country, city, region, similar, type, categoryProducts, removeLanguage,
-                fromPrice, toPrice, topSelling, lastProducts, lastOffers, useStatus, serialNumber, all
+                quantity, rate, month, year, 
+                sortByPrice, userId, type, removeLanguage,
+                fromPrice, toPrice, lastProducts, lastOffers, useStatus, serialNumber, all,productCategory
             } = req.query;
             let query = { deleted: false };
             let sortQuery = { _id: -1 };
@@ -142,80 +85,27 @@ export default {
             }
 
             if (type) query.type = type;
+            if(productCategory) query.productCategory = productCategory;
             if (hasOffer) query.offer = { $gt: 0 };
             if (quantity) query.quantity = quantity;
             if (rate) query.rate = rate;
             if (offer) query.offer = offer;
             if (price) query.price = price;
-            if (country) query.countrys = country;
-            if (city) query.cities = city;
-            if (region) query.regions = region;
+            
             if (useStatus) query.useStatus = useStatus;
 
             if (hasOffer) query.offer = { $gt: 0 };
 
-            if (categoryProducts) {
-                let subIds = await Category.find({ deleted: false, parent: categoryProducts }).distinct('_id');
-                query.$or = [{ category: categoryProducts }, { category: { $in: subIds } }];
-            }
-
-
-            if (tradeMark) {
-                if (Array.isArray(tradeMark)) {
-                    query.tradeMark = { $in: tradeMark };
-                } else if (!isNaN(tradeMark)) {
-                    query.tradeMark = tradeMark;
-                }
-            }
-            if (category) {
-                if (Array.isArray(category)) {
-                    query.category = { $in: category };
-                } else if (!isNaN(category)) {
-                    query.category = category;
-                }
-            }
-            if (color) {
-                if (Array.isArray(color)) {
-                    query['colors.color'] = { $in: color };
-                } else if (!isNaN(color)) {
-                    query['colors.color'] = color;
-                }
-            }
-            if (size) {
-                if (Array.isArray(size)) {
-                    query['colors.sizes.size'] = { $in: size };
-                } else if (!isNaN(size)) {
-                    query['colors.sizes.size'] = size;
-                }
-            }
-            if (allSizes) {
-                let sizes = await Size.find({ deleted: false }).distinct('_id');
-                query['colors.sizes.size'] = { $in: sizes };
-            }
-
             if (name) {
                 query.$or = [{ 'name.en': { '$regex': name, '$options': 'i' } }, { 'name.ar': { '$regex': name, '$options': 'i' } }]
             }
-            if (unit) {
-                query.$or = [{ 'unit.en': { '$regex': unit, '$options': 'i' } }, { 'unit.ar': { '$regex': unit, '$options': 'i' } }]
-            }
+            
             if (description) {
                 query.$or = [{ 'description.en': { '$regex': description, '$options': 'i' } }, { 'description.ar': { '$regex': description, '$options': 'i' } }]
             }
 
-            if (similar) {
-                let product = await checkExistThenGet(similar, Product, { deleted: false });
-                query.$or = [{ category: product.category, tradeMark: product.tradeMark }];
-                query._id = { $ne: similar }
-            }
-            if (topSelling) {
-                let topSellingProducts = await getProducts(await Product.find({ deleted: false }).distinct('_id'));
-                if (topSellingProducts.length > 0) {
-                    query._id = { $in: topSellingProducts }
-                } else {
-                    sortQuery = { _id: 1 }
-                }
-            }
+            
+            
             if (lastProducts) {
                 sortQuery = { _id: -1 }
             }
