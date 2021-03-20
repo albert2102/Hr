@@ -5,7 +5,7 @@ import { requireAuth } from '../../services/passport';
 import { multerSaveTo } from "../../services/multer-service";
 import { parseObject } from "../../controllers/shared.controller/shared.controller";
 
-let parseArray = ['name', 'description', 'deletedImages']
+let parseArray = ['name', 'description', 'slider']
 
 
 router.route('/')

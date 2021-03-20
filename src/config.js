@@ -5,9 +5,9 @@ config.jwtSecret = 'Ajam';
 config.confirmMessage = 'verify code: ';
 config.App = {Name:'Ajam'}
 config.GoogleApiKey = 'AIzaSyAopqrgTVP86bnQposmo5dYB3jidriBvJM';
-config.twilioAccountSID = 'ACa671f4ab393ebea9b9ec78a1aba5a2ff';
-config.twilioAuthToken = '21d77eef2284ba1f558dbb52e8ab1570';
-config.twilioServiceSID = 'VA0ca77833273a2a50d6d4ecb7c5b1b21f';
+config.twilioAccountSID = 'AC34189f894302e23d3911b811cd33e3b2';
+config.twilioAuthToken = '78596a652f83ccaa89996ad7b44c037e';
+config.twilioServiceSID = 'VA366c058a3677e33792b5d7d4871f8e5d';
 config.backend_endpoint = 'https://www.catchit.sa/Catchit-Backend';
 
 
@@ -32,4 +32,9 @@ config.payment = {
     testMode:'EXTERNAL',
     notificationUrl : 'https://www.catchit.sa/Catchit-Backend/payment/notify',
 }
+
+
+/////////////twilio///////////////////
+////email == ajamapplication55@gmail.com
+/// pass === ajamapplication55
 export default config;

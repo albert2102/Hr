@@ -10,7 +10,7 @@ import i18n from 'i18n';
 
 let populateQuery = [
     { path: 'product', model: 'product', 
-        populate: [{ path: 'colors.color', model: 'color' }, { path: 'category', model: 'category' },{ path: 'tradeMark', model: 'tradeMark' }] 
+        populate: [{ path: 'trader', model: 'user' },{ path: 'productCategory', model: 'productCategory' }] 
     },
     { path: 'user', model: 'user' }
 ];

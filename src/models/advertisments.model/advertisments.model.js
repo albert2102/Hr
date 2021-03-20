@@ -6,24 +6,43 @@ const advertismentsSchema = new Schema({
         type: Number,
         required: true
     },
-    image:{
-        type:String
+    images:{
+        type:[String]
     },
-    numberOfSlots:{
-        type:Number,
-        max:4,
-        min:1,
-        default:2
+    address:{
+        type: String,
+        required: true
     },
-    type:{
-        type:String,
-        enum:['HOME_PAGE','PRODUCT_PAGE'],
-        default:'HOME_PAGE'
+    description:{
+        type: String,
     },
-    homeAddsAfetr:{
-        type:String,
-        enum:['PRODUCT','CATEGORY'],
-        default:'PRODUCT'
+    phone:{
+        type: String
+    },
+    whatsappNumber:{
+        type: String
+    },
+    contactBy:{
+        type: String,
+        enum:['PHONE','CONVERSATION']
+    },
+    geoLocation: {
+        type: { type: String, enum: ['Point'], default: 'Point' },
+        coordinates: { type: [Number], default: [30.98758, 30.867589] }
+    },
+    status:{
+        type: String,
+        enum:['WAITING','ACCEPTED','REJECTED'],
+        default: 'WAITING'
+    },
+    user:{
+        type: Number,
+        ref:'user',
+        required: true
+    },
+    numberOfViews:{
+        type: Number,
+        default: 0
     },
     deleted: {
         type: Boolean,
@@ -39,5 +58,6 @@ advertismentsSchema.set('toJSON', {
     }
 });
 autoIncrement.initialize(mongoose.connection);
+advertismentsSchema.index({ geoLocation: "2dsphere" });
 advertismentsSchema.plugin(autoIncrement.plugin, { model: 'advertisments', startAt: 1 });
 export default mongoose.model('advertisments', advertismentsSchema);

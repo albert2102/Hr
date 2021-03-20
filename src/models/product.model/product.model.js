@@ -28,7 +28,7 @@ const productSchema = new Schema({
     slider: [String],
     image: {
         type: String,
-        required: true
+        //required: true
     },
     trader:{
         type:Number,
@@ -40,7 +40,7 @@ const productSchema = new Schema({
     },
     taxes:{
         type: Number,
-        default: 5
+        //default: 5
     },
 
     ////////////////////////////////////////////////// adds data
@@ -72,7 +72,7 @@ const productSchema = new Schema({
     useStatus:{
         type: String,
         enum:['USED','NEW'],
-        required: true
+        //required: true
     }
 }, { timestamps: true });
 

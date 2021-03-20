@@ -146,6 +146,10 @@ const userSchema = new Schema({
     },
     responsibleName:{
         type: String
+    },
+    online:{
+        type: Boolean,
+        default: true
     }
 
 }, { timestamps: true });

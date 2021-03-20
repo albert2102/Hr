@@ -6,6 +6,7 @@ import userController from '../../controllers/user.controller/user.controller';
 const router = express.Router();
 
 
+router.get('/Home',userController.Home);
 
 router.route('/user/openActiveChatHead').put(requireAuth,userController.openActiveChatHead)
 router.route('/user/closeActiveChatHead').put(requireAuth, userController.closeActiveChatHead)

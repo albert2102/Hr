@@ -6,7 +6,11 @@ import { body } from "express-validator/check";
 import ProductCategory from "../../models/product-category.model/product-category.model";
 import i18n from 'i18n'
 import dotObject from 'dot-object';
-import moment from 'moment'
+import moment from 'moment';
+
+const populateQuery = [
+    {path:'user',model:'user'}
+]
 export default {
 
     async findAll(req, res, next) {
@@ -42,13 +46,13 @@ export default {
             let pageCount = categoriesCount;
             if (all) {
                 limit = pageCount;
-                categories = await ProductCategory.find(query).sort({ createdAt: -1 })
+                categories = await ProductCategory.find(query).sort({ createdAt: -1 }).populate(populateQuery)
                 categoriesCount = categories.length;
             }
             else {
                 categoriesCount = await ProductCategory.count(query);
                 pageCount = Math.ceil(categoriesCount / limit);
-                categories = await ProductCategory.find(query).sort({ createdAt: -1 }).limit(limit).skip((page - 1) * limit)
+                categories = await ProductCategory.find(query).sort({ createdAt: -1 }).limit(limit).skip((page - 1) * limit).populate(populateQuery)
             }
             if (!removeLanguage) {
                 categories = ProductCategory.schema.methods.toJSONLocalizedOnly(categories, i18n.getLocale());
@@ -75,7 +79,7 @@ export default {
                 body('name.ar').not().isEmpty().withMessage(() => { return i18n.__('arabicName') })
                     .custom(async (val, { req }) => {
                         let query = { 'name.ar': val, deleted: false , user:req.user.id};
-                        let productCategory = await productCategory.findOne(query).lean();
+                        let productCategory = await ProductCategory.findOne(query).lean();
                         if (productCategory)
                             throw new Error(i18n.__('arabicNameDublicated'));
                         return true;
@@ -112,8 +116,8 @@ export default {
     async create(req, res, next) {
         try {
             let user = req.user;
-            validatedBody.user = user.id;
             let validatedBody = checkValidations(req);
+            validatedBody.user = user.id;
             // if (req.file) {
             //     let icon = await handleImg(req, { attributeName: 'icon', isUpdate: false }, i18n.__('iconRequired'));
             //     validatedBody.icon = icon;
@@ -132,7 +136,7 @@ export default {
         try {
             let { productCategoryId } = req.params;
             let { removeLanguage } = req.query;
-            var productCategory = await checkExistThenGet(productCategoryId, ProductCategory, { deleted: false });
+            var productCategory = await checkExistThenGet(productCategoryId, ProductCategory, { deleted: false,populate:populateQuery });
             if (!removeLanguage) {
                 productCategory = ProductCategory.schema.methods.toJSONLocalizedOnly(productCategory, i18n.getLocale());
             }
@@ -157,7 +161,7 @@ export default {
             //     validatedBody.icon = icon;
             // }
 
-            let updatedproductCategory = await ProductCategory.findByIdAndUpdate(productCategoryId, validatedBody, { new: true });
+            let updatedproductCategory = await ProductCategory.findByIdAndUpdate(productCategoryId, validatedBody, { new: true }).populate(populateQuery)
             if (!removeLanguage) {
                 updatedproductCategory = ProductCategory.schema.methods.toJSONLocalizedOnly(updatedproductCategory, i18n.getLocale());
             }

@@ -6,7 +6,7 @@ let transporter = nodemailer.createTransport({
     port: 465,
     secure: true, 
     auth: {
-        user: 'catchitapp2020@gmail.com',
+        user: 'ajamapplication55@gmail.com',
         pass: 'Tech4life'
     },
     tls: {

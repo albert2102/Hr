@@ -4,12 +4,8 @@ import { checkExist, checkExistThenGet } from "../../helpers/CheckMethods";
 import { checkValidations, fieldhandleImg, handleImg, deleteImages } from "../shared.controller/shared.controller";
 import { body } from "express-validator/check";
 import Product from "../../models/product.model/product.model";
-import Category from "../../models/category.model/category.model";
+import Category from "../../models/product-category.model/product-category.model";
 import Favorites from '../../models/favorites.model/favorites.model';
-
-
-import Rate from "../../models/rate.model/rate.model";
-
 import i18n from 'i18n'
 import moment from 'moment'
 import dotObject from 'dot-object';
@@ -65,10 +61,10 @@ export default {
     async findAll(req, res, next) {
         try {
             let page = +req.query.page || 1, limit = +req.query.limit || 20;
-            let { name, unit, description, price, offer, hasOffer,
-                quantity, rate, month, year, 
+            let { name, description, price, offer, hasOffer,
+                quantity, month, year,
                 sortByPrice, userId, type, removeLanguage,
-                fromPrice, toPrice, lastProducts, lastOffers, useStatus, serialNumber, all,productCategory
+                fromPrice, toPrice, lastProducts, lastOffers, useStatus, serialNumber, all, productCategory
             } = req.query;
             let query = { deleted: false };
             let sortQuery = { _id: -1 };
@@ -85,13 +81,12 @@ export default {
             }
 
             if (type) query.type = type;
-            if(productCategory) query.productCategory = productCategory;
+            if (productCategory) query.productCategory = productCategory;
             if (hasOffer) query.offer = { $gt: 0 };
             if (quantity) query.quantity = quantity;
-            if (rate) query.rate = rate;
             if (offer) query.offer = offer;
             if (price) query.price = price;
-            
+
             if (useStatus) query.useStatus = useStatus;
 
             if (hasOffer) query.offer = { $gt: 0 };
@@ -99,13 +94,13 @@ export default {
             if (name) {
                 query.$or = [{ 'name.en': { '$regex': name, '$options': 'i' } }, { 'name.ar': { '$regex': name, '$options': 'i' } }]
             }
-            
+
             if (description) {
                 query.$or = [{ 'description.en': { '$regex': description, '$options': 'i' } }, { 'description.ar': { '$regex': description, '$options': 'i' } }]
             }
 
-            
-            
+
+
             if (lastProducts) {
                 sortQuery = { _id: -1 }
             }
@@ -160,7 +155,7 @@ export default {
         if (!isUpdate) {
             validations = [
                 body('price').not().isEmpty().withMessage(() => { return i18n.__('priceRequired') }),
-                body('taxes').optional().not().isEmpty().withMessage(() => { return i18n.__('taxesRequired') }).isInt({ min: 0, max: 100 }),
+                //body('taxes').optional().not().isEmpty().withMessage(() => { return i18n.__('taxesRequired') }).isInt({ min: 0, max: 100 }),
                 body('offer').optional().not().isEmpty().withMessage(() => { return i18n.__('offerRequired') })
                     .isInt({ max: 100, min: 0 }).withMessage(() => { return i18n.__('invalidOfferValue') }),
 
@@ -175,15 +170,17 @@ export default {
 
                 body('description').not().isEmpty().withMessage(() => { return i18n.__('descriptionRequired') }),
                 body('description.en').optional().not().isEmpty().withMessage(() => { return i18n.__('descriptionRequired') }),
-                body('description.ar').optional().not().isEmpty().withMessage(() => { return i18n.__('descriptionRequired') })
+                body('description.ar').optional().not().isEmpty().withMessage(() => { return i18n.__('descriptionRequired') }),
+
+                body('slider').not().isEmpty().withMessage(() => { return i18n.__('sliderRequired') }).isArray()
+                    .withMessage(() => { return i18n.__('mustBeArray') }),
             ];
         }
         else {
             validations = [
-                
+
                 body('price').optional().not().isEmpty().withMessage(() => { return i18n.__('priceRequired') }),
-                body('taxes').optional().not().isEmpty().withMessage(() => { return i18n.__('taxesRequired') })
-                    .isInt({ min: 0, max: 100 }),
+                //body('taxes').optional().not().isEmpty().withMessage(() => { return i18n.__('taxesRequired') }).isInt({ min: 0, max: 100 }),
                 body('offer').optional().not().isEmpty().withMessage(() => { return i18n.__('offerRequired') })
                     .isInt({ max: 100, min: 0 }).withMessage(() => { return i18n.__('invalidOfferValue') }),
                 body('productCategory').optional().not().isEmpty().withMessage(() => { return i18n.__('productCategoryRequired') })
@@ -191,8 +188,8 @@ export default {
                         await checkExist(value, Category, { deleted: false });
                         return true;
                     }),
-                
-            
+
+
 
                 body('name').optional().not().isEmpty().withMessage(() => { return i18n.__('nameRequired') }),
                 body('name.en').optional().not().isEmpty().withMessage(() => { return i18n.__('englishName') }),
@@ -202,8 +199,7 @@ export default {
                 body('description.en').optional().not().isEmpty().withMessage(() => { return i18n.__('descriptionRequired') }),
                 body('description.ar').optional().not().isEmpty().withMessage(() => { return i18n.__('descriptionRequired') }),
 
-                
-                body('deletedImages').optional().not().isEmpty().withMessage(() => { return i18n.__('deletedImageRequired') }).isArray()
+                body('slider').optional().not().isEmpty().withMessage(() => { return i18n.__('sliderRequired') }).isArray()
                     .withMessage(() => { return i18n.__('mustBeArray') }),
             ];
         }
@@ -213,25 +209,25 @@ export default {
     async create(req, res, next) {
         try {
             let user = req.user;
-            
+
             const validatedBody = checkValidations(req);
             validatedBody.trader = user.id;
-            
+
             if (!(validatedBody.name.en || validatedBody.name.ar)) {
                 return next(new ApiError(404, i18n.__('nameRequired')));
             }
-            
+
             if (!(validatedBody.description.en || validatedBody.description.ar)) {
                 return next(new ApiError(404, i18n.__('descriptionRequired')));
             }
             if (req.files && req.files['image'] && (req.files['image'].length > 0)) {
                 validatedBody.image = fieldhandleImg(req, { attributeName: 'image', isUpdate: false });
-            } 
+            }
             if (req.files && req.files['slider'] && (req.files['slider'].length > 0)) {
                 validatedBody.slider = fieldhandleImg(req, { attributeName: 'slider', isUpdate: false });
             }
-            
-            
+
+
             let createdproduct = await Product.create(validatedBody);
             createdproduct = Product.schema.methods.toJSONLocalizedOnly(createdproduct, i18n.getLocale());
             res.status(200).send(createdproduct);
@@ -240,7 +236,7 @@ export default {
         }
     },
 
-    
+
 
     async findById(req, res, next) {
         try {
@@ -263,28 +259,23 @@ export default {
             let user = req.user;
             let { productId } = req.params;
             let { removeLanguage } = req.query;
-            let product = await checkExistThenGet(productId, Product, { deleted: false ,trader:user.id});
+            let product = await checkExistThenGet(productId, Product, { deleted: false, trader: user.id });
             var validatedBody = checkValidations(req);
-            
+
             if (validatedBody.name && !(validatedBody.name.en || validatedBody.name.ar)) {
                 return next(new ApiError(404, i18n.__('nameRequired')));
             }
-            
+
             if (validatedBody.description && !(validatedBody.description.en || validatedBody.description.ar)) {
                 return next(new ApiError(404, i18n.__('descriptionRequired')));
             }
 
-            let newSlider = [];
-            if (validatedBody.deletedImages && validatedBody.deletedImages.length > 0) {
-                newSlider = product.slider.filter(val => !validatedBody.deletedImages.includes(val));
-                deleteImages(validatedBody.deletedImages);
+            let data = {};
+            if(validatedBody.slider){
+                data.slider = validatedBody.slider;
+                delete validatedBody.slider;
             }
-            let data = {}
-            
             validatedBody = dotObject.dot(validatedBody);
-            if (newSlider.length > 0) {
-                validatedBody.slider = newSlider;
-            }
 
             if (req.files && req.files['image']) {
                 validatedBody.image = fieldhandleImg(req, { attributeName: 'image', isUpdate: false });
@@ -293,15 +284,6 @@ export default {
                 validatedBody.slider = fieldhandleImg(req, { attributeName: 'slider', isUpdate: false });
             }
 
-            if (req.files['newImages'] && req.files['newImages'].length > 0) {
-                let newImages = await fieldhandleImg(req, { attributeName: 'newImages' });
-                if (validatedBody.slider)
-                    validatedBody.slider = validatedBody.slider.concat(newImages);
-                else {
-                    validatedBody.slider = product.slider.concat(newImages);
-                }
-            }
-            
             let updatedproduct = await Product.findByIdAndUpdate(productId, { ...validatedBody, ...data }, { new: true }).populate(populateQuery)
             if (!removeLanguage) {
                 updatedproduct = Product.schema.methods.toJSONLocalizedOnly(updatedproduct, i18n.getLocale());
@@ -317,11 +299,10 @@ export default {
         try {
             let user = req.user;
             let { productId } = req.params;
-            let product = await checkExistThenGet(productId, Product, { deleted: false ,trader:user.id});
+            let product = await checkExistThenGet(productId, Product, { deleted: false, trader: user.id });
             product.deleted = true;
             await product.save();
             res.status(200).send('Deleted Successfully');
-            await Rate.updateMany({ product: productId, deleted: false }, { deleted: true });
             await Favorites.updateMany({ product: productId, deleted: false }, { deleted: true });
         }
         catch (err) {

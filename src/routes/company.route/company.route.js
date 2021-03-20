@@ -5,18 +5,11 @@ import { multerSaveTo } from '../../services/multer-service';
 import { parseObject } from '../../controllers/shared.controller/shared.controller'
 const router = express.Router();
 
-let parseArray = ['aboutUs','socialLinks','instructionsForUse','returnPolicy','footerText',
-                    'privacy','location','firstCategory','secondCategory','thirdCategory'
-        ];
+let parseArray = ['commissionAgreement','socialLinks','instructionsForUse','location','fixedCategoryName'];
 
 const uploadedFiles =[
     {name:"logo",maxCount:1},
-    {name:"firstCategoryIcon",maxCount:1},
-    {name:"firstCategoryImage",maxCount:1},
-    {name:"secondCategoryIcon",maxCount:1},
-    {name:"secondCategoryImage",maxCount:1},
-    {name:"thirdCategoryIcon",maxCount:1},
-    {name:"thirdCategoryImage",maxCount:1},
+    {name:"fixedCategoryIcon",maxCount:1},
 ]
         
 router.route('/')

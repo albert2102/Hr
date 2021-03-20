@@ -17,17 +17,16 @@ export default {
         let validations
         if (!isUpdate) {
             validations = [
-                body('detailedAddress').optional().not().isEmpty().withMessage(() => { return i18n.__('addressRequired') }),
+                body('addressName').not().isEmpty().withMessage(() => { return i18n.__('addressNameRequired') }),
+                body('buildingNumber').not().isEmpty().withMessage(() => { return i18n.__('buildingNumberRequired') }),
+                body('flatNumber').not().isEmpty().withMessage(() => { return i18n.__('flatNumberRequired') }),
                 body('street').not().isEmpty().withMessage(() => { return i18n.__('streetRequired') }),
                 body('long').optional().not().isEmpty().withMessage(() => { return i18n.__('longRequired') }),
                 body('lat').optional().not().isEmpty().withMessage(() => { return i18n.__('latRequired') }),
                 body('address').optional().not().isEmpty().withMessage(() => { return i18n.__('addressRequired') }),
                 body('details').optional().not().isEmpty().withMessage(() => { return i18n.__('addressRequired') }),
-                body('region').optional().not().isEmpty().withMessage(() => { return i18n.__('addressRequired') }),
-
                 body('phone').optional().not().isEmpty().withMessage(() => { return i18n.__('phoneRequired') }),
-               
-                body('city').not().isEmpty().withMessage(() => { return i18n.__('cityRequired') }).custom(async (val, { req }) => {
+                body('city').optional().not().isEmpty().withMessage(() => { return i18n.__('cityRequired') }).custom(async (val, { req }) => {
                     await checkExist(val, City, { deleted: false });
                     return true;
                 }),
@@ -35,14 +34,14 @@ export default {
         }
         else {
             validations = [
-                body('detailedAddress').optional().not().isEmpty().withMessage(() => { return i18n.__('addressRequired') }),
+                body('addressName').optional().not().isEmpty().withMessage(() => { return i18n.__('addressNameRequired') }),
+                body('buildingNumber').optional().not().isEmpty().withMessage(() => { return i18n.__('buildingNumberRequired') }),
+                body('flatNumber').optional().not().isEmpty().withMessage(() => { return i18n.__('flatNumberRequired') }),
                 body('street').optional().not().isEmpty().withMessage(() => { return i18n.__('streetRequired') }),
                 body('long').optional().not().isEmpty().withMessage(() => { return i18n.__('longRequired') }),
                 body('lat').optional().not().isEmpty().withMessage(() => { return i18n.__('latRequired') }),
                 body('address').optional().not().isEmpty().withMessage(() => { return i18n.__('addressRequired') }),
                 body('details').optional().not().isEmpty().withMessage(() => { return i18n.__('addressRequired') }),
-                body('region').optional().not().isEmpty().withMessage(() => { return i18n.__('addressRequired') }),
-
                 body('phone').optional().not().isEmpty().withMessage(() => { return i18n.__('phoneRequired') }),
                
                 body('city').optional().not().isEmpty().withMessage(() => { return i18n.__('cityRequired') }).custom(async (val, { req }) => {

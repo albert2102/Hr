@@ -1,39 +1,49 @@
 
 import Advertisments from '../../models/advertisments.model/advertisments.model';
-import Category from '../../models/category.model/category.model';
-import Product from '../../models/product.model/product.model';
 import ApiResponse from "../../helpers/ApiResponse";
 import { checkExistThenGet, checkExist } from "../../helpers/CheckMethods";
 import { body } from 'express-validator/check';
-import { checkValidations, handleImg } from "../shared.controller/shared.controller";
+import { checkValidations, handleImg, handleImgs } from "../shared.controller/shared.controller";
 import i18n from 'i18n';
 import ApiError from '../../helpers/ApiError';
+import socketEvents from '../../socketEvents';
 
-
-const populateQuery = [
-    { path: 'product', model: 'product' },{ path: 'category', model: 'category' }
-];
-
+let countNew = async () => {
+    try {
+        let count = await Advertisments.count({ deleted: false, status: 'WAITING' });
+        adminNSP.emit(socketEvents.WaitingAdvCount, { count: count });
+    } catch (error) {
+        throw error;
+    }
+}
 export default {
 
     async find(req, res, next) {
         try {
             let page = +req.query.page || 1, limit = +req.query.limit || 20;
 
-            let {type,numberOfSlots} = req.query
+            let { status,address,description,phone,whatsappNumber,contactBy,price,lat,long } = req.query
 
-            let query = {  deleted: false };
-            if (numberOfSlots) {
-               query.numberOfSlots = numberOfSlots
+            let query = { deleted: false };
+
+            if (status) query.status = status;
+            if (address) query.address = { '$regex': address, '$options': 'i' };
+            if (description) query.description = { '$regex': description, '$options': 'i' };
+            if (phone) query.phone = { '$regex': phone, '$options': 'i' };
+            if (whatsappNumber) query.whatsappNumber = { '$regex': whatsappNumber, '$options': 'i' };
+            if (contactBy) query.contactBy = contactBy;
+            if (price) query.price = price;
+
+            let aggregateQuery = [
+                {$match: query},
+                {$limit: limit},
+                {$skip: (page - 1) * limit}];
+            
+            if (lat && long) {
+                aggregateQuery.unshift({$geoNear: {near: {type: "Point",coordinates: [+long, +lat]},distanceField: "dist.calculated"}})
             }
-            if (type) {
-                query.type = type
-             }
-
-            let advertisment = await Advertisments.find(query)
-                .sort({ createdAt: -1 }).populate(populateQuery)
-                .limit(limit)
-                .skip((page - 1) * limit);
+            console.log(aggregateQuery)
+            let advertisment = await Advertisments.aggregate(aggregateQuery)
 
             const advertismentCount = await Advertisments.count(query);
             const pageCount = Math.ceil(advertismentCount / limit);
@@ -43,29 +53,53 @@ export default {
         }
     },
 
-    validateBody() {
-        let validations = [
-                body('numberOfSlots').not().isEmpty().withMessage(() => { return i18n.__('numberOfSlotsRequired') })
-                .isInt({max:4,min:1}).withMessage(() => { return i18n.__('invalidSlot') }),
-                body('type').not().isEmpty().withMessage(() => { return i18n.__('typeRequired') })
-                    .isIn(['HOME_PAGE','PRODUCT_PAGE']).withMessage(() => { return i18n.__('invalidType') }),
-                body('homeAddsAfetr').optional().not().isEmpty().withMessage(() => { return i18n.__('homeAddsAfetrRequired') })
-                    .isIn(['PRODUCT','CATEGORY']).withMessage(() => { return i18n.__('invalidType') })
+    validateBody(isUpdate = false) {
+        let validations;
+        if(!isUpdate){
+        validations = [
+            body('address').not().isEmpty().withMessage(() => { return i18n.__('addressRequired') }),
+            body('description').not().isEmpty().withMessage(() => { return i18n.__('descriptionRequired') }),
+            body('phone').not().isEmpty().withMessage(() => { return i18n.__('phoneRequired') }),
+            body('whatsappNumber').optional().not().isEmpty().withMessage(() => { return i18n.__('whatsappNumberRequired') }),
+            body('contactBy').not().isEmpty().withMessage(() => { return i18n.__('contactByRequired') })
+                .isIn(['PHONE', 'CONVERSATION']).withMessage(() => { return i18n.__('invalidType') }),
+            body('long').not().isEmpty().withMessage(() => { return i18n.__('longRequired') }),
+            body('lat').not().isEmpty().withMessage(() => { return i18n.__('latRequired') }),
+            body('price').not().isEmpty().withMessage(() => { return i18n.__('priceRequired') }),
 
-            ];
+        ];
+    }else{
+        validations=[
+            body('address').optional().not().isEmpty().withMessage(() => { return i18n.__('addressRequired') }),
+            body('description').optional().not().isEmpty().withMessage(() => { return i18n.__('descriptionRequired') }),
+            body('phone').optional().not().isEmpty().withMessage(() => { return i18n.__('phoneRequired') }),
+            body('whatsappNumber').optional().not().isEmpty().withMessage(() => { return i18n.__('whatsappNumberRequired') }),
+            body('contactBy').optional().not().isEmpty().withMessage(() => { return i18n.__('contactByRequired') })
+                .isIn(['PHONE', 'CONVERSATION']).withMessage(() => { return i18n.__('invalidType') }),
+            body('long').optional().not().isEmpty().withMessage(() => { return i18n.__('longRequired') }),
+            body('lat').optional().not().isEmpty().withMessage(() => { return i18n.__('latRequired') }),
+            body('price').optional().not().isEmpty().withMessage(() => { return i18n.__('priceRequired') }),
+        ]
+    }
 
         return validations;
     },
 
     async create(req, res, next) {
         try {
-            const validatedBody = checkValidations(req);
-            
-            if(req.file)
-                validatedBody.image =await handleImg(req,{attributeName:'image'}) ;
+            let validatedBody = checkValidations(req);
+            validatedBody.user = req.user.id;
+            if (req.files && req.files.length > 0) {
+                validatedBody.images = await handleImgs(req, { attributeName: 'images' });
+            }else{
+                return next(new ApiError(401,i18n.__('imagesRequired')))
+            }
+            if(validatedBody.lat && validatedBody.long){
+                validatedBody.geoLocation = { type: 'Point', coordinates: [validatedBody.long, validatedBody.lat] }
+            }
             let advertisment = await Advertisments.create(validatedBody);
-            advertisment = await Advertisments.populate(advertisment,populateQuery);
             res.status(200).send(advertisment);
+            await countNew();
         } catch (error) {
             next(error)
         }
@@ -73,12 +107,17 @@ export default {
 
     async update(req, res, next) {
         try {
-            const validatedBody = checkValidations(req);
+            let validatedBody = checkValidations(req);
             let { AdvertismentsId } = req.params;
-            let advertisment = await checkExistThenGet(AdvertismentsId, Advertisments, { deleted: false , populate:populateQuery });
-            if(req.file)
-                validatedBody.image = handleImg(req,{attributeName:'image'}) ;
-            advertisment = await Advertisments.findByIdAndUpdate(AdvertismentsId , validatedBody , {new:true});
+            let advertisment = await checkExistThenGet(AdvertismentsId, Advertisments, { deleted: false });
+
+            if (req.files && req.files.length > 0) {
+                validatedBody.images = await handleImgs(req, { attributeName: 'images' });
+            }
+            if(validatedBody.lat && validatedBody.long){
+                validatedBody.geoLocation = { type: 'Point', coordinates: [validatedBody.long, validatedBody.lat] }
+            }
+            advertisment = await Advertisments.findByIdAndUpdate(AdvertismentsId, validatedBody, { new: true });
             res.status(200).send(advertisment);
         } catch (error) {
             next(error)
@@ -88,7 +127,7 @@ export default {
     async findById(req, res, next) {
         try {
             let { AdvertismentsId } = req.params;
-            let advertisment = await checkExistThenGet(AdvertismentsId, Advertisments, { deleted: false , populate:populateQuery });
+            let advertisment = await checkExistThenGet(AdvertismentsId, Advertisments, { deleted: false });
             res.status(200).send(advertisment);
         }
         catch (err) {
@@ -99,7 +138,7 @@ export default {
     async delete(req, res, next) {
         try {
             let { AdvertismentsId } = req.params;
-            let advertisment = await checkExistThenGet(AdvertismentsId, Advertisments, { deleted: false  });
+            let advertisment = await checkExistThenGet(AdvertismentsId, Advertisments, { deleted: false });
             advertisment.deleted = true;
             await advertisment.save();
             res.status(200).send("Deleted Successfully");
@@ -107,6 +146,45 @@ export default {
         catch (err) {
             next(err);
         }
-    }
+    },
+
+    validateAdminChangeStatus(){
+        return [
+            body('status').not().isEmpty().withMessage(() => { return i18n.__('statusRequired') })
+                .isIn(['ACCEPTED','REJECTED']).withMessage(() => { return i18n.__('invalidType') }),
+        ]
+    },
+
+    async changeStatus(req, res, next) {
+        try {
+            let user = req.user;
+            if (user.type != 'ADMIN' && user.type != 'SUB_ADMIN') {
+                return next(new ApiError(401, 'غير مسموح'))
+            }
+            let validatedBody = checkValidations(req);
+            let { AdvertismentsId } = req.params;
+            let advertisment = await checkExistThenGet(AdvertismentsId, Advertisments, { deleted: false });
+            advertisment = await Advertisments.findByIdAndUpdate(AdvertismentsId, validatedBody, { new: true });
+            res.status(200).send(advertisment);
+            await countNew();
+
+        } catch (error) {
+            next(error)
+        }
+    },
+    
+    async updateNumberOfViews(req, res, next) {
+        try {
+            let { AdvertismentsId } = req.params;
+            let advertisment = await checkExistThenGet(AdvertismentsId, Advertisments, { deleted: false });
+            advertisment.numberOfViews = advertisment.numberOfViews + 1;
+            await advertisment.save();
+            res.status(200).send(advertisment);
+
+        } catch (error) {
+            next(error)
+        }
+    },
+    countNew
 }
 

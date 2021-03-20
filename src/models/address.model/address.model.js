@@ -10,7 +10,7 @@ const addressSchema = new Schema({
         type:String
 
     },
-    detailedAddress:{
+    addressName:{
         type:String
     },
     country:{
@@ -27,7 +27,6 @@ const addressSchema = new Schema({
     },
     street:{
         type:String
-
     },
     long: { 
         type: Number
@@ -45,6 +44,15 @@ const addressSchema = new Schema({
     user:{
         type:Number,
         ref:'user'
+    },
+    addressName:{
+        type:String
+    },
+    buildingNumber:{
+        type:String
+    },
+    flatNumber:{
+        type:String
     },
     deleted:{
         type:Boolean,

@@ -4,8 +4,8 @@ import User from '../src/models/user.model/user.model'
 import socketEvents from '../src/socketEvents'
 import contactUsController from '../src/controllers/contactUs.controller/contactUs.controller'
 import Company from '../src/models/company.model/company.model'
-
-
+import advertismentController from '../src/controllers/advertisments.controller/advertisments.controller';
+import issueController from "../src/controllers/issue.controller/issue.controller";
 
 module.exports = {
 
@@ -79,6 +79,8 @@ module.exports = {
             await NotificationController.getCountNotification(id, true);
             await messageController.countUnseenForAdmin();
             await contactUsController.countNotReplied();
+            await advertismentController.countNew();
+            await issueController.countNew();
         })
     },
 

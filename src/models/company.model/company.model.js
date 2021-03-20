@@ -33,40 +33,9 @@ const CompanySchema = new Schema({
         i18n:true,
         required: true
     },
-    privacy:{
-        type:[{ar:{ type: String},en:{ type: String}}],
-        i18n:true,
-        required: true
-    },
-    aboutUs:{
-        type:[{ar:{ type: String},en:{ type: String}}],
-        i18n:true,
-        required: true
-    },
-    returnPolicy:{
-        type:[{ar:{ type: String},en:{ type: String}}],
-        i18n:true,
-        required: true
-    },
-    footerText:{
+    commissionAgreement:{
         type: String,
         i18n: true
-    },
-    email:{
-        type: String,
-        required: true
-    },
-    phone:{
-        type: String,
-        required: true
-    },
-    landlinePhone:{
-        type: String,
-        required: true
-    },
-    whatsappNumber:{
-        type: String,
-        //required: true
     },
     androidUrl:{
         type: String,
@@ -82,26 +51,24 @@ const CompanySchema = new Schema({
     },
     location:{
         type: locationSchema,
-        required: true
+        // required: true
     },
     appShareCount:{
         type: Number,
         default:0
     },
-    minimumOrder:{
+    traderWaitingTime:{ //in sec
         type: Number
     },
-    minimumOrderTime:{ //in sec
+    driverWaitingTime:{ //in sec
         type: Number
     },
-    firstCategory:{
-        type: CategorySchema
+    fixedCategoryName:{
+        type: String,
+        i18n: true
     },
-    secondCategory:{
-        type: CategorySchema
-    },
-    thirdCategory:{
-        type: CategorySchema
+    fixedCategoryIcon:{
+        type: String
     },
     transportPrice:{
         type: Number,

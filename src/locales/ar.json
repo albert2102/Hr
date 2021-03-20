@@ -199,5 +199,7 @@
 	"serialNumberRequired": "serialNumberRequired",
 	"invalidColorOrSize": "invalidColorOrSize",
 	"sizeNotFound": "sizeNotFound",
-	"iconRequired": "iconRequired"
+	"iconRequired": "iconRequired",
+	"arinstructionsForUseRequired": "arinstructionsForUseRequired",
+	"eninstructionsForUseRequired": "eninstructionsForUseRequired"
 }

@@ -16,6 +16,7 @@ import { twilioSend, twilioVerify } from '../../services/twilo'
 import checkValidCoordinates from 'is-valid-coordinates';
 import NotificationController from '../notif.controller/notif.controller';
 import Address from '../../models/address.model/address.model';
+import Product from '../../models/product.model/product.model';
 
 const checkUserExistByEmail = async (email) => {
     let user = await User.findOne({ email, deleted: false });
@@ -36,7 +37,7 @@ export default {
             let page = +req.query.page || 1,
                 limit = +req.query.limit || 20;
             var { all, name, type, fromDate, toDate, phone, email, activated, countryKey, countryCode,
-                month, year, day, archive , country} = req.query;
+                month, year, day, archive, country } = req.query;
 
             var query = { deleted: false, type: { $ne: 'VISITOR' } };
             if (archive) query.deleted = true;
@@ -48,8 +49,8 @@ export default {
             if (countryKey) query.countryKey = countryKey;
             if (countryCode) query.countryCode = countryCode;
             if (country) {
-                let userCountries = await Address.find({deleted:false , country :  country }).distinct('user');
-                query._id = {$in : userCountries}
+                let userCountries = await Address.find({ deleted: false, country: country }).distinct('user');
+                query._id = { $in: userCountries }
             }
 
 
@@ -110,7 +111,9 @@ export default {
     validateUserSignin() {
         let validations = [
             body('phone').not().isEmpty().withMessage(() => { return i18n.__('usernameOrPhoneRequired') }),
-            body('password').not().isEmpty().withMessage(() => { return i18n.__('passwordRequired') })
+            body('password').not().isEmpty().withMessage(() => { return i18n.__('passwordRequired') }),
+            body('type').not().isEmpty().withMessage(() => { return i18n.__('typeIsRequired') })
+                .isIn(['CLIENT','INSTITUTION','DRIVER']).withMessage(() => { return i18n.__('userTypeWrong') }),
         ];
         return validations;
     },
@@ -118,7 +121,7 @@ export default {
     async signIn(req, res, next) {
         try {
             const validatedBody = checkValidations(req);
-            var query = { deleted: false,type:{$in:['CLIENT']} };
+            var query = { deleted: false, type: validatedBody.type};
             query.phone = validatedBody.phone.trim();
 
             let user = await User.findOne(query).populate(populateQuery);
@@ -146,13 +149,13 @@ export default {
     validateUserCreateBody() {
         let validations = [
             body('name').not().isEmpty().withMessage(() => { return i18n.__('nameRequired') })
-            .custom(async (value, { req }) => {
-                value = (value.trim());
-                let userQuery = { username: value, deleted: false };
-                if (await User.findOne(userQuery))
-                    throw new Error(i18n.__('usernameDuplicated'));
-                return true;
-            }),
+                .custom(async (value, { req }) => {
+                    value = (value.trim());
+                    let userQuery = { username: value, deleted: false };
+                    if (await User.findOne(userQuery))
+                        throw new Error(i18n.__('usernameDuplicated'));
+                    return true;
+                }),
             body('email').optional().trim().not().isEmpty().withMessage(() => { return i18n.__('emailRequired') })
                 .isEmail().withMessage(() => { return i18n.__('EmailNotValid') })
                 .custom(async (value, { req }) => {
@@ -187,7 +190,7 @@ export default {
                 let image = await handleImg(req, { attributeName: 'image', isUpdate: false });
                 validatedBody.image = image;
             }
-            
+
             let createdUser = await User.create(validatedBody);
             res.status(200).send({ user: createdUser, token: generateToken(createdUser.id) })
             adminNSP.to('room-admin').emit(socketEvents.NewSignup, { user: createdUser });
@@ -255,7 +258,7 @@ export default {
             body('currentPassword').optional().not().isEmpty().withMessage(() => { return i18n.__('CurrentPasswordRequired') }),
             body('countryCode').optional().not().isEmpty().withMessage(() => { return i18n.__('countryCodeRequired') }),
             body('countryKey').optional().not().isEmpty().withMessage(() => { return i18n.__('countryKeyRequired') }),
-            
+
         ];
 
         return validations;
@@ -337,7 +340,7 @@ export default {
         return [
             body('email').not().isEmpty().withMessage(() => { return i18n.__('emailRequired') }),
             body('type').not().isEmpty().withMessage(() => { return i18n.__('typeIsRequired') })
-                .isIn(['ADMIN', 'SUB_ADMIN', 'CLIENT']).withMessage(() => { return i18n.__('userTypeWrong') }),
+                .isIn(['ADMIN','SUB_ADMIN','CLIENT','INSTITUTION','DRIVER']).withMessage(() => { return i18n.__('userTypeWrong') }),
         ];
     },
     async forgetPassword(req, res, next) {
@@ -366,7 +369,7 @@ export default {
             body('email').not().isEmpty().withMessage(() => { return i18n.__('emailRequired') }),
             body('code').not().isEmpty().withMessage(() => { return i18n.__('codeRequired') }),
             body('type').not().isEmpty().withMessage(() => { return i18n.__('typeIsRequired') })
-                .isIn(['ADMIN', 'SUB_ADMIN', 'CLIENT']).withMessage(() => { return i18n.__('userTypeWrong') }),
+                .isIn(['ADMIN','SUB_ADMIN','CLIENT','INSTITUTION','DRIVER']).withMessage(() => { return i18n.__('userTypeWrong') }),
         ];
     },
     async verifyForgetPasswordCode(req, res, next) {
@@ -477,7 +480,7 @@ export default {
         return [
             body('email').not().isEmpty().withMessage(() => { return i18n.__('emailRequired') }),
             body('newPassword').not().isEmpty().withMessage(() => { return i18n.__('newPasswordRequired') }),
-            body('type').not().isEmpty().withMessage(() => { return i18n.__('typeIsRequired') }).isIn(['ADMIN', 'SUB_ADMIN','CLIENT']).withMessage(() => { return i18n.__('userTypeWrong') }),
+            body('type').not().isEmpty().withMessage(() => { return i18n.__('typeIsRequired') }).isIn(['ADMIN','SUB_ADMIN','CLIENT','INSTITUTION','DRIVER']).withMessage(() => { return i18n.__('userTypeWrong') }),
         ];
     },
 
@@ -670,6 +673,43 @@ export default {
                 .isIn(['ios', 'android', 'web']).withMessage(() => { return i18n.__('wrong type') })
         ];
         return validations;
+    },
+
+    async Home(req, res, next) {
+        try {
+            let page = +req.query.page || 1,
+                limit = +req.query.limit || 20;
+            var { text, hasOffer, open, long,lat } = req.query;
+
+            var query = { deleted: false,type:'INSTITUTION'};
+            if(open) query.online = true;
+            if(hasOffer){
+                let tradersOffers = await Product.find({deleted: false,offer:{$ne:0}}).distinct('trader');
+                query._id = {$in: tradersOffers}
+            }
+            if (text){
+                let traders = await Product.find({deleted: false,$or : [{ 'name.en': { '$regex': text, '$options': 'i' } }, { 'name.ar': { '$regex': text, '$options': 'i' } }]}).distinct('trader')
+                query.$or = [{name:{ '$regex': text, '$options': 'i' }},{_id:{$in: traders}}];
+            }
+            let aggregateQuery = [
+                {$match: query},
+                {$limit: limit},
+                {$skip: (page - 1) * limit}];
+            
+            if (lat && long) {
+                aggregateQuery.unshift({$geoNear: {near: {type: "Point",coordinates: [+long, +lat]},distanceField: "dist.calculated"}})
+            }
+            let users = await User.aggregate(aggregateQuery)
+            let pageCount;
+            const userCount = await User.count(query);
+            users = await User.populate(populateQuery);
+            pageCount = Math.ceil(userCount / limit);
+            users = User.schema.methods.toJSONLocalizedOnly(users, i18n.getLocale());
+
+            res.send(new ApiResponse(users, page, pageCount, limit, userCount, req));
+        } catch (error) {
+            next(error)
+        }
     },
 
 };
