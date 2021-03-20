@@ -62,15 +62,11 @@ export default {
         try {
             let page = +req.query.page || 1, limit = +req.query.limit || 20;
             let { name, description, price, offer, hasOffer,
-                quantity, month, year,
-                sortByPrice, userId, type, removeLanguage,
-                fromPrice, toPrice, lastProducts, lastOffers, useStatus, serialNumber, all, productCategory
+                month, year,sortByPrice, userId, removeLanguage,
+                fromPrice, toPrice, all, productCategory,trader
             } = req.query;
             let query = { deleted: false };
             let sortQuery = { _id: -1 };
-            if (serialNumber) query.serialNumber = serialNumber;
-
-
 
             if (fromPrice && toPrice) {
                 query.price = { $gte: fromPrice, $lte: toPrice }
@@ -80,17 +76,9 @@ export default {
                 query.price = { $lte: toPrice }
             }
 
-            if (type) query.type = type;
-            if (productCategory) query.productCategory = productCategory;
             if (hasOffer) query.offer = { $gt: 0 };
-            if (quantity) query.quantity = quantity;
             if (offer) query.offer = offer;
             if (price) query.price = price;
-
-            if (useStatus) query.useStatus = useStatus;
-
-            if (hasOffer) query.offer = { $gt: 0 };
-
             if (name) {
                 query.$or = [{ 'name.en': { '$regex': name, '$options': 'i' } }, { 'name.ar': { '$regex': name, '$options': 'i' } }]
             }
@@ -98,18 +86,12 @@ export default {
             if (description) {
                 query.$or = [{ 'description.en': { '$regex': description, '$options': 'i' } }, { 'description.ar': { '$regex': description, '$options': 'i' } }]
             }
-
-
-
-            if (lastProducts) {
-                sortQuery = { _id: -1 }
-            }
-            if (lastOffers) {
-                query.offer = { $gt: 0 }
-            }
             if (sortByPrice) {
                 sortQuery = { priceAfterOffer: sortByPrice }
             }
+            if(productCategory) query.productCategory = productCategory;
+            if(trader) query.trader = trader;
+
             let date = new Date();
             if (month && year) {
                 month = month - 1;

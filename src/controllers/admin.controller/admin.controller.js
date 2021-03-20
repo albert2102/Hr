@@ -418,6 +418,8 @@ export default {
             body('carInsuranceImage').optional().not().isEmpty().withMessage(() => { return i18n.__('carInsuranceImageRequired') }),
             body('ibanNumber').not().isEmpty().withMessage(() => { return i18n.__('ibanNumberRequired') }),
 
+            body('ajamTaxes').not().isEmpty().withMessage(() => { return i18n.__('taxesRequired') }).isInt({ min: 0, max: 100 }),
+            
         ];
         return validations;
     },
@@ -464,6 +466,9 @@ export default {
             body('carPlateWithYouImage').optional().not().isEmpty().withMessage(() => { return i18n.__('carPlateWithYouImageRequired') }),
             body('carInsuranceImage').optional().not().isEmpty().withMessage(() => { return i18n.__('carInsuranceImageRequired') }),
             body('ibanNumber').optional().not().isEmpty().withMessage(() => { return i18n.__('ibanNumberRequired') }),
+
+            body('ajamTaxes').optional().not().isEmpty().withMessage(() => { return i18n.__('taxesRequired') }).isInt({ min: 0, max: 100 }),
+
         ];
 
         return validations;
@@ -529,6 +534,7 @@ export default {
             body('location').not().isEmpty().withMessage(() => { return i18n.__('locationRequired') }),
             body('location.long').not().isEmpty().withMessage(() => { return i18n.__('longitudeRequired') }),
             body('location.lat').not().isEmpty().withMessage(() => { return i18n.__('latitudeRequired') }),
+            body('ajamTaxes').not().isEmpty().withMessage(() => { return i18n.__('taxesRequired') }).isInt({ min: 0, max: 100 }),
 
 
         ];
@@ -575,6 +581,8 @@ export default {
             body('location').optional().not().isEmpty().withMessage(() => { return i18n.__('locationRequired') }),
             body('location.long').optional().not().isEmpty().withMessage(() => { return i18n.__('longitudeRequired') }),
             body('location.lat').optional().not().isEmpty().withMessage(() => { return i18n.__('latitudeRequired') }),
+            body('ajamTaxes').optional().not().isEmpty().withMessage(() => { return i18n.__('taxesRequired') }).isInt({ min: 0, max: 100 }),
+
         ];
 
         return validations;

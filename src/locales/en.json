@@ -1,5 +1,5 @@
 {
-	"usernameOrPhoneRequired":"Phone or Username is wrong",
+	"usernameOrPhoneRequired": "Phone or Username is wrong",
 	"phoneOrEmail": "Enter your phone or email ",
 	"twilioCodeRequired": "Enter the code sent to you",
 	"accountNotApproved": "Your account not approved",
@@ -150,9 +150,10 @@
 	"arrangeNumberExist": "arrange Number Exist",
 	"invalidQuantity": "invalid Quantity",
 	"reciverRequired": "reciverRequired",
-	"categoryNameRequired":"category name is required",
-	"categoryNameArRequired":"category arabic name is required",
-	"catrgoryNameEnRequired":"category english name is required",
-	"transportPriceRequired":"transport Price is Required",
-	"promoCodeInvalid":"Invalid PromoCode"
+	"categoryNameRequired": "category name is required",
+	"categoryNameArRequired": "category arabic name is required",
+	"catrgoryNameEnRequired": "category english name is required",
+	"transportPriceRequired": "transport Price is Required",
+	"promoCodeInvalid": "Invalid PromoCode",
+	"taxesRequired": "taxesRequired"
 }

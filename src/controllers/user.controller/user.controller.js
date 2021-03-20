@@ -679,10 +679,13 @@ export default {
         try {
             let page = +req.query.page || 1,
                 limit = +req.query.limit || 20;
-            var { text, hasOffer, open, long,lat } = req.query;
+            var { text, hasOffer, open, long,lat,category } = req.query;
 
             var query = { deleted: false,type:'INSTITUTION'};
+
             if(open) query.online = true;
+            if(category) query.category = +category;
+
             if(hasOffer){
                 let tradersOffers = await Product.find({deleted: false,offer:{$ne:0}}).distinct('trader');
                 query._id = {$in: tradersOffers}
@@ -702,9 +705,9 @@ export default {
             let users = await User.aggregate(aggregateQuery)
             let pageCount;
             const userCount = await User.count(query);
-            users = await User.populate(populateQuery);
+            users = await User.populate(users,populateQuery);
             pageCount = Math.ceil(userCount / limit);
-            users = User.schema.methods.toJSONLocalizedOnly(users, i18n.getLocale());
+            // users = User.schema.methods.toJSONLocalizedOnly(users, i18n.getLocale());
 
             res.send(new ApiResponse(users, page, pageCount, limit, userCount, req));
         } catch (error) {

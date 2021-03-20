@@ -150,6 +150,9 @@ const userSchema = new Schema({
     online:{
         type: Boolean,
         default: true
+    },
+    ajamTaxes:{
+        type: Number,
     }
 
 }, { timestamps: true });
@@ -183,7 +186,7 @@ userSchema.set('toJSON', {
 });
 
 autoIncrement.initialize(mongoose.connection);
-userSchema.index({ geolocation: "2dsphere" });
+userSchema.index({ geoLocation: "2dsphere" });
 userSchema.plugin(mongooseI18n, {locales: ['en', 'ar']});
 userSchema.plugin(autoIncrement.plugin, { model: 'user', startAt: 1 });
 export default mongoose.model('user', userSchema);
