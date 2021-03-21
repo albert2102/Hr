@@ -153,8 +153,24 @@ const userSchema = new Schema({
     },
     ajamTaxes:{
         type: Number,
-    }
-
+    },
+    workingTimeText:{
+        type: String
+    },
+    address:{
+        type: String
+    },
+    paymentMethod:{
+        type: [String],
+        enum:['VISA','MASTERCARD','CASH','MADA']
+    },
+    totalRate:{
+        type: Number
+    },
+    totalRateCount:{
+        type: Number
+    },
+    
 }, { timestamps: true });
 
 
