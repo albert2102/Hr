@@ -14,6 +14,7 @@ import advertismentsRoute from './advertisment.route/advertisment.route';
 import appadvertismentsRoute from './app-advertisment.route/app-advertisment.route';
 import issueRoute from './issue.route/issue.route';
 import favoriteRoute from './favorites.route/favorites.route';
+import creditRouter from './credit.route/credit.route';
 
 // import countryRouter from './country.route/country.route';
 // import cityRouter from './city.route/city.route';
@@ -40,6 +41,7 @@ router.use('/advertisments',advertismentsRoute);
 router.use('/app-advertisments',appadvertismentsRoute);
 router.use('/issue',issueRoute);
 router.use('/favorites',favoriteRoute);
+router.use('/credit', creditRouter)
 
 // router.use('/country',countryRouter)
 // router.use('/city',cityRouter)
@@ -54,6 +56,5 @@ router.use('/favorites',favoriteRoute);
 
 
 // router.use('/dashboard',dashBoardRouter);
-// // router.use('/credit', creditRouter)
 
 export default router;

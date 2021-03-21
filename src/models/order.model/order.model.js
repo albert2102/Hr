@@ -44,7 +44,7 @@ const orderSchema = new Schema({
     },
     paymentMethod: {
         type: String,
-        enum: ['VISA','MASTERCARD','CASH','MADA']
+        enum: ['DIGITAL','WALLET','CASH']
     },
     status: {
         type: String,
@@ -73,7 +73,12 @@ const orderSchema = new Schema({
     },
     taxes:{
         type: Number
-    }
+    },
+    orderType:{
+        type: String,
+        enum:['DELIVERY','FROM_STORE']
+    },
+
 }, { timestamps: true });
 orderSchema.set('toJSON', {
     transform: function (doc, ret, options) {
