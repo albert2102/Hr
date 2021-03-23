@@ -22,10 +22,10 @@ export default {
         try {
             let page = +req.query.page || 1, limit = +req.query.limit || 20;
 
-            let { status,address,description,phone,whatsappNumber,contactBy,price,lat,long } = req.query
+            let { status, address, description, phone, whatsappNumber, contactBy, price, lat, long, user } = req.query
 
             let query = { deleted: false };
-
+            if (user) query.user = user;
             if (status) query.status = status;
             if (address) query.address = { '$regex': address, '$options': 'i' };
             if (description) query.description = { '$regex': description, '$options': 'i' };
@@ -35,12 +35,12 @@ export default {
             if (price) query.price = price;
 
             let aggregateQuery = [
-                {$match: query},
-                {$limit: limit},
-                {$skip: (page - 1) * limit}];
-            
+                { $match: query },
+                { $limit: limit },
+                { $skip: (page - 1) * limit }];
+
             if (lat && long) {
-                aggregateQuery.unshift({$geoNear: {near: {type: "Point",coordinates: [+long, +lat]},distanceField: "dist.calculated"}})
+                aggregateQuery.unshift({ $geoNear: { near: { type: "Point", coordinates: [+long, +lat] }, distanceField: "dist.calculated" } })
             }
             console.log(aggregateQuery)
             let advertisment = await Advertisments.aggregate(aggregateQuery)
@@ -55,32 +55,32 @@ export default {
 
     validateBody(isUpdate = false) {
         let validations;
-        if(!isUpdate){
-        validations = [
-            body('address').not().isEmpty().withMessage(() => { return i18n.__('addressRequired') }),
-            body('description').not().isEmpty().withMessage(() => { return i18n.__('descriptionRequired') }),
-            body('phone').not().isEmpty().withMessage(() => { return i18n.__('phoneRequired') }),
-            body('whatsappNumber').optional().not().isEmpty().withMessage(() => { return i18n.__('whatsappNumberRequired') }),
-            body('contactBy').not().isEmpty().withMessage(() => { return i18n.__('contactByRequired') })
-                .isIn(['PHONE', 'CONVERSATION']).withMessage(() => { return i18n.__('invalidType') }),
-            body('long').not().isEmpty().withMessage(() => { return i18n.__('longRequired') }),
-            body('lat').not().isEmpty().withMessage(() => { return i18n.__('latRequired') }),
-            body('price').not().isEmpty().withMessage(() => { return i18n.__('priceRequired') }),
+        if (!isUpdate) {
+            validations = [
+                body('address').not().isEmpty().withMessage(() => { return i18n.__('addressRequired') }),
+                body('description').not().isEmpty().withMessage(() => { return i18n.__('descriptionRequired') }),
+                body('phone').not().isEmpty().withMessage(() => { return i18n.__('phoneRequired') }),
+                body('whatsappNumber').optional().not().isEmpty().withMessage(() => { return i18n.__('whatsappNumberRequired') }),
+                body('contactBy').not().isEmpty().withMessage(() => { return i18n.__('contactByRequired') })
+                    .isIn(['PHONE', 'CONVERSATION']).withMessage(() => { return i18n.__('invalidType') }),
+                body('long').not().isEmpty().withMessage(() => { return i18n.__('longRequired') }),
+                body('lat').not().isEmpty().withMessage(() => { return i18n.__('latRequired') }),
+                body('price').not().isEmpty().withMessage(() => { return i18n.__('priceRequired') }),
 
-        ];
-    }else{
-        validations=[
-            body('address').optional().not().isEmpty().withMessage(() => { return i18n.__('addressRequired') }),
-            body('description').optional().not().isEmpty().withMessage(() => { return i18n.__('descriptionRequired') }),
-            body('phone').optional().not().isEmpty().withMessage(() => { return i18n.__('phoneRequired') }),
-            body('whatsappNumber').optional().not().isEmpty().withMessage(() => { return i18n.__('whatsappNumberRequired') }),
-            body('contactBy').optional().not().isEmpty().withMessage(() => { return i18n.__('contactByRequired') })
-                .isIn(['PHONE', 'CONVERSATION']).withMessage(() => { return i18n.__('invalidType') }),
-            body('long').optional().not().isEmpty().withMessage(() => { return i18n.__('longRequired') }),
-            body('lat').optional().not().isEmpty().withMessage(() => { return i18n.__('latRequired') }),
-            body('price').optional().not().isEmpty().withMessage(() => { return i18n.__('priceRequired') }),
-        ]
-    }
+            ];
+        } else {
+            validations = [
+                body('address').optional().not().isEmpty().withMessage(() => { return i18n.__('addressRequired') }),
+                body('description').optional().not().isEmpty().withMessage(() => { return i18n.__('descriptionRequired') }),
+                body('phone').optional().not().isEmpty().withMessage(() => { return i18n.__('phoneRequired') }),
+                body('whatsappNumber').optional().not().isEmpty().withMessage(() => { return i18n.__('whatsappNumberRequired') }),
+                body('contactBy').optional().not().isEmpty().withMessage(() => { return i18n.__('contactByRequired') })
+                    .isIn(['PHONE', 'CONVERSATION']).withMessage(() => { return i18n.__('invalidType') }),
+                body('long').optional().not().isEmpty().withMessage(() => { return i18n.__('longRequired') }),
+                body('lat').optional().not().isEmpty().withMessage(() => { return i18n.__('latRequired') }),
+                body('price').optional().not().isEmpty().withMessage(() => { return i18n.__('priceRequired') }),
+            ]
+        }
 
         return validations;
     },
@@ -91,10 +91,10 @@ export default {
             validatedBody.user = req.user.id;
             if (req.files && req.files.length > 0) {
                 validatedBody.images = await handleImgs(req, { attributeName: 'images' });
-            }else{
-                return next(new ApiError(401,i18n.__('imagesRequired')))
+            } else {
+                return next(new ApiError(401, i18n.__('imagesRequired')))
             }
-            if(validatedBody.lat && validatedBody.long){
+            if (validatedBody.lat && validatedBody.long) {
                 validatedBody.geoLocation = { type: 'Point', coordinates: [validatedBody.long, validatedBody.lat] }
             }
             let advertisment = await Advertisments.create(validatedBody);
@@ -114,7 +114,7 @@ export default {
             if (req.files && req.files.length > 0) {
                 validatedBody.images = await handleImgs(req, { attributeName: 'images' });
             }
-            if(validatedBody.lat && validatedBody.long){
+            if (validatedBody.lat && validatedBody.long) {
                 validatedBody.geoLocation = { type: 'Point', coordinates: [validatedBody.long, validatedBody.lat] }
             }
             advertisment = await Advertisments.findByIdAndUpdate(AdvertismentsId, validatedBody, { new: true });
@@ -148,10 +148,10 @@ export default {
         }
     },
 
-    validateAdminChangeStatus(){
+    validateAdminChangeStatus() {
         return [
             body('status').not().isEmpty().withMessage(() => { return i18n.__('statusRequired') })
-                .isIn(['ACCEPTED','REJECTED']).withMessage(() => { return i18n.__('invalidType') }),
+                .isIn(['ACCEPTED', 'REJECTED']).withMessage(() => { return i18n.__('invalidType') }),
         ]
     },
 
@@ -172,7 +172,7 @@ export default {
             next(error)
         }
     },
-    
+
     async updateNumberOfViews(req, res, next) {
         try {
             let { AdvertismentsId } = req.params;

@@ -37,7 +37,7 @@ export default {
             let page = +req.query.page || 1,
                 limit = +req.query.limit || 20;
             var { all, name, type, fromDate, toDate, phone, email, activated, countryKey, countryCode,
-                month, year, day, archive, country } = req.query;
+                month, year, day, archive, country,category } = req.query;
 
             var query = { deleted: false, type: { $ne: 'VISITOR' } };
             if (archive) query.deleted = true;
@@ -52,7 +52,7 @@ export default {
                 let userCountries = await Address.find({ deleted: false, country: country }).distinct('user');
                 query._id = { $in: userCountries }
             }
-
+            if (category) query.category =category;
 
             if (fromDate && toDate) {
                 let startOfDate = moment(fromDate).startOf('day');

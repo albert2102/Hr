@@ -128,49 +128,25 @@ export default {
 
     validateBody() {
         return [
-            body('moneyReminder').optional().not().isEmpty().withMessage(() => { return i18n.__('moneyReminderRequired') }),
-
             body('products.*.product').not().isEmpty().withMessage(() => { return i18n.__('productRequired') })
                 .custom(async (val, { req }) => {
                     req.product = await checkExistThenGet(val, Product, { deleted: false }, i18n.__('productNotFound'));
                     return true;
                 }),
-            body('products.*.colorId').optional().not().isEmpty().withMessage(() => { return i18n.__('colorIdRequired') }),
-            /*.custom(async (val, { req }) => {
-                console.log("req.product.id == ",req.product.id)
-                let color = await Product.find({ _id: req.product.id, 'colors._id': val }, { _id: 0, 'colors.$': 1 })
-                if (color.length == 0) {
-                    throw new Error(i18n.__('invalidColorId'));
-                }
-                req.sizes = color[0].colors[0].sizes;
-                val = color[0].colors[0].color;
-
-                return true;
-            }),*/
-            body('products.*.sizeId').optional().not().isEmpty().withMessage(() => { return i18n.__('sizeIdRequired') }),
-            /* .custom(async (val, { req }) => {
-                 if (req.sizes) {
-                     if (req.sizes.some(obj => obj['_id'] == val)) {
-                         for (let index = 0; index < req.sizes.length; index++) {
-                             if (req.sizes[index]._id == val) {
-                                 val = req.sizes[index].size;
-                             }
-                         }
-                         return true
-                     }
-                 }
-                 else {
-                     throw new Error(i18n.__('invalidSizeId'));
-                 }
-             }),*/
             body('products.*.quantity').not().isEmpty().withMessage(() => { return i18n.__('quantityRequired') }),
-            body('address').not().isEmpty().withMessage(() => { return i18n.__('addressRequired') })
+            body('address').optional().not().isEmpty().withMessage(() => { return i18n.__('addressRequired') })
                 .custom(async (val, { req }) => {
                     req.address = await checkExistThenGet(val, Address, { deleted: false, user: req.user.id }, i18n.__('addressNotFound'));
                     return true;
                 }),
-            body('paymentMethod').not().isEmpty().withMessage(() => { return i18n.__('paymentMethodRequired') }).isIn(['CASH', 'CREDIT']).withMessage('Wrong type'),
-            body('notes').optional().not().isEmpty().withMessage(() => { return i18n.__('notesRequired') }),
+            body('orderType').not().isEmpty().withMessage(() => { return i18n.__('paymentMethodRequired') }).isIn(['DELIVERY','FROM_STORE']).withMessage('Wrong type')
+            .custom(async (val, { req }) => {
+                if(val == 'DELIVERY' && ! req.body.address){
+                    throw new Error(i18n.__('addressRequired'));
+                }
+                return true;
+            }),
+            body('paymentMethod').not().isEmpty().withMessage(() => { return i18n.__('paymentMethodRequired') }).isIn(['DIGITAL','WALLET','CASH']).withMessage('Wrong type'),
             body('promoCode').optional().not().isEmpty().withMessage(() => { return i18n.__('promocodeRequired') })
                 .custom(async (val, { req }) => {
                     if (req.user.type == 'VISITOR') {
@@ -198,11 +174,11 @@ export default {
             let user = req.user;
             let validatedBody = checkValidations(req);
 
-            validatedBody.orderNumber = generateVerifyCode(/^\d+$/);
+            validatedBody.orderNumber = '' + (new Date()).getTime();
             validatedBody.user = user.id;
             validatedBody.products = await checkAvailability(validatedBody.products)
             validatedBody.price = await calculatePrice(validatedBody.products)
-            validatedBody = await getFinalPrice(validatedBody)
+            validatedBody.totalPrice = await getFinalPrice(validatedBody)
             ///////////////////////////////////////////////////// taxes
             let company = await Company.findOne({ deleted: false });
             let priceBeforeTaxes = await calculatePriceBeforeProductTaxes(validatedBody.products)

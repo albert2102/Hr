@@ -57,6 +57,9 @@ const userSchema = new Schema({
     image:{
         type: String
     },
+    coverImage:{
+        type: String,
+    },
     language:{
         type:String,
         default:'ar',
@@ -170,6 +173,10 @@ const userSchema = new Schema({
     totalRateCount:{
         type: Number
     },
+    wallet:{
+        type: Number,
+        default: 0
+    }
     
 }, { timestamps: true });
 
