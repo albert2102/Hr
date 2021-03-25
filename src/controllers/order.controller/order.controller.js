@@ -173,19 +173,15 @@ export default {
         try {
             let user = req.user;
             let validatedBody = checkValidations(req);
-
             validatedBody.orderNumber = '' + (new Date()).getTime();
             validatedBody.user = user.id;
-            validatedBody.products = await checkAvailability(validatedBody.products)
             validatedBody.price = await calculatePrice(validatedBody.products)
-            validatedBody.totalPrice = await getFinalPrice(validatedBody)
+            validatedBody = await getFinalPrice(validatedBody)
             ///////////////////////////////////////////////////// taxes
             let company = await Company.findOne({ deleted: false });
-            let priceBeforeTaxes = await calculatePriceBeforeProductTaxes(validatedBody.products)
-            // console.log(priceBeforeTaxes)
             validatedBody.taxes = company.taxes;
             validatedBody.transportPrice = company.transportPrice;
-            validatedBody.taxesValue = +((priceBeforeTaxes * (company.taxes / 100)).toFixed(3));
+            validatedBody.taxesValue = +((validatedBody.totalPrice * (company.taxes / 100)).toFixed(3));
             validatedBody.totalPrice = validatedBody.totalPrice + Number(validatedBody.transportPrice)
 
             let order = await Order.create(validatedBody);
@@ -194,9 +190,8 @@ export default {
             if (validatedBody.paymentMethod == 'CASH') {
                 res.status(200).send(order);
                 order = await Order.populate(order, populateQuery)
-                await updateProductAvailability(order.products)
-                let onlineOrder = await Order.count({ deleted: false, type: 'ONLINE', adminInformed: false });
-                adminNSP.emit(socketEvents.UpdateOrderCount, { onlineOrder });
+                let newOrdersCount = await Order.count({ deleted: false, adminInformed: false });
+                adminNSP.emit(socketEvents.UpdateOrderCount, { count: newOrdersCount });
             }
 
         } catch (err) {
@@ -245,20 +240,19 @@ export default {
 
     async acceptOrReject(req, res, next) {
         try {
-            if (req.user.type != 'ADMIN' && req.user.type != 'SUB_ADMIN')
-                return next(new ApiError(403, ('admin.auth')));
+            if (req.user.type != 'ADMIN' && req.user.type != 'SUB_ADMIN' && req.user.type != 'INSTITUTION')
+                return next(new ApiError(403, ('notAllowToChangeStatus')));
 
             let { orderId } = req.params;
             await checkExist(orderId, Order, { deleted: false, status: 'WAITING' });
             let validatedBody = checkValidations(req);
-
             let updatedOrder = await Order.findByIdAndUpdate(orderId, validatedBody, { new: true }).populate(populateQuery);
             updatedOrder = Order.schema.methods.toJSONLocalizedOnly(updatedOrder, i18n.getLocale());
             res.status(200).send(updatedOrder);
             let description;
             if (validatedBody.status == 'ACCEPTED') {
-                // await updateProductAvailability(updatedOrder.products)
-                description = { en: updatedOrder.orderNumber + ' : ' + 'Your Order Has Been Approved', ar: updatedOrder.orderNumber + ' : ' + ' تم تجهيز طلبك' };
+                ////////////// find drivers /////////////////////////
+                description = { en: updatedOrder.orderNumber + ' : ' + 'Your Order Has Been Approved', ar: updatedOrder.orderNumber + ' : ' + '  جاري تجهيز طلبك' };
             } else {
                 await reversProductQuantity(updatedOrder.products);
                 description = { en: updatedOrder.orderNumber + ' : ' + 'Your Order Has Been Rejected ' + validatedBody.rejectReason, ar: updatedOrder.orderNumber + ' : ' + ' تم رفض طلبك ' + validatedBody.rejectReason };

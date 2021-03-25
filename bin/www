@@ -26,7 +26,7 @@ var cluster = require('cluster');
 
 } else {*/
   var server = http.createServer(/*{
-  key: fs.readFileSync('catchit.sa.key'),
+  key: fs.readFileSync('ajamadmin.com.key'),
   cert: fs.readFileSync('server.cert')
   },*/
   app);
