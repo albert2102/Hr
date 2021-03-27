@@ -2,13 +2,19 @@ import express from 'express';
 import { requireAuth } from '../../services/passport';
 import { multerSaveTo } from '../../services/multer-service';
 import userController from '../../controllers/user.controller/user.controller';
+import {parseObject} from '../../controllers/shared.controller/shared.controller';
 
 const router = express.Router();
 
+router.route('/institution/updateInfo')
+    .put(requireAuth,multerSaveTo('users').single('image'),parseObject(['paymentMethod']), userController.validateUpdateInstitution(), userController.updateInfo);
 
-router.get('/Home',userController.Home);
+router.route('/driver/updateInfo')
+    .put(requireAuth,multerSaveTo('users').single('image'),parseObject(['paymentMethod']), userController.validateUpdateDriver(), userController.updateInfo);
 
-router.route('/user/openActiveChatHead').put(requireAuth,userController.openActiveChatHead)
+router.get('/Home', userController.Home);
+
+router.route('/user/openActiveChatHead').put(requireAuth, userController.openActiveChatHead)
 router.route('/user/closeActiveChatHead').put(requireAuth, userController.closeActiveChatHead)
 
 router.route('/signup')

@@ -714,5 +714,108 @@ export default {
             next(error)
         }
     },
+    /////////////////////////////////////////////////////////////
+    validateUpdateDriver() {
+        let validations = [
+            body('name').optional().not().isEmpty().withMessage(() => { return i18n.__('nameRequired') }),
+            body('email').optional().trim().not().isEmpty().withMessage(() => { return i18n.__('emailRequired') })
+                .isEmail().withMessage(() => { return i18n.__('EmailNotValid') })
+                .custom(async (value, { req }) => {
+                    value = (value.trim()).toLowerCase();
+                    let userQuery = { email: value, deleted: false, _id: { $ne: req.body.userId } };
+                    if (await User.findOne(userQuery))
+                        throw new Error(i18n.__('emailDuplicated'));
+                    else
+                        return true;
+                }),
+            body('password').optional().not().isEmpty().withMessage(() => { return i18n.__('passwordRequired') }),
+            body('phone').optional().not().isEmpty().withMessage(() => { return i18n.__('PhoneIsRequired') })
+                .custom(async (value, { req }) => {
+                    value = (value.trim()).toLowerCase();
+                    let userQuery = { phone: value, deleted: false, _id: { $ne: req.body.userId } };
+
+                    if (await User.findOne(userQuery))
+                        throw new Error(i18n.__('phoneIsDuplicated'));
+                    else
+                        return true;
+                }),
+            body('language').optional().not().isEmpty().withMessage(() => { return i18n.__('languageRequired') }),
+            body('notification').optional().not().isEmpty().withMessage(() => { return i18n.__('notificationRequired') }),
+            body('countryCode').optional().not().isEmpty().withMessage(() => { return i18n.__('countryCodeRequired') }),
+            body('countryKey').optional().not().isEmpty().withMessage(() => { return i18n.__('countryKeyRequired') }),
+            body('nationalIdImage').optional().not().isEmpty().withMessage(() => { return i18n.__('nationalIdImageRequired') }),
+            body('frontCarLicenceImage').optional().not().isEmpty().withMessage(() => { return i18n.__('frontCarLicenceImageRequired') }),
+            body('backCarLicenceImage').optional().not().isEmpty().withMessage(() => { return i18n.__('backCarLicenceImageRequired') }),
+            body('frontDriverLicenceImage').optional().not().isEmpty().withMessage(() => { return i18n.__('frontDriverLicenceImageRequired') }),
+            body('backDriverLicenceImage').optional().not().isEmpty().withMessage(() => { return i18n.__('backDriverLicenceImageRequired') }),
+            body('internallyCarImage').optional().not().isEmpty().withMessage(() => { return i18n.__('internallyCarImageRequired') }).isArray().withMessage('must be an array'),
+            body('frontCarImage').optional().not().isEmpty().withMessage(() => { return i18n.__('frontCarImageRequired') }),
+            body('backCarImage').optional().not().isEmpty().withMessage(() => { return i18n.__('backCarImageRequired') }),
+            body('frontCarPlateImage').optional().not().isEmpty().withMessage(() => { return i18n.__('frontCarPlateImageRequired') }),
+            body('backCarPlateImage').optional().not().isEmpty().withMessage(() => { return i18n.__('backCarPlateImageRequired') }),
+            body('carPlateWithYouImage').optional().not().isEmpty().withMessage(() => { return i18n.__('carPlateWithYouImageRequired') }),
+            body('carInsuranceImage').optional().not().isEmpty().withMessage(() => { return i18n.__('carInsuranceImageRequired') }),
+            body('ibanNumber').optional().not().isEmpty().withMessage(() => { return i18n.__('ibanNumberRequired') }),
+            body('coverImage').optional().not().isEmpty().withMessage(() => { return i18n.__('coverImageRequired') }),
+
+            body('ajamTaxes').optional().not().isEmpty().withMessage(() => { return i18n.__('taxesRequired') }).isInt({ min: 0, max: 100 }),
+            body('address').optional().not().isEmpty().withMessage(() => { return i18n.__('addressRequired') }),
+            body('workingTimeText').optional().not().isEmpty().withMessage(() => { return i18n.__('workingTimeTextRequired') }),
+            body('paymentMethod').optional().not().isEmpty().withMessage(() => { return i18n.__('paymentMethodRequired') }).isArray().withMessage('must be array').isIn(['VISA','MASTERCARD','CASH','MADA']).withMessage(() => { return i18n.__('userTypeWrong') }),
+
+        ];
+
+        return validations;
+    },
+
+
+    validateUpdateInstitution() {
+        let validations = [
+            body('name').optional().not().isEmpty().withMessage(() => { return i18n.__('nameRequired') }),
+            body('email').optional().trim().not().isEmpty().withMessage(() => { return i18n.__('emailRequired') })
+                .isEmail().withMessage(() => { return i18n.__('EmailNotValid') })
+                .custom(async (value, { req }) => {
+                    value = (value.trim()).toLowerCase();
+                    let userQuery = { email: value, deleted: false, _id: { $ne: req.body.userId } };
+                    if (await User.findOne(userQuery))
+                        throw new Error(i18n.__('emailDuplicated'));
+                    else
+                        return true;
+                }),
+            body('password').optional().not().isEmpty().withMessage(() => { return i18n.__('passwordRequired') }),
+            body('phone').optional().not().isEmpty().withMessage(() => { return i18n.__('PhoneIsRequired') })
+                .custom(async (value, { req }) => {
+                    value = (value.trim()).toLowerCase();
+                    let userQuery = { phone: value, deleted: false, _id: { $ne: req.body.userId } };
+
+                    if (await User.findOne(userQuery))
+                        throw new Error(i18n.__('phoneIsDuplicated'));
+                    else
+                        return true;
+                }),
+            body('language').optional().not().isEmpty().withMessage(() => { return i18n.__('languageRequired') }),
+            body('notification').optional().not().isEmpty().withMessage(() => { return i18n.__('notificationRequired') }),
+            body('countryCode').optional().not().isEmpty().withMessage(() => { return i18n.__('countryCodeRequired') }),
+            body('countryKey').optional().not().isEmpty().withMessage(() => { return i18n.__('countryKeyRequired') }),
+
+            body('commercialRegister').optional().not().isEmpty().withMessage(() => { return i18n.__('commercialRegisterRequired') }),
+            body('ibanNumber').optional().not().isEmpty().withMessage(() => { return i18n.__('ibanNumberRequired') }),
+            body('category').optional().not().isEmpty().withMessage(() => { return i18n.__('categoryRequired') }).custom(async (val, { req }) => {
+                await checkExist(val, Category, { deleted: false });
+                return true;
+            }),
+            body('responsibleName').optional().not().isEmpty().withMessage(() => { return i18n.__('responsibleNameRequired') }),
+            body('location').optional().not().isEmpty().withMessage(() => { return i18n.__('locationRequired') }),
+            body('location.long').optional().not().isEmpty().withMessage(() => { return i18n.__('longitudeRequired') }),
+            body('location.lat').optional().not().isEmpty().withMessage(() => { return i18n.__('latitudeRequired') }),
+
+            body('address').optional().not().isEmpty().withMessage(() => { return i18n.__('addressRequired') }),
+            body('workingTimeText').optional().not().isEmpty().withMessage(() => { return i18n.__('workingTimeTextRequired') }),
+            body('paymentMethod').optional().not().isEmpty().withMessage(() => { return i18n.__('paymentMethodRequired') }).isArray().withMessage('must be array').isIn(['VISA','MASTERCARD','CASH','MADA']).withMessage(() => { return i18n.__('userTypeWrong') }),
+
+        ];
+
+        return validations;
+    },
 
 };

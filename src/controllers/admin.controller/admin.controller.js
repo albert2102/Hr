@@ -420,10 +420,6 @@ export default {
             body('coverImage').optional().not().isEmpty().withMessage(() => { return i18n.__('coverImageRequired') }),
 
             body('ajamTaxes').not().isEmpty().withMessage(() => { return i18n.__('taxesRequired') }).isInt({ min: 0, max: 100 }),
-            body('address').not().isEmpty().withMessage(() => { return i18n.__('addressRequired') }),
-            body('workingTimeText').not().isEmpty().withMessage(() => { return i18n.__('workingTimeTextRequired') }),
-            body('paymentMethod').not().isEmpty().withMessage(() => { return i18n.__('paymentMethodRequired') }).isArray().withMessage('must be array').isIn(['VISA','MASTERCARD','CASH','MADA']).withMessage(() => { return i18n.__('userTypeWrong') }),
-
             
         ];
         return validations;
@@ -474,10 +470,7 @@ export default {
             body('coverImage').optional().not().isEmpty().withMessage(() => { return i18n.__('coverImageRequired') }),
 
             body('ajamTaxes').optional().not().isEmpty().withMessage(() => { return i18n.__('taxesRequired') }).isInt({ min: 0, max: 100 }),
-            body('address').optional().not().isEmpty().withMessage(() => { return i18n.__('addressRequired') }),
-            body('workingTimeText').optional().not().isEmpty().withMessage(() => { return i18n.__('workingTimeTextRequired') }),
-            body('paymentMethod').optional().not().isEmpty().withMessage(() => { return i18n.__('paymentMethodRequired') }).isArray().withMessage('must be array').isIn(['VISA','MASTERCARD','CASH','MADA']).withMessage(() => { return i18n.__('userTypeWrong') }),
-
+            
         ];
 
         return validations;
@@ -545,6 +538,10 @@ export default {
             body('location.lat').not().isEmpty().withMessage(() => { return i18n.__('latitudeRequired') }),
             body('ajamTaxes').not().isEmpty().withMessage(() => { return i18n.__('taxesRequired') }).isInt({ min: 0, max: 100 }),
 
+            body('address').not().isEmpty().withMessage(() => { return i18n.__('addressRequired') }),
+            body('workingTimeText').not().isEmpty().withMessage(() => { return i18n.__('workingTimeTextRequired') }),
+            body('paymentMethod').not().isEmpty().withMessage(() => { return i18n.__('paymentMethodRequired') }).isArray().withMessage('must be array').isIn(['VISA','MASTERCARD','CASH','MADA']).withMessage(() => { return i18n.__('userTypeWrong') }),
+
 
         ];
         return validations;
@@ -591,6 +588,10 @@ export default {
             body('location.long').optional().not().isEmpty().withMessage(() => { return i18n.__('longitudeRequired') }),
             body('location.lat').optional().not().isEmpty().withMessage(() => { return i18n.__('latitudeRequired') }),
             body('ajamTaxes').optional().not().isEmpty().withMessage(() => { return i18n.__('taxesRequired') }).isInt({ min: 0, max: 100 }),
+
+            body('address').optional().not().isEmpty().withMessage(() => { return i18n.__('addressRequired') }),
+            body('workingTimeText').optional().not().isEmpty().withMessage(() => { return i18n.__('workingTimeTextRequired') }),
+            body('paymentMethod').optional().not().isEmpty().withMessage(() => { return i18n.__('paymentMethodRequired') }).isArray().withMessage('must be array').isIn(['VISA','MASTERCARD','CASH','MADA']).withMessage(() => { return i18n.__('userTypeWrong') }),
 
         ];
 
