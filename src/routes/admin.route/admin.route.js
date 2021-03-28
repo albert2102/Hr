@@ -4,7 +4,7 @@ import { multerSaveTo } from '../../services/multer-service';
 import adminController from '../../controllers/admin.controller/admin.controller';
 import { parseObject } from '../../controllers/shared.controller/shared.controller';
 
-const parseArray = ['location','internallyCarImage']
+const parseArray = ['location','internallyCarImage','paymentMethod']
 
 const router = express.Router();
 

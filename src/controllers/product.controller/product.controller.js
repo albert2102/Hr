@@ -148,11 +148,11 @@ export default {
                     }),
                 body('name').not().isEmpty().withMessage(() => { return i18n.__('nameRequired') }),
                 body('name.en').optional().not().isEmpty().withMessage(() => { return i18n.__('englishName') }),
-                body('name.ar').optional().not().isEmpty().withMessage(() => { return i18n.__('arabicName') }),
+                body('name.ar').not().isEmpty().withMessage(() => { return i18n.__('arabicName') }),
 
                 body('description').not().isEmpty().withMessage(() => { return i18n.__('descriptionRequired') }),
                 body('description.en').optional().not().isEmpty().withMessage(() => { return i18n.__('descriptionRequired') }),
-                body('description.ar').optional().not().isEmpty().withMessage(() => { return i18n.__('descriptionRequired') }),
+                body('description.ar').not().isEmpty().withMessage(() => { return i18n.__('descriptionRequired') }),
 
                 body('slider').not().isEmpty().withMessage(() => { return i18n.__('sliderRequired') }).isArray()
                     .withMessage(() => { return i18n.__('mustBeArray') }),
@@ -195,13 +195,6 @@ export default {
             const validatedBody = checkValidations(req);
             validatedBody.trader = user.id;
 
-            if (!(validatedBody.name.en || validatedBody.name.ar)) {
-                return next(new ApiError(404, i18n.__('nameRequired')));
-            }
-
-            if (!(validatedBody.description.en || validatedBody.description.ar)) {
-                return next(new ApiError(404, i18n.__('descriptionRequired')));
-            }
             if (req.files && req.files['image'] && (req.files['image'].length > 0)) {
                 validatedBody.image = fieldhandleImg(req, { attributeName: 'image', isUpdate: false });
             }

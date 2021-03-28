@@ -176,8 +176,14 @@ const userSchema = new Schema({
     wallet:{
         type: Number,
         default: 0
+    },
+    productsIncludeTaxes:{
+        type: Boolean
+    },
+    institutionStatus:{
+        type: String,
+        enum:['OPEN','BUSY','CLOSED']
     }
-    
 }, { timestamps: true });
 
 

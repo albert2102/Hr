@@ -110,6 +110,7 @@ export default {
 
     validateUserSignin() {
         let validations = [
+            body('countryCode').not().isEmpty().withMessage(() => { return i18n.__('countryCodeRequired') }),
             body('phone').not().isEmpty().withMessage(() => { return i18n.__('usernameOrPhoneRequired') }),
             body('password').not().isEmpty().withMessage(() => { return i18n.__('passwordRequired') }),
             body('type').not().isEmpty().withMessage(() => { return i18n.__('typeIsRequired') })
@@ -122,6 +123,7 @@ export default {
         try {
             const validatedBody = checkValidations(req);
             var query = { deleted: false, type: validatedBody.type};
+            if(validatedBody.countryCode) query.countryCode = validatedBody.countryCode;
             query.phone = validatedBody.phone.trim();
 
             let user = await User.findOne(query).populate(populateQuery);
@@ -133,6 +135,8 @@ export default {
                         if (!user.activated) {
                             return next(new ApiError(403, i18n.__('accountStop')));
                         }
+                        
+                        user = await User.schema.methods.toJSONLocalizedOnly(user, i18n.getLocale());
                         return res.status(200).send({ user, token: generateToken(user.id) });
                     } else {
                         return next(new ApiError(400, i18n.__('passwordInvalid')));
@@ -285,6 +289,8 @@ export default {
                         delete validatedBody.newPassword;
                         delete validatedBody.currentPassword;
                         user = await User.findOneAndUpdate({ deleted: false, _id: userId }, validatedBody, { new: true }).populate(populateQuery);
+                        user = await User.schema.methods.toJSONLocalizedOnly(user, i18n.getLocale());
+                        
                         res.status(200).send(user);
                     } else {
                         return next(new ApiError(403, i18n.__('currentPasswordInvalid')))
@@ -300,6 +306,8 @@ export default {
                 }
             } else {
                 user = await User.findOneAndUpdate({ deleted: false, _id: userId }, validatedBody, { new: true }).populate(populateQuery);
+                user = await User.schema.methods.toJSONLocalizedOnly(user, i18n.getLocale());
+    
                 res.status(200).send(user);
             }
 
@@ -812,6 +820,8 @@ export default {
             body('address').optional().not().isEmpty().withMessage(() => { return i18n.__('addressRequired') }),
             body('workingTimeText').optional().not().isEmpty().withMessage(() => { return i18n.__('workingTimeTextRequired') }),
             body('paymentMethod').optional().not().isEmpty().withMessage(() => { return i18n.__('paymentMethodRequired') }).isArray().withMessage('must be array').isIn(['VISA','MASTERCARD','CASH','MADA']).withMessage(() => { return i18n.__('userTypeWrong') }),
+            body('productsIncludeTaxes').optional().not().isEmpty().withMessage(() => { return i18n.__('productsIncludeTaxesRequired') }).isBoolean().withMessage('must be boolean'),
+            body('institutionStatus').optional().not().isEmpty().withMessage(() => { return i18n.__('institutionStatusRequired') }).isIn(['OPEN','BUSY','CLOSED']).withMessage(() => { return i18n.__('userTypeWrong') }),
 
         ];
 

@@ -60,7 +60,7 @@ export default {
         let validations = [];
         if (!isUpdate) {
             validations = [
-                body('name.en').not().isEmpty().withMessage(() => { return i18n.__('englishName') })
+                body('name.en').optional().not().isEmpty().withMessage(() => { return i18n.__('englishName') })
                     .custom(async (val, { req }) => {
                         let query = { 'name.en': val, deleted: false };
                         let category = await Category.findOne(query).lean();

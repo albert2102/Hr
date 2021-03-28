@@ -4,13 +4,15 @@ import { multerSaveTo } from '../../services/multer-service';
 import userController from '../../controllers/user.controller/user.controller';
 import {parseObject} from '../../controllers/shared.controller/shared.controller';
 
+const parseArray = ['location','internallyCarImage','paymentMethod']
+
 const router = express.Router();
 
 router.route('/institution/updateInfo')
-    .put(requireAuth,multerSaveTo('users').single('image'),parseObject(['paymentMethod']), userController.validateUpdateInstitution(), userController.updateInfo);
+    .put(requireAuth,multerSaveTo('users').single('image'),parseObject(parseArray), userController.validateUpdateInstitution(), userController.updateInfo);
 
 router.route('/driver/updateInfo')
-    .put(requireAuth,multerSaveTo('users').single('image'),parseObject(['paymentMethod']), userController.validateUpdateDriver(), userController.updateInfo);
+    .put(requireAuth,multerSaveTo('users').single('image'),parseObject(parseArray), userController.validateUpdateDriver(), userController.updateInfo);
 
 router.get('/Home', userController.Home);
 

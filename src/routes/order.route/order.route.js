@@ -12,9 +12,6 @@ router.route('/')
         orderController.create)
 
 
-router.route('/maual').post(requireAuth, multerSaveTo('company').single('image'),orderController.createManualOrder)
-router.route('/maual/:id').put(requireAuth, orderController.changeManulaOrderToReplied)
-
 router.route('/:orderId/accepteOrReject').put(requireAuth, orderController.validateAcceptOrReject(), orderController.acceptOrReject)
 router.route('/:orderId/shipped').put(requireAuth, orderController.shipped)
 router.route('/:orderId/delivered').put(requireAuth, orderController.delivered)

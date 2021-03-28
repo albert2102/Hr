@@ -26,7 +26,27 @@ let populateQuery = [
     { path: 'promoCode', model: 'promocode' },
 ];
 
+let checkAvailability = async (list) => {
+    let products = [];
+    for (let index = 0; index < list.length; index++) {
+        let product = await Product.findById(list[index].product);
+        let singleProduct = list[index];
+        singleProduct.price = product.price;
+        if (product.offer && product.offer > 0 && !product.buyOneGetOne) {
+            singleProduct.offer = product.offer;
+            singleProduct.priceAfterOffer = +((singleProduct.price - (singleProduct.price * (singleProduct.offer / 100.0))).toFixed(3))
+        } else {
+            singleProduct.priceAfterOffer = singleProduct.price;
+        }
+        products.push(singleProduct);
+    }
+
+    return products;
+
+}
+
 let calculatePrice = async (list) => {
+    console.log(list)
     let price = 0;
     for (let index = 0; index < list.length; index++) {
         if (list[index].offer && list[index].offer > 0) {
@@ -175,6 +195,7 @@ export default {
             let validatedBody = checkValidations(req);
             validatedBody.orderNumber = '' + (new Date()).getTime();
             validatedBody.user = user.id;
+            validatedBody.products = await checkAvailability(validatedBody.products)
             validatedBody.price = await calculatePrice(validatedBody.products)
             validatedBody = await getFinalPrice(validatedBody)
             ///////////////////////////////////////////////////// taxes

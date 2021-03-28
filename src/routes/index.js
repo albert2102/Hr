@@ -20,8 +20,8 @@ import creditRouter from './credit.route/credit.route';
 // import cityRouter from './city.route/city.route';
 // import subcategoryRouter from './sub-category.route/sub-category.route';
 // import branchesRoute from './branches.route/branches.route';
-
-// import addressRoute from './address.route/address.route';
+import orderRouter from './order.route/order.route'
+import addressRoute from './address.route/address.route';
 // import notifRouter from './notif.route/notif.route';
 // import dashBoardRouter from './dashboard.route/dashboard.route';
 // import promocodeRoute from './promocode.route/promocode.route';
@@ -47,10 +47,10 @@ router.use('/credit', creditRouter)
 // router.use('/city',cityRouter)
 // router.use('/sub-category',subcategoryRouter)
 // // router.use('/product',productRoute);
-// router.use('/address',addressRoute);
+router.use('/address',addressRoute);
 // router.use('/promocode',promocodeRoute)
 // router.use('/notif',notifRouter);
-// // router.use('/order', orderRouter);
+router.use('/order', orderRouter);
 // router.use('/chat', chatRouter);
 // router.use('/branches',branchesRoute);
 
