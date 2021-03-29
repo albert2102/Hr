@@ -420,7 +420,10 @@ export default {
     ////////////////////////////////////////////////////////////////////////// forget password by phone
     validateForgetPasswordByPhone() {
         return [
+            body('countryCode').not().isEmpty().withMessage(() => { return i18n.__('countryCodeRequired') }),
             body('phone').not().isEmpty().withMessage(() => { return i18n.__('phoneRequired') }),
+            body('type').not().isEmpty().withMessage(() => { return i18n.__('typeIsRequired') })
+                .isIn(['ADMIN','SUB_ADMIN','CLIENT','INSTITUTION','DRIVER']).withMessage(() => { return i18n.__('userTypeWrong') }),
         ];
     },
     async forgetPasswordByPhone(req, res, next) {
@@ -428,7 +431,7 @@ export default {
             let validatedBody = checkValidations(req);
             var phone = validatedBody.phone;
             phone = phone.trim()
-            var user = await User.findOne({ phone: phone, deleted: false });
+            var user = await User.findOne({ phone: phone, deleted: false,type:validatedBody.type,countryCode: validatedBody.countryCode });
             if (!user)
                 return next(new ApiError(403, i18n.__('userNotFound')));
             twilioSend('+2' + phone, user.language || 'ar');
@@ -442,6 +445,9 @@ export default {
         return [
             body('code').not().isEmpty().withMessage(() => { return i18n.__('codeRequired') }),
             body('phone').not().isEmpty().withMessage(() => { return i18n.__('phoneRequired') }),
+            body('countryCode').not().isEmpty().withMessage(() => { return i18n.__('countryCodeRequired') }),
+            body('type').not().isEmpty().withMessage(() => { return i18n.__('typeIsRequired') })
+                .isIn(['ADMIN','SUB_ADMIN','CLIENT','INSTITUTION','DRIVER']).withMessage(() => { return i18n.__('userTypeWrong') }),
         ];
     },
     async verifyForgetPasswordByPhone(req, res, next) {
@@ -449,7 +455,7 @@ export default {
             let validatedBody = checkValidations(req);
             var phone = validatedBody.phone;
             phone = phone.trim()
-            var user = await User.findOne({ phone: phone, deleted: false });
+            var user = await User.findOne({ phone: phone, deleted: false,type:validatedBody.type,countryCode: validatedBody.countryCode });
             if (!user)
                 return next(new ApiError(403, i18n.__('userNotFound')));
             twilioVerify('+' + user.countryCode + phone, validatedBody.code, user, res, next);
@@ -462,13 +468,16 @@ export default {
         return [
             body('password').not().isEmpty().withMessage(() => { return i18n.__('passwordRequired ') }),
             body('phone').not().isEmpty().withMessage(() => { return i18n.__('phoneRequired') }),
+            body('countryCode').not().isEmpty().withMessage(() => { return i18n.__('countryCodeRequired') }),
+            body('type').not().isEmpty().withMessage(() => { return i18n.__('typeIsRequired') })
+                .isIn(['ADMIN','SUB_ADMIN','CLIENT','INSTITUTION','DRIVER']).withMessage(() => { return i18n.__('userTypeWrong') }),
         ];
     },
     async updatePasswordByPhone(req, res, next) {
         try {
             let validatedBody = checkValidations(req);
             validatedBody.phone = validatedBody.phone.trim();
-            let user = await User.findOne({ deleted: false, phone: validatedBody.phone });
+            let user = await User.findOne({ deleted: false, phone: validatedBody.phone,type:validatedBody.type,countryCode: validatedBody.countryCode });
             if (!user) {
                 return next(new ApiError(403, i18n.__('userNotFound')));
             }
