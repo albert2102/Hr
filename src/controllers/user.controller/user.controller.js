@@ -1,6 +1,6 @@
 import bcrypt from 'bcryptjs';
 import { body } from 'express-validator/check';
-import { checkValidations, handleImg, deleteImages } from '../shared.controller/shared.controller';
+import { checkValidations, handleImg, fieldhandleImg } from '../shared.controller/shared.controller';
 import { generateToken } from '../../utils/token';
 import User from '../../models/user.model/user.model';
 import { checkExistThenGet, checkExist } from '../../helpers/CheckMethods';
@@ -275,9 +275,12 @@ export default {
             if (validatedBody.email) {
                 validatedBody.email = (validatedBody.email.trim()).toLowerCase();
             }
-            if (req.file) {
-                let image = await handleImg(req, { attributeName: 'image', isUpdate: false });
-                validatedBody.image = image;
+            if (req.files && req.files['image'] && req.files['image'].length > 0) {
+                validatedBody.image = (fieldhandleImg(req, { attributeName: 'image' }))[0];
+            }
+            if (req.files && req.files['coverImage'] && req.files['coverImage'].length > 0) {
+                let coverImage = fieldhandleImg(req, { attributeName: 'coverImage' });
+                validatedBody.coverImage = coverImage[0];
             }
             if (validatedBody.newPassword) {
 
