@@ -6,13 +6,17 @@ import {parseObject} from '../../controllers/shared.controller/shared.controller
 
 const parseArray = ['location','internallyCarImage','paymentMethod']
 
+const uploadedFiles =[
+    {name:"image",maxCount:1},
+    {name:"coverImage",maxCount:1},
+]
 const router = express.Router();
 
 router.route('/institution/updateInfo')
-    .put(requireAuth,multerSaveTo('users').single('image'),parseObject(parseArray), userController.validateUpdateInstitution(), userController.updateInfo);
+    .put(requireAuth,multerSaveTo('users').fields(uploadedFiles),parseObject(parseArray), userController.validateUpdateInstitution(), userController.updateInfo);
 
 router.route('/driver/updateInfo')
-    .put(requireAuth,multerSaveTo('users').single('image'),parseObject(parseArray), userController.validateUpdateDriver(), userController.updateInfo);
+    .put(requireAuth,multerSaveTo('users').fields(uploadedFiles),parseObject(parseArray), userController.validateUpdateDriver(), userController.updateInfo);
 
 router.get('/Home', userController.Home);
 
@@ -44,7 +48,7 @@ router.post('/checkExistEmail', userController.validateCheckEmail(), userControl
 
 router.put('/user/updateInfo',
     requireAuth,
-    multerSaveTo('users').single('image'),
+    multerSaveTo('users').fields(uploadedFiles),
     userController.validateUserUpdate(true),
     userController.updateInfo);
 
