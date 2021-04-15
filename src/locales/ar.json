@@ -201,5 +201,9 @@
 	"sizeNotFound": "sizeNotFound",
 	"iconRequired": "iconRequired",
 	"arinstructionsForUseRequired": "arinstructionsForUseRequired",
-	"eninstructionsForUseRequired": "eninstructionsForUseRequired"
+	"eninstructionsForUseRequired": "eninstructionsForUseRequired",
+	"locationRequired": "locationRequired",
+	"workingTimeTextRequired": "workingTimeTextRequired",
+	"internallyCarImageRequired": "internallyCarImageRequired",
+	"advertismentRequired": "advertismentRequired"
 }
