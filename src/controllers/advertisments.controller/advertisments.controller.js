@@ -152,7 +152,7 @@ export default {
 
     validateAdminChangeStatus() {
         return [
-            body('commetion').not().isEmpty().withMessage(() => { return i18n.__('commetionRequired') }),
+            body('commetion').optional().not().isEmpty().withMessage(() => { return i18n.__('commetionRequired') }),
             body('status').not().isEmpty().withMessage(() => { return i18n.__('statusRequired') })
                 .isIn(['ACCEPTED', 'REJECTED']).withMessage(() => { return i18n.__('invalidType') }),
         ]
@@ -165,6 +165,9 @@ export default {
                 return next(new ApiError(401, 'غير مسموح'))
             }
             let validatedBody = checkValidations(req);
+            if ((validatedBody.status =='ACCEPTED')&& (!validatedBody.commetion)) {
+                return next(new ApiError(404,i18n.__('commetionRequired')));
+            }
             let { AdvertismentsId } = req.params;
             let advertisment = await checkExistThenGet(AdvertismentsId, Advertisments, { deleted: false });
             advertisment = await Advertisments.findByIdAndUpdate(AdvertismentsId, validatedBody, { new: true });

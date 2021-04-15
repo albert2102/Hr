@@ -1,4 +1,4 @@
-{	
+{
 	"locationRequired": "يجب تحديد الموقع",
 	"workingTimeTextRequired": "يجب ادخال ساعات العمل",
 	"internallyCarImageRequired": "يجب ادخال صورة السيارة الداخلية",
@@ -207,5 +207,6 @@
 	"arinstructionsForUseRequired": "arinstructionsForUseRequired",
 	"eninstructionsForUseRequired": "eninstructionsForUseRequired",
 	"invalidNumber": "invalidNumber",
-	"numberDublicated": "numberDublicated"
+	"numberDublicated": "numberDublicated",
+	"commetionRequired": "commetionRequired"
 }
