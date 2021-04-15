@@ -81,7 +81,19 @@ const CompanySchema = new Schema({
     taxes:{
         type: Number,
         default: 10
-    }
+    },
+    driver_androidUrl:{
+        type: String,
+    },
+    driver_iosUrl:{
+        type: String,
+    },
+    store_androidUrl:{
+        type: String,
+    },
+    store_iosUrl:{
+        type: String,
+    },
 
 }, { timestamps: true });
 

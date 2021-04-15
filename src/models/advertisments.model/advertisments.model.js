@@ -35,6 +35,9 @@ const advertismentsSchema = new Schema({
         enum:['WAITING','ACCEPTED','REJECTED'],
         default: 'WAITING'
     },
+    commetion:{
+        type:Number
+    },
     user:{
         type: Number,
         ref:'user',

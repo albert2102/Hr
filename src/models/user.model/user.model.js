@@ -183,7 +183,19 @@ const userSchema = new Schema({
     institutionStatus:{
         type: String,
         enum:['OPEN','BUSY','CLOSED']
-    }
+    },
+    openChat:{ //for institution
+        type: Boolean,
+        default: true
+    },
+    deliveryPricePerSecond:{// سعر التوصيل بالثانية الواحدة
+        type: Number,
+        default : 0.2
+    },
+    minDeliveryPrice:{// الحد الادني لسعر التوصيل
+        type: Number,
+        default : 10
+    },
 }, { timestamps: true });
 
 

@@ -543,7 +543,10 @@ export default {
             body('paymentMethod').not().isEmpty().withMessage(() => { return i18n.__('paymentMethodRequired') }).isArray().withMessage('must be array').isIn(['VISA','MASTERCARD','CASH','MADA']).withMessage(() => { return i18n.__('userTypeWrong') }),
             body('productsIncludeTaxes').optional().not().isEmpty().withMessage(() => { return i18n.__('productsIncludeTaxesRequired') }).isBoolean().withMessage('must be boolean'),
             body('institutionStatus').optional().not().isEmpty().withMessage(() => { return i18n.__('institutionStatusRequired') }).isIn(['OPEN','BUSY','CLOSED']).withMessage(() => { return i18n.__('userTypeWrong') }),
+            body('openChat').optional().not().isEmpty().withMessage(() => { return i18n.__('openChatRequired') }).isBoolean().withMessage('must be boolean'),
 
+            body('deliveryPricePerSecond').not().isEmpty().withMessage(() => { return i18n.__('deliveryPricePerSecondRequired') }),
+            body('minDeliveryPrice').not().isEmpty().withMessage(() => { return i18n.__('minDeliveryPriceRequired') }),
         ];
         return validations;
     },
@@ -595,6 +598,10 @@ export default {
             body('paymentMethod').optional().not().isEmpty().withMessage(() => { return i18n.__('paymentMethodRequired') }).isArray().withMessage('must be array').isIn(['VISA','MASTERCARD','CASH','MADA']).withMessage(() => { return i18n.__('userTypeWrong') }),
             body('productsIncludeTaxes').optional().not().isEmpty().withMessage(() => { return i18n.__('productsIncludeTaxesRequired') }).isBoolean().withMessage('must be boolean'),
             body('institutionStatus').optional().not().isEmpty().withMessage(() => { return i18n.__('institutionStatusRequired') }).isIn(['OPEN','BUSY','CLOSED']).withMessage(() => { return i18n.__('userTypeWrong') }),
+            body('openChat').optional().not().isEmpty().withMessage(() => { return i18n.__('openChatRequired') }),
+            body('deliveryPricePerSecond').optional().not().isEmpty().withMessage(() => { return i18n.__('deliveryPricePerSecondRequired') }),
+            body('minDeliveryPrice').optional().not().isEmpty().withMessage(() => { return i18n.__('minDeliveryPriceRequired') }),
+            
         ];
 
         return validations;

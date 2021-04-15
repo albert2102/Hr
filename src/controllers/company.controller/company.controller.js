@@ -68,6 +68,11 @@ export default {
                 body('commissionAgreement.ar').not().isEmpty().withMessage(() => { return i18n.__('arCommissionAgreementRequired') }),
                 body('commissionAgreement.en').not().isEmpty().withMessage(() => { return i18n.__('enCommissionAgreementRequired') }),
 
+                body('driver_androidUrl').optional().not().isEmpty().withMessage(() => { return i18n.__('driver_androidUrlRequired') }),
+                body('driver_iosUrl').optional().not().isEmpty().withMessage(() => { return i18n.__('driver_iosUrlRequired') }),
+
+                body('store_androidUrl').optional().not().isEmpty().withMessage(() => { return i18n.__('store_androidUrlRequired') }),
+                body('store_iosUrl').optional().not().isEmpty().withMessage(() => { return i18n.__('store_iosUrlRequired') }),
             ];
         }
         else {
@@ -101,6 +106,12 @@ export default {
                 body('commissionAgreement').optional().not().isEmpty().withMessage(() => { return i18n.__('commissionAgreementRequired') }),
                 body('commissionAgreement.ar').optional().not().isEmpty().withMessage(() => { return i18n.__('arCommissionAgreementRequired') }),
                 body('commissionAgreement.en').optional().not().isEmpty().withMessage(() => { return i18n.__('enCommissionAgreementRequired') }),
+
+                body('driver_androidUrl').optional().not().isEmpty().withMessage(() => { return i18n.__('driver_androidUrlRequired') }),
+                body('driver_iosUrl').optional().not().isEmpty().withMessage(() => { return i18n.__('driver_iosUrlRequired') }),
+
+                body('store_androidUrl').optional().not().isEmpty().withMessage(() => { return i18n.__('store_androidUrlRequired') }),
+                body('store_iosUrl').optional().not().isEmpty().withMessage(() => { return i18n.__('store_iosUrlRequired') }),
 
 
             ];

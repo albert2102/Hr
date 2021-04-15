@@ -703,10 +703,16 @@ export default {
 
             var query = { deleted: false,type:'INSTITUTION'};
 
-            if(open) query.online = true;
-            if(category) query.category = +category;
+            if(open) query.online = true; // مفتوح
+            if (category) {
+                if (Array.isArray(category)) {
+                    query.category = { $in: category };
+                } else if (!isNaN(category)) {
+                    query.category = +category;
+                }
+            }
 
-            if(hasOffer){
+            if(hasOffer){ // الاوفر
                 let tradersOffers = await Product.find({deleted: false,offer:{$ne:0}}).distinct('trader');
                 query._id = {$in: tradersOffers}
             }
@@ -719,7 +725,7 @@ export default {
                 {$limit: limit},
                 {$skip: (page - 1) * limit}];
             
-            if (lat && long) {
+            if (lat && long) { // الاقرب والابعد
                 aggregateQuery.unshift({$geoNear: {near: {type: "Point",coordinates: [+long, +lat]},distanceField: "dist.calculated"}})
             }
             let users = await User.aggregate(aggregateQuery)
@@ -834,7 +840,9 @@ export default {
             body('paymentMethod').optional().not().isEmpty().withMessage(() => { return i18n.__('paymentMethodRequired') }).isArray().withMessage('must be array').isIn(['VISA','MASTERCARD','CASH','MADA']).withMessage(() => { return i18n.__('userTypeWrong') }),
             body('productsIncludeTaxes').optional().not().isEmpty().withMessage(() => { return i18n.__('productsIncludeTaxesRequired') }).isBoolean().withMessage('must be boolean'),
             body('institutionStatus').optional().not().isEmpty().withMessage(() => { return i18n.__('institutionStatusRequired') }).isIn(['OPEN','BUSY','CLOSED']).withMessage(() => { return i18n.__('userTypeWrong') }),
-
+            
+            body('openChat').optional().not().isEmpty().withMessage(() => { return i18n.__('openChatRequired') }).isBoolean().withMessage('must be boolean')
+        
         ];
 
         return validations;

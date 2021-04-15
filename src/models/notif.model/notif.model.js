@@ -24,7 +24,7 @@ const NotifSchema = new Schema({
     },
     subjectType:{
         type:String,
-        enum:['USER','CONTACTUS','ADMIN','ORDER','CHANGE_ORDER_STATUS','PROMOCODE','PRODUCT']
+        enum:['USER','CONTACTUS','ADMIN','ORDER','CHANGE_ORDER_STATUS','PROMOCODE','PRODUCT','ADVERTISMENT']
     },
     mailType:{
         type:String,

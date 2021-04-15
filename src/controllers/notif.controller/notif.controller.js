@@ -18,7 +18,7 @@ const populateQuery = [
 
 ];
 
-let create = async (resource, target, description, subject, subjectType, order) => {
+let create = async (resource, target, description, subject, subjectType, order,addvertisment) => {
     try {
         var query = { resource, target, description, subject, subjectType }
         if (subjectType == "PROMOCODE") query.promoCode = subject;
@@ -31,6 +31,9 @@ let create = async (resource, target, description, subject, subjectType, order) 
         }
         if (order) {
             query.order = order;
+        }
+        if (addvertisment) {
+            query.addvertisment = addvertisment;
         }
 
         var newNotification = new Notif(query);

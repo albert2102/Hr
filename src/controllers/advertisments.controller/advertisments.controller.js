@@ -7,6 +7,8 @@ import { checkValidations, handleImg, handleImgs } from "../shared.controller/sh
 import i18n from 'i18n';
 import ApiError from '../../helpers/ApiError';
 import socketEvents from '../../socketEvents';
+import notifyController from '../notif.controller/notif.controller';
+import config from "../../config";
 
 let countNew = async () => {
     try {
@@ -150,6 +152,7 @@ export default {
 
     validateAdminChangeStatus() {
         return [
+            body('commetion').not().isEmpty().withMessage(() => { return i18n.__('commetionRequired') }),
             body('status').not().isEmpty().withMessage(() => { return i18n.__('statusRequired') })
                 .isIn(['ACCEPTED', 'REJECTED']).withMessage(() => { return i18n.__('invalidType') }),
         ]
@@ -166,6 +169,20 @@ export default {
             let advertisment = await checkExistThenGet(AdvertismentsId, Advertisments, { deleted: false });
             advertisment = await Advertisments.findByIdAndUpdate(AdvertismentsId, validatedBody, { new: true });
             res.status(200).send(advertisment);
+            let description  = {en:``,ar:``};
+
+            if (validatedBody.status == 'ACCEPTED') {
+                description  = {en:`You advertisment has been accepted in ajam and the commetion for this is ${validatedBody.commetion}`,
+                ar:`تم قبول اعلانك في أجَمْ و يجب دفع عمولة بقيمة ${validatedBody.commetion}`};
+            } else {
+                description  = {en:`Your advertisment has been rejected in Ajam`,ar:`تم رفضا اعلانك في أجَمْ`};
+            }
+
+
+            await notifyController.create(req.user.id, advertisment.user, description, advertisment.id, 'ADVERTISMENT', null, advertisment.id);
+            notificationNSP.to('room-' + advertisment.user).emit(socketEvents.ChangeAdvertismentStatus, { advertisment: advertisment });
+            notifyController.pushNotification(advertisment.user, 'ADVERTISMENT', advertisment.id, description, config.notificationTitle);
+
             await countNew();
 
         } catch (error) {
