@@ -201,5 +201,7 @@
 	"sizeNotFound": "sizeNotFound",
 	"iconRequired": "iconRequired",
 	"arinstructionsForUseRequired": "arinstructionsForUseRequired",
-	"eninstructionsForUseRequired": "eninstructionsForUseRequired"
+	"eninstructionsForUseRequired": "eninstructionsForUseRequired",
+	"invalidNumber": "invalidNumber",
+	"numberDublicated": "numberDublicated"
 }

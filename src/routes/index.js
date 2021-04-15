@@ -22,6 +22,7 @@ import creditRouter from './credit.route/credit.route';
 // import branchesRoute from './branches.route/branches.route';
 import orderRouter from './order.route/order.route'
 import addressRoute from './address.route/address.route';
+import shippingRoute from './shipping-card.route/shipping-card.route';
 // import notifRouter from './notif.route/notif.route';
 // import dashBoardRouter from './dashboard.route/dashboard.route';
 // import promocodeRoute from './promocode.route/promocode.route';
@@ -42,6 +43,7 @@ router.use('/app-advertisments',appadvertismentsRoute);
 router.use('/issue',issueRoute);
 router.use('/favorites',favoriteRoute);
 router.use('/credit', creditRouter)
+router.use('/shipping-card',shippingRoute )
 
 // router.use('/country',countryRouter)
 // router.use('/city',cityRouter)
