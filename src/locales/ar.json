@@ -1,4 +1,8 @@
-{
+{	
+	"locationRequired": "يجب تحديد الموقع",
+	"workingTimeTextRequired": "يجب ادخال ساعات العمل",
+	"internallyCarImageRequired": "يجب ادخال صورة السيارة الداخلية",
+	"advertismentRequired": "يجب تحديد الاعلان",
 	"usernameOrPhoneRequired": "رقم الجوال او اسم المستخدم خطأ",
 	"accountNotApproved": "لم يتم مراجعة البيانات من قبل الادمن",
 	"phoneOrEmail": "أدخل بريدك الالكترونى او رقم الهاتف",
