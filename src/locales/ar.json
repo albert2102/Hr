@@ -208,5 +208,6 @@
 	"eninstructionsForUseRequired": "eninstructionsForUseRequired",
 	"invalidNumber": "invalidNumber",
 	"numberDublicated": "numberDublicated",
-	"commetionRequired": "commetionRequired"
+	"commetionRequired": "commetionRequired",
+	"duplicatedPromoCode": "duplicatedPromoCode"
 }

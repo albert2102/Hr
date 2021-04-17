@@ -25,7 +25,7 @@ import addressRoute from './address.route/address.route';
 import shippingRoute from './shipping-card.route/shipping-card.route';
 // import notifRouter from './notif.route/notif.route';
 // import dashBoardRouter from './dashboard.route/dashboard.route';
-// import promocodeRoute from './promocode.route/promocode.route';
+import promocodeRoute from './promocode.route/promocode.route';
 // import chatRouter from './message.route/message.route';
 
 
@@ -50,7 +50,7 @@ router.use('/shipping-card',shippingRoute )
 // router.use('/sub-category',subcategoryRouter)
 // // router.use('/product',productRoute);
 router.use('/address',addressRoute);
-// router.use('/promocode',promocodeRoute)
+router.use('/promocode',promocodeRoute)
 // router.use('/notif',notifRouter);
 router.use('/order', orderRouter);
 // router.use('/chat', chatRouter);

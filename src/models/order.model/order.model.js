@@ -78,7 +78,12 @@ const orderSchema = new Schema({
         type: String,
         enum:['DELIVERY','FROM_STORE']
     },
-
+    durationDelivery:{ // second
+        type: Number
+    },
+    discountValue:{
+        type: Number
+    }
 }, { timestamps: true });
 orderSchema.set('toJSON', {
     transform: function (doc, ret, options) {
