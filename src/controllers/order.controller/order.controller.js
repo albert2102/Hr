@@ -22,6 +22,8 @@ import { duration_time } from '../../calculateDistance'
 
 let populateQuery = [
     { path: 'user', model: 'user' },
+    { path: 'driver', model: 'user' },
+    { path: 'trader', model: 'user' },
     { path: 'products.product', model: 'product', populate: [{ path: 'trader', model: 'user' }, { path: 'productCategory', model: 'productCategory' }] },
     { path: 'address', model: 'address', populate: [{ path: 'city', model: 'city', populate: [{ path: 'country', model: 'country' }] }] },
     { path: 'promoCode', model: 'promocode' },
@@ -101,10 +103,10 @@ let getFinalPrice = async (validateBody) => {
                 validateBody.totalPrice = +((priceBeforeDiscount - Number(validateBody.discountValue)).toFixed(3));
             }
         } else {
-            
+
             if (promoCode.promoCodeOn == 'TRANSPORTATION') {
                 priceBeforeDiscount = Number(validateBody.transportPrice);
-                
+
                 validateBody.discountValue = (((priceBeforeDiscount - promoCode.discount) > 0) ? promoCode.discount : 0);
                 validateBody.totalPrice = Number(validateBody.price + (priceBeforeDiscount - Number(validateBody.discountValue)));
             }
@@ -112,7 +114,7 @@ let getFinalPrice = async (validateBody) => {
                 priceBeforeDiscount = +validateBody.price;
 
                 validateBody.discountValue = (((priceBeforeDiscount - promoCode.discount) > 0) ? promoCode.discount : 0);
-                validateBody.totalPrice = Number(validateBody.transportPrice) +  Number(priceBeforeDiscount - Number(validateBody.discountValue))
+                validateBody.totalPrice = Number(validateBody.transportPrice) + Number(priceBeforeDiscount - Number(validateBody.discountValue))
 
             }
             else {
@@ -131,6 +133,51 @@ let getFinalPrice = async (validateBody) => {
     return validateBody;
 }
 
+const findDriver = async (order) => {
+    try {
+        let busyDrivers = await Order.find({ deleted: false, status: { $in: ['ACCEPTED', 'SHIPPED'], } }).distinct('driver');
+        let userQuery = {
+            deleted: false,
+            type: 'DRIVER',
+            _id: { $nin: busyDrivers },
+        };
+
+        let driver;
+        let drivers = await User.aggregate([
+            {
+                $geoNear: {
+                    near: {
+                        type: "Point",
+                        coordinates: [+order.trader.geoLocation.coordinates[0], +order.trader.geoLocation.coordinates[1]]
+                    },
+                    distanceField: "dist.calculated"
+                }
+            },
+            {
+                $match: userQuery
+            },
+            {
+                $limit: 10
+            }
+        ]);
+        console.log('drivers length in find drivers ', drivers.length);
+        if (drivers && (drivers.length > 0)) {
+            driver = drivers[0];
+        }
+
+        if (driver) {
+            order.driver = driver._id;
+            await order.save();
+            //orderService(order);
+            notificationNSP.to('room-' + driver._id).emit(socketEvents.NewOrder, { order: order });
+        } else {
+            order.status = 'NOT_ASSIGN';
+            await order.save();
+        }
+    } catch (error) {
+        throw error;
+    }
+}
 export default {
 
     async findAll(req, res, next) {
@@ -253,6 +300,7 @@ export default {
             let company = await Company.findOne({ deleted: false });
             validatedBody.taxes = company.taxes;
             let trader = resuktCheckAval.trader;
+            validatedBody.trader = trader.id;
             if ((trader.type == 'INSTITUTION' && !trader.productsIncludeTaxes) || trader.type == 'ADMIN' || trader.type == 'SUB_ADMIN') {
                 validatedBody.taxes = company.taxes;
             } else {
@@ -343,6 +391,8 @@ export default {
             let description;
             if (validatedBody.status == 'ACCEPTED') {
                 ////////////// find drivers /////////////////////////
+                await findDriver(updatedOrder);
+                ////////////////////////////////////////////////////
                 description = { en: updatedOrder.orderNumber + ' : ' + 'Your Order Has Been Approved', ar: updatedOrder.orderNumber + ' : ' + '  جاري تجهيز طلبك' };
             } else {
                 await reversProductQuantity(updatedOrder.products);
@@ -367,7 +417,7 @@ export default {
 
     async shipped(req, res, next) {
         try {
-            if (req.user.type != 'ADMIN' && req.user.type != 'SUB_ADMIN')
+            if (req.user.type != 'ADMIN' && req.user.type != 'SUB_ADMIN' && req.user.type != 'INSTITUTION')
                 return next(new ApiError(403, ('admin.auth')));
 
             let { orderId } = req.params;
