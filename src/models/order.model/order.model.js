@@ -52,7 +52,7 @@ const orderSchema = new Schema({
     },
     status: {
         type: String,
-        enum: ['WAITING','ACCEPTED','REJECTED', 'CANCELED', 'SHIPPED', 'DELIVERED','NOT_ASSIGN'],
+        enum: ['WAITING','ACCEPTED','DRIVER_ACCEPTED','REJECTED', 'CANCELED', 'SHIPPED', 'DELIVERED','NOT_ASSIGN'],
         default: 'WAITING'
     },
     price: {

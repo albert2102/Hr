@@ -133,6 +133,34 @@ let getFinalPrice = async (validateBody) => {
     return validateBody;
 }
 
+const orderService = async (order) => {
+    try {
+        let date = (new Date()).getTime();
+        let company = await Company.findOne({ deleted: false });
+        date = date + company.driverWaitingTime;
+        date = new Date(date);
+        let jobName = 'order-' + order.id;
+        let currentOrder = await checkExistThenGet(order.id, Order,{populate:populateQuery});
+
+        var j = schedule.scheduleJob(jobName, date, async (fireDate) => {
+            try {
+                console.log(jobName, ' fire date ', fireDate);
+                currentOrder = await checkExistThenGet(order.id, Order);
+                if (order.status == 'DRIVER_ACCEPTED') {
+                    let validatedBody = { $addToSet: { rejectedDrivers: currentOrder.driver }, $unset: { driver: 1 } };
+                    let updatedOrder = await Order.findByIdAndUpdate(order.id, validatedBody, { new: true }).populate(populateQuery);
+                    notificationNSP.to('room-' + currentOrder.driver).emit(socketEvents.OrderExpired, { order: updatedOrder });
+                    findDriver(updatedOrder);
+                }
+            } catch (error) {
+                throw error;
+            }
+        })
+    } catch (error) {
+        throw error;
+    }
+}
+
 const findDriver = async (order) => {
     try {
         let busyDrivers = await Order.find({ deleted: false, status: { $in: ['ACCEPTED', 'SHIPPED'], } }).distinct('driver');
@@ -168,7 +196,7 @@ const findDriver = async (order) => {
         if (driver) {
             order.driver = driver._id;
             await order.save();
-            //orderService(order);
+            orderService(order);
             notificationNSP.to('room-' + driver._id).emit(socketEvents.NewOrder, { order: order });
         } else {
             order.status = 'NOT_ASSIGN';
@@ -411,6 +439,37 @@ export default {
 
         } catch (err) {
             // console.log(err);
+            next(err);
+        }
+    },
+
+    validateDriverAcceptOrReject() {
+        let validations = [
+            body('status').optional().not().isEmpty().withMessage(() => { return i18n.__('statusRequired') })
+                .isIn(['ACCEPTED', 'REJECTED']).withMessage(() => { return i18n.__('statusRequired') })
+        ];
+        return validations;
+    },
+
+    async driverAcceptOrReject(req, res, next) {
+        try {
+            if (req.user.type != 'DRIVER')
+                return next(new ApiError(403, ('notAllowToChangeStatus')));
+
+            let { orderId } = req.params;
+            await checkExist(orderId, Order, { deleted: false, status: 'ACCEPTED',driver:req.user.id });
+            let validatedBody = checkValidations(req);
+            if(validatedBody.status == 'ACCEPTED'){
+                validatedBody.status ='DRIVER_ACCEPTED';
+            }else{
+                validatedBody['$addToSet'] = { rejectedDrivers: req.user.id };
+                delete validatedBody.status;
+            }
+            let updatedOrder = await Order.findByIdAndUpdate(orderId, validatedBody, { new: true }).populate(populateQuery);
+            updatedOrder = Order.schema.methods.toJSONLocalizedOnly(updatedOrder, i18n.getLocale());
+            res.status(200).send(updatedOrder);
+
+        } catch (err) {
             next(err);
         }
     },
