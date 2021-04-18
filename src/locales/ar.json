@@ -210,5 +210,8 @@
 	"numberDublicated": "numberDublicated",
 	"commetionRequired": "commetionRequired",
 	"deliveryPricePerSecondRequired": "deliveryPricePerSecondRequired",
-	"minDeliveryPriceRequired": "minDeliveryPriceRequired"
+	"minDeliveryPriceRequired": "minDeliveryPriceRequired",
+	"duplicatedPromoCode": "duplicatedPromoCode",
+	"valueRequired": "valueRequired",
+	"numberRequired": "numberRequired"
 }

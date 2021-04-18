@@ -44,6 +44,14 @@ const promocodeSchema = new Schema({
     deleted: {
         type: Boolean,
         default: false
+    },
+    promoCodeOn: {
+        type: String,
+        enum: ['TRANSPORTATION', 'PRODUCTS','ALL'],
+        default: 'ALL'
+    },
+    maxAmount:{
+        type: Number
     }
 }, { timestamps: true });
 

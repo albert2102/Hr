@@ -49,6 +49,7 @@ router.post('/checkExistEmail', userController.validateCheckEmail(), userControl
 router.put('/user/updateInfo',
     requireAuth,
     multerSaveTo('users').fields(uploadedFiles),
+    parseObject(parseArray), 
     userController.validateUserUpdate(true),
     userController.updateInfo);
 

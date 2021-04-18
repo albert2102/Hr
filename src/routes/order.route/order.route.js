@@ -13,6 +13,7 @@ router.route('/')
 
 
 router.route('/:orderId/accepteOrReject').put(requireAuth, orderController.validateAcceptOrReject(), orderController.acceptOrReject)
+router.route('/:orderId/driverAccepteOrReject').put(requireAuth, orderController.validateDriverAcceptOrReject(), orderController.driverAcceptOrReject)
 router.route('/:orderId/shipped').put(requireAuth, orderController.shipped)
 router.route('/:orderId/delivered').put(requireAuth, orderController.delivered)
 router.route('/:orderId/canceled').put(requireAuth, orderController.canceled)

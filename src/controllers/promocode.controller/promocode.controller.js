@@ -24,7 +24,8 @@ export default {
             let page = +req.query.page || 1,
                 limit = +req.query.limit || 20;
             let skip = (page - 1) * limit;
-            let { user, code, from, to, month, year, archive, usersType, numberOfUse, discount, startDate, endDate } = req.query;
+            let { user, code, from, to, month, year, archive, usersType, numberOfUse, discount, startDate, endDate,promoCodeOn } = req.query;
+            if (promoCodeOn) query.promoCodeOn = promoCodeOn;
             if (archive) query.deleted = true;
             if (usersType) query.usersType = usersType
             if (user) query.$or = [{ users: { $in: user }, usersType: 'SPECIFIC' }, { usersType: 'ALL' }];
@@ -108,7 +109,15 @@ export default {
                 await checkExist(val, User, { deleted: false });
                 return true;
             }),
-            body('promoCodeType').not().isEmpty().withMessage(() => { return i18n.__('promoCodeTypeRequired') }).isIn(['RATIO', 'VALUE']).withMessage(() => { return i18n.__('invalidType') })
+            body('promoCodeType').not().isEmpty().withMessage(() => { return i18n.__('promoCodeTypeRequired') }).isIn(['RATIO', 'VALUE']).withMessage(() => { return i18n.__('invalidType') }).custom(async (value, { req }) => {
+                if (value === 'RATIO' && !req.body.maxAmount) {
+                        throw new Error('maxAmountRequired');
+                }
+                return true;
+            }),
+            body('promoCodeOn').not().isEmpty().withMessage(() => { return i18n.__('promoCodeTypeRequired') }).isIn(['TRANSPORTATION', 'PRODUCTS','ALL']).withMessage(() => { return i18n.__('invalidType') }),
+            body('maxAmount').optional().not().isEmpty().withMessage(() => { return i18n.__('maxAmountRequired') }),
+
         ]
         return validations;
     },
@@ -132,15 +141,15 @@ export default {
                 let users = await User.find({ type: 'CLIENT', deleted: false })
                 for (let index = 0; index < users.length; index++) {
                     if (users[index].language == 'ar') {
-                        notifiController.pushNotification(users[index]._id, 'PROMOCODE', promocode._id, desc.ar,config.notificationTitle.ar);
+                        notifiController.pushNotification(users[index]._id, 'PROMOCODE', promocode._id, desc.ar, config.notificationTitle.ar);
                     } else {
-                        notifiController.pushNotification(users[index]._id, 'PROMOCODE', promocode._id, desc.en,config.notificationTitle.ar);
+                        notifiController.pushNotification(users[index]._id, 'PROMOCODE', promocode._id, desc.en, config.notificationTitle.ar);
                     }
                     notifiController.create(req.user.id, users[index]._id, desc, promocode._id, "PROMOCODE")
                     notificationNSP.to('room-' + users[index].id).emit(socketEvents.NewUser, { user: users[index] });
                 }
             } else {
-                let users = await User.find({ _id: { $in: promocode.users } }) 
+                let users = await User.find({ _id: { $in: promocode.users } })
                 for (let index = 0; index < users.length; index++) {
                     let user = users[index]
                     if (user && user.language == 'ar') {
@@ -240,7 +249,7 @@ export default {
                 return next(new ApiError(400, i18n.__('promoCodeInvalid')));
             }
 
-            let count = await Order.count({deleted:false, user: user.id, promoCode: promoCode.id });
+            let count = await Order.count({ deleted: false, user: user.id, promoCode: promoCode.id });
             if (count >= promoCode.numberOfUse) {
                 return next(new ApiError(400, i18n.__('ExccedPromoCodeNumberOuse')));
             }

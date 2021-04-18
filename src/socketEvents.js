@@ -21,5 +21,5 @@ socketEvents.ContactUsCount = 'ContactUsCount';
 socketEvents.IssueCount = 'IssueCount';
 socketEvents.WaitingAdvCount = 'WaitingAdvCount';
 socketEvents.ChangeAdvertismentStatus = 'ChangeAdvertismentStatus';
-
+socketEvents.OrderExpired = 'OrderExpired';
 export default socketEvents;

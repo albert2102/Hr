@@ -262,7 +262,10 @@ export default {
             body('currentPassword').optional().not().isEmpty().withMessage(() => { return i18n.__('CurrentPasswordRequired') }),
             body('countryCode').optional().not().isEmpty().withMessage(() => { return i18n.__('countryCodeRequired') }),
             body('countryKey').optional().not().isEmpty().withMessage(() => { return i18n.__('countryKeyRequired') }),
-
+            
+            body('location').optional().not().isEmpty().withMessage(() => { return i18n.__('locationRequired') }),
+            body('location.long').optional().not().isEmpty().withMessage(() => { return i18n.__('longitudeRequired') }),
+            body('location.lat').optional().not().isEmpty().withMessage(() => { return i18n.__('latitudeRequired') }),
         ];
 
         return validations;
@@ -281,6 +284,9 @@ export default {
             if (req.files && req.files['coverImage'] && req.files['coverImage'].length > 0) {
                 let coverImage = fieldhandleImg(req, { attributeName: 'coverImage' });
                 validatedBody.coverImage = coverImage[0];
+            }
+            if(validatedBody.location && validatedBody.location.lat && validatedBody.location.lat){
+                validatedBody.geoLocation = { type: 'Point', coordinates: [validatedBody.location.long, validatedBody.location.lat] }
             }
             if (validatedBody.newPassword) {
 

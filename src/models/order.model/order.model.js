@@ -32,6 +32,10 @@ const orderSchema = new Schema({
         ref: 'user',
         required: true
     },
+    driver:{
+        type: Number,
+        ref: 'user'
+    },
     products: {
         type: [productSchema]
     },
@@ -48,7 +52,7 @@ const orderSchema = new Schema({
     },
     status: {
         type: String,
-        enum: ['WAITING','ACCEPTED','REJECTED', 'CANCELED', 'SHIPPED', 'DELIVERED'],
+        enum: ['WAITING','ACCEPTED','DRIVER_ACCEPTED','REJECTED', 'CANCELED', 'SHIPPED', 'DELIVERED','NOT_ASSIGN'],
         default: 'WAITING'
     },
     price: {
@@ -78,7 +82,22 @@ const orderSchema = new Schema({
         type: String,
         enum:['DELIVERY','FROM_STORE']
     },
-
+    durationDelivery:{ // second
+        type: Number
+    },
+    discountValue:{
+        type: Number
+    },
+    trader:{
+        type: Number,
+        ref :'user'
+    },
+    rejectReason:{
+        type: String
+    },
+    rejectedDrivers:{
+        type: [Number]
+    }
 }, { timestamps: true });
 orderSchema.set('toJSON', {
     transform: function (doc, ret, options) {

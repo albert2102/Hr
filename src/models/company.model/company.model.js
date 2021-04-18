@@ -57,11 +57,13 @@ const CompanySchema = new Schema({
         type: Number,
         default:0
     },
-    traderWaitingTime:{ //in sec
-        type: Number
+    traderWaitingTime:{ //in millisecond
+        type: Number,
+        default: 180000
     },
-    driverWaitingTime:{ //in sec
-        type: Number
+    driverWaitingTime:{ //in millisecond
+        type: Number,
+        default: 3600000
     },
     fixedCategoryName:{
         type: String,

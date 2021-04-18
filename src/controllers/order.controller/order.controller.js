@@ -18,18 +18,27 @@ import { generateVerifyCode } from '../../services/generator-code-service'
 import Company from '../../models/company.model/company.model';
 import config from '../../config';
 import { sendEmail } from '../../services/emailMessage.service';
+import { duration_time } from '../../calculateDistance'
 
 let populateQuery = [
     { path: 'user', model: 'user' },
-    { path: 'products.product', model: 'product', populate: [{ path: 'trader', model: 'user' },{ path: 'productCategory', model: 'productCategory' }] },
+    { path: 'driver', model: 'user' },
+    { path: 'trader', model: 'user' },
+    { path: 'products.product', model: 'product', populate: [{ path: 'trader', model: 'user' }, { path: 'productCategory', model: 'productCategory' }] },
     { path: 'address', model: 'address', populate: [{ path: 'city', model: 'city', populate: [{ path: 'country', model: 'country' }] }] },
     { path: 'promoCode', model: 'promocode' },
 ];
 
 let checkAvailability = async (list) => {
+    let trader;
     let products = [];
     for (let index = 0; index < list.length; index++) {
         let product = await Product.findById(list[index].product);
+        if (trader && trader != product.trader) {
+            throw new ApiError(400, 'Products must be from one store only !');
+        } else {
+            trader = product.trader;
+        }
         let singleProduct = list[index];
         singleProduct.price = product.price;
         if (product.offer && product.offer > 0 && !product.buyOneGetOne) {
@@ -40,8 +49,8 @@ let checkAvailability = async (list) => {
         }
         products.push(singleProduct);
     }
-
-    return products;
+    trader = await User.findById(trader);
+    return ({ products, trader });
 
 }
 
@@ -63,20 +72,140 @@ let calculatePrice = async (list) => {
 let getFinalPrice = async (validateBody) => {
     if (validateBody.promoCode) {
         let promoCode = await PromoCode.findById(validateBody.promoCode);
+        let priceBeforeDiscount;
         if (promoCode.promoCodeType == 'RATIO') {
-            let discount = validateBody.price - (validateBody.price * (promoCode.discount / 100))
-            validateBody.discountValue = (validateBody.price * (promoCode.discount / 100))
-            validateBody.totalPrice = +((discount).toFixed(3));
+
+            if (promoCode.promoCodeOn == 'TRANSPORTATION') {
+                priceBeforeDiscount = Number(validateBody.transportPrice);
+
+                validateBody.discountValue = (priceBeforeDiscount * (promoCode.discount / 100))
+                if (promoCode.maxAmount && (validateBody.discountValue > promoCode.maxAmount)) {
+                    validateBody.discountValue = promoCode.maxAmount;
+                }
+                validateBody.totalPrice = Number(validateBody.price + ((priceBeforeDiscount - Number(validateBody.discountValue)).toFixed(3)));
+            }
+            else if (promoCode.promoCodeOn == 'PRODUCTS') {
+                priceBeforeDiscount = validateBody.price;
+
+                validateBody.discountValue = (priceBeforeDiscount * (promoCode.discount / 100))
+                if (promoCode.maxAmount && (validateBody.discountValue > promoCode.maxAmount)) {
+                    validateBody.discountValue = promoCode.maxAmount;
+                }
+                validateBody.totalPrice = Number(+validateBody.transportPrice + ((priceBeforeDiscount - Number(validateBody.discountValue)).toFixed(3)));
+            }
+            else {
+                priceBeforeDiscount = validateBody.price + Number(validateBody.transportPrice);
+
+                validateBody.discountValue = (priceBeforeDiscount * (promoCode.discount / 100))
+                if (promoCode.maxAmount && (validateBody.discountValue > promoCode.maxAmount)) {
+                    validateBody.discountValue = promoCode.maxAmount;
+                }
+                validateBody.totalPrice = +((priceBeforeDiscount - Number(validateBody.discountValue)).toFixed(3));
+            }
         } else {
-            validateBody.totalPrice = (((validateBody.price - promoCode.discount) > 0) ? (validateBody.price - promoCode.discount) : validateBody.price);
-            validateBody.discountValue = (((validateBody.price - promoCode.discount) > 0) ? promoCode.discount : 0);
+
+            if (promoCode.promoCodeOn == 'TRANSPORTATION') {
+                priceBeforeDiscount = Number(validateBody.transportPrice);
+
+                validateBody.discountValue = (((priceBeforeDiscount - promoCode.discount) > 0) ? promoCode.discount : 0);
+                validateBody.totalPrice = Number(validateBody.price + (priceBeforeDiscount - Number(validateBody.discountValue)));
+            }
+            else if (promoCode.promoCodeOn == 'PRODUCTS') {
+                priceBeforeDiscount = +validateBody.price;
+
+                validateBody.discountValue = (((priceBeforeDiscount - promoCode.discount) > 0) ? promoCode.discount : 0);
+                validateBody.totalPrice = Number(validateBody.transportPrice) + Number(priceBeforeDiscount - Number(validateBody.discountValue))
+
+            }
+            else {
+                priceBeforeDiscount = +validateBody.price + Number(validateBody.transportPrice);
+
+                validateBody.discountValue = (((priceBeforeDiscount - promoCode.discount) > 0) ? promoCode.discount : 0);
+                validateBody.totalPrice = +(priceBeforeDiscount - Number(validateBody.discountValue));
+
+            }
+
         }
+
     } else {
-        validateBody.totalPrice = validateBody.price;
+        validateBody.totalPrice = validateBody.price + Number(validateBody.transportPrice);
     }
     return validateBody;
 }
 
+const orderService = async (order) => {
+    try {
+        let date = (new Date()).getTime();
+        let company = await Company.findOne({ deleted: false });
+        date = date + company.driverWaitingTime;
+        date = new Date(date);
+        let jobName = 'order-' + order.id;
+        let currentOrder = await checkExistThenGet(order.id, Order,{populate:populateQuery});
+
+        var j = schedule.scheduleJob(jobName, date, async (fireDate) => {
+            try {
+                console.log(jobName, ' fire date ', fireDate);
+                currentOrder = await checkExistThenGet(order.id, Order);
+                if (order.status == 'DRIVER_ACCEPTED') {
+                    let validatedBody = { $addToSet: { rejectedDrivers: currentOrder.driver }, $unset: { driver: 1 } };
+                    let updatedOrder = await Order.findByIdAndUpdate(order.id, validatedBody, { new: true }).populate(populateQuery);
+                    notificationNSP.to('room-' + currentOrder.driver).emit(socketEvents.OrderExpired, { order: updatedOrder });
+                    findDriver(updatedOrder);
+                }
+            } catch (error) {
+                throw error;
+            }
+        })
+    } catch (error) {
+        throw error;
+    }
+}
+
+const findDriver = async (order) => {
+    try {
+        let busyDrivers = await Order.find({ deleted: false, status: { $in: ['ACCEPTED', 'SHIPPED'], } }).distinct('driver');
+        let userQuery = {
+            deleted: false,
+            type: 'DRIVER',
+            _id: { $nin: busyDrivers },
+        };
+
+        let driver;
+        let drivers = await User.aggregate([
+            {
+                $geoNear: {
+                    near: {
+                        type: "Point",
+                        coordinates: [+order.trader.geoLocation.coordinates[0], +order.trader.geoLocation.coordinates[1]]
+                    },
+                    distanceField: "dist.calculated"
+                }
+            },
+            {
+                $match: userQuery
+            },
+            {
+                $limit: 10
+            }
+        ]);
+        console.log('drivers length in find drivers ', drivers.length);
+        if (drivers && (drivers.length > 0)) {
+            driver = drivers[0];
+        }
+
+        if (driver) {
+            order.driver = driver._id;
+            await order.save();
+            orderService(order);
+            notificationNSP.to('room-' + driver._id).emit(socketEvents.NewOrder, { order: order });
+        } else {
+            order.status = 'NOT_ASSIGN';
+            await order.save();
+        }
+    } catch (error) {
+        throw error;
+    }
+}
 export default {
 
     async findAll(req, res, next) {
@@ -159,19 +288,16 @@ export default {
                     req.address = await checkExistThenGet(val, Address, { deleted: false, user: req.user.id }, i18n.__('addressNotFound'));
                     return true;
                 }),
-            body('orderType').not().isEmpty().withMessage(() => { return i18n.__('paymentMethodRequired') }).isIn(['DELIVERY','FROM_STORE']).withMessage('Wrong type')
-            .custom(async (val, { req }) => {
-                if(val == 'DELIVERY' && ! req.body.address){
-                    throw new Error(i18n.__('addressRequired'));
-                }
-                return true;
-            }),
-            body('paymentMethod').not().isEmpty().withMessage(() => { return i18n.__('paymentMethodRequired') }).isIn(['DIGITAL','WALLET','CASH']).withMessage('Wrong type'),
+            body('orderType').not().isEmpty().withMessage(() => { return i18n.__('paymentMethodRequired') }).isIn(['DELIVERY', 'FROM_STORE']).withMessage('Wrong type')
+                .custom(async (val, { req }) => {
+                    if (val == 'DELIVERY' && !req.body.address) {
+                        throw new Error(i18n.__('addressRequired'));
+                    }
+                    return true;
+                }),
+            body('paymentMethod').not().isEmpty().withMessage(() => { return i18n.__('paymentMethodRequired') }).isIn(['DIGITAL', 'WALLET', 'CASH']).withMessage('Wrong type'),
             body('promoCode').optional().not().isEmpty().withMessage(() => { return i18n.__('promocodeRequired') })
                 .custom(async (val, { req }) => {
-                    if (req.user.type == 'VISITOR') {
-                        throw new Error(i18n.__('mustSignIn'));
-                    }
                     let currentDate = new Date();
                     let query = {
                         deleted: false,
@@ -195,15 +321,35 @@ export default {
             let validatedBody = checkValidations(req);
             validatedBody.orderNumber = '' + (new Date()).getTime();
             validatedBody.user = user.id;
-            validatedBody.products = await checkAvailability(validatedBody.products)
-            validatedBody.price = await calculatePrice(validatedBody.products)
-            validatedBody = await getFinalPrice(validatedBody)
-            ///////////////////////////////////////////////////// taxes
+            let resuktCheckAval = await checkAvailability(validatedBody.products);
+            validatedBody.products = resuktCheckAval.products;
+
+            /////////////////////////// Taxes ///////////////////////////////
             let company = await Company.findOne({ deleted: false });
             validatedBody.taxes = company.taxes;
-            validatedBody.transportPrice = company.transportPrice;
-            validatedBody.taxesValue = +((validatedBody.totalPrice * (company.taxes / 100)).toFixed(3));
-            validatedBody.totalPrice = validatedBody.totalPrice + Number(validatedBody.transportPrice)
+            let trader = resuktCheckAval.trader;
+            validatedBody.trader = trader.id;
+            if ((trader.type == 'INSTITUTION' && !trader.productsIncludeTaxes) || trader.type == 'ADMIN' || trader.type == 'SUB_ADMIN') {
+                validatedBody.taxes = company.taxes;
+            } else {
+                validatedBody.taxes = 0;
+            }
+            //////////////////////////Transportation Price////////////////////////////////
+            let duration = 0;
+            duration = await duration_time({ lat: req.user.geoLocation.coordinates[1], long: req.user.geoLocation.coordinates[0] }, { lat: trader.geoLocation.coordinates[1], long: trader.geoLocation.coordinates[0] });
+            let durationPrice = duration * Number(trader.deliveryPricePerSecond);
+            validatedBody.durationDelivery = duration;
+            if (durationPrice < trader.minDeliveryPrice) {
+                validatedBody.transportPrice = trader.minDeliveryPrice;
+            } else {
+                validatedBody.transportPrice = durationPrice;
+            }
+
+            ///////////////////////////////////////////////////////////////////////////////
+            validatedBody.price = await calculatePrice(validatedBody.products)
+            validatedBody = await getFinalPrice(validatedBody)
+
+            validatedBody.totalPrice = validatedBody.totalPrice + Number(validatedBody.taxes)
 
             let order = await Order.create(validatedBody);
             order.orderNumber = order.orderNumber + order.id;
@@ -273,6 +419,8 @@ export default {
             let description;
             if (validatedBody.status == 'ACCEPTED') {
                 ////////////// find drivers /////////////////////////
+                await findDriver(updatedOrder);
+                ////////////////////////////////////////////////////
                 description = { en: updatedOrder.orderNumber + ' : ' + 'Your Order Has Been Approved', ar: updatedOrder.orderNumber + ' : ' + '  جاري تجهيز طلبك' };
             } else {
                 await reversProductQuantity(updatedOrder.products);
@@ -295,9 +443,40 @@ export default {
         }
     },
 
+    validateDriverAcceptOrReject() {
+        let validations = [
+            body('status').optional().not().isEmpty().withMessage(() => { return i18n.__('statusRequired') })
+                .isIn(['ACCEPTED', 'REJECTED']).withMessage(() => { return i18n.__('statusRequired') })
+        ];
+        return validations;
+    },
+
+    async driverAcceptOrReject(req, res, next) {
+        try {
+            if (req.user.type != 'DRIVER')
+                return next(new ApiError(403, ('notAllowToChangeStatus')));
+
+            let { orderId } = req.params;
+            await checkExist(orderId, Order, { deleted: false, status: 'ACCEPTED',driver:req.user.id });
+            let validatedBody = checkValidations(req);
+            if(validatedBody.status == 'ACCEPTED'){
+                validatedBody.status ='DRIVER_ACCEPTED';
+            }else{
+                validatedBody['$addToSet'] = { rejectedDrivers: req.user.id };
+                delete validatedBody.status;
+            }
+            let updatedOrder = await Order.findByIdAndUpdate(orderId, validatedBody, { new: true }).populate(populateQuery);
+            updatedOrder = Order.schema.methods.toJSONLocalizedOnly(updatedOrder, i18n.getLocale());
+            res.status(200).send(updatedOrder);
+
+        } catch (err) {
+            next(err);
+        }
+    },
+
     async shipped(req, res, next) {
         try {
-            if (req.user.type != 'ADMIN' && req.user.type != 'SUB_ADMIN')
+            if (req.user.type != 'ADMIN' && req.user.type != 'SUB_ADMIN' && req.user.type != 'INSTITUTION')
                 return next(new ApiError(403, ('admin.auth')));
 
             let { orderId } = req.params;
