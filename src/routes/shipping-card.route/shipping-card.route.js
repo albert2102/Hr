@@ -3,6 +3,7 @@ var router = express.Router();
 import shippingCardController from "../../controllers/shipping-card.controller/shipping-card.controller";
 import {requireAuth} from '../../services/passport';
 
+router.route('/multiple').post(requireAuth,shippingCardController.validateMulti(),shippingCardController.createMulti)
 router.route('/')
     .get(shippingCardController.findAll)
     .post(requireAuth,shippingCardController.validateBody(),shippingCardController.create)

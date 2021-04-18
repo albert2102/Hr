@@ -209,5 +209,6 @@
 	"invalidNumber": "invalidNumber",
 	"numberDublicated": "numberDublicated",
 	"commetionRequired": "commetionRequired",
-	"duplicatedPromoCode": "duplicatedPromoCode"
+	"duplicatedPromoCode": "duplicatedPromoCode",
+	"unauthrized": "unauthrized"
 }

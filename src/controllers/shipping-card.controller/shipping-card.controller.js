@@ -6,8 +6,9 @@ import { checkValidations } from "../shared.controller/shared.controller";
 import i18n from 'i18n';
 import moment from 'moment'
 import ApiError from "../../helpers/ApiError";
+import { generateVerifyCode } from '../../services/generator-code-service'
 
-let populateQuery = [{path: 'user', model: 'user'}];
+let populateQuery = [{ path: 'user', model: 'user' }];
 
 
 export default {
@@ -18,30 +19,30 @@ export default {
             validations = [
                 body('price').not().isEmpty().withMessage(() => { return i18n.__('priceRequired') }),
                 body('value').not().isEmpty().withMessage(() => { return i18n.__('valueRequired') }),
-                body('number').not().isEmpty().withMessage(() => { return i18n.__('numberRequired') })
-                    .isNumeric().withMessage(() => { return i18n.__('invalidNumber') })
-                    .custom(async (val, { req }) => {
-                        let query = { number: val, deleted: false };
-                        let card = await ShippingCard.findOne(query).lean();
-                        if (card)
-                            throw new Error(i18n.__('numberDublicated'));
-                        return true;
-                    })
+                // body('number').not().isEmpty().withMessage(() => { return i18n.__('numberRequired') })
+                //     .isNumeric().withMessage(() => { return i18n.__('invalidNumber') })
+                //     .custom(async (val, { req }) => {
+                //         let query = { number: val, deleted: false };
+                //         let card = await ShippingCard.findOne(query).lean();
+                //         if (card)
+                //             throw new Error(i18n.__('numberDublicated'));
+                //         return true;
+                //     })
             ];
         }
         else {
             validations = [
                 body('price').optional().not().isEmpty().withMessage(() => { return i18n.__('priceRequired') }),
                 body('value').optional().not().isEmpty().withMessage(() => { return i18n.__('valueRequired') }),
-                body('number').optional().not().isEmpty().withMessage(() => { return i18n.__('numberRequired') })
-                .isNumeric().withMessage(() => { return i18n.__('invalidNumber') })
-                    .custom(async (val, { req }) => {
-                        let query = { number: val, deleted: false ,_id: { $ne: req.params.shippingCardId }};
-                        let card = await ShippingCard.findOne(query).lean();
-                        if (card)
-                            throw new Error(i18n.__('numberDublicated'));
-                        return true;
-                    })
+                // body('number').optional().not().isEmpty().withMessage(() => { return i18n.__('numberRequired') })
+                // .isNumeric().withMessage(() => { return i18n.__('invalidNumber') })
+                //     .custom(async (val, { req }) => {
+                //         let query = { number: val, deleted: false ,_id: { $ne: req.params.shippingCardId }};
+                //         let card = await ShippingCard.findOne(query).lean();
+                //         if (card)
+                //             throw new Error(i18n.__('numberDublicated'));
+                //         return true;
+                //     })
             ];
 
         }
@@ -52,7 +53,7 @@ export default {
         try {
             let page = +req.query.page || 1, limit = +req.query.limit || 20;
 
-            var { number,price,value, month, year,user } = req.query;
+            var { number, price, value, month, year, user } = req.query;
             let query = { deleted: false };
 
             if (user) query.user = user;
@@ -92,12 +93,22 @@ export default {
     async create(req, res, next) {
         try {
             let user = req.user;
+            if (user.type != 'ADMIN' && user.type != 'SUB_ADMIN')
+                return next(new ApiError(403, i18n.__('unauthrized')));
+
             let validatedBody = checkValidations(req);
             validatedBody.user = user.id;
             let shippingCard = await ShippingCard.create(validatedBody);
+
+            ///////////////////////////////////////////////////////////////////
+            let shippingCardId = shippingCard.id;
+            let generateCodeLength = 15 - shippingCardId.toString().length;
+            shippingCard.number = generateVerifyCode(generateCodeLength) + shippingCardId;
+            ///////////////////////////////////////////////////////////////////
+            await shippingCard.save();
             shippingCard = await ShippingCard.populate(shippingCard, populateQuery);
             shippingCard = ShippingCard.schema.methods.toJSONLocalizedOnly(shippingCard, i18n.getLocale());
-            res.status(200).send({shippingCard});
+            res.status(200).send({ shippingCard });
         } catch (err) {
             next(err);
         }
@@ -110,7 +121,7 @@ export default {
             let validatedBody = checkValidations(req);
             let updatedshippingCard = await ShippingCard.findByIdAndUpdate(shippingCardId, validatedBody, { new: true }).populate(populateQuery);
             updatedshippingCard = ShippingCard.schema.methods.toJSONLocalizedOnly(updatedshippingCard, i18n.getLocale());
-            res.status(200).send({ shippingCard: updatedshippingCard});
+            res.status(200).send({ shippingCard: updatedshippingCard });
         } catch (err) {
             next(err);
         }
@@ -123,7 +134,7 @@ export default {
 
             shippingCard = ShippingCard.schema.methods.toJSONLocalizedOnly(shippingCard, i18n.getLocale());
 
-            res.status(200).send({shippingCard});
+            res.status(200).send({ shippingCard });
 
         } catch (err) {
             next(err);
@@ -141,5 +152,36 @@ export default {
         catch (err) {
             next(err);
         }
-    }
+    },
+
+    validateMulti() {
+        return [
+            body('price').not().isEmpty().withMessage(() => { return i18n.__('priceRequired') }),
+            body('value').not().isEmpty().withMessage(() => { return i18n.__('valueRequired') }),
+            body('count').not().isEmpty().withMessage(() => { return i18n.__('countRequired') }).isNumeric().withMessage('must be numeric')
+        ];
+    },
+
+    async createMulti(req, res, next) {
+        try {
+            let user = req.user;
+            if (user.type != 'ADMIN' && user.type != 'SUB_ADMIN')
+                return next(new ApiError(403, i18n.__('unauthrized')));
+
+            let validatedBody = checkValidations(req);
+            validatedBody.user = user.id;
+            for (let index = 0; index < validatedBody.count; index++) {
+                let shippingCard = await ShippingCard.create(validatedBody);
+                ///////////////////////////////////////////////////////////////////
+                let shippingCardId = shippingCard.id;
+                let generateCodeLength = 15 - shippingCardId.toString().length;
+                shippingCard.number = generateVerifyCode(generateCodeLength) + shippingCardId;
+                ///////////////////////////////////////////////////////////////////
+                await shippingCard.save();
+            }
+            res.status(200).send("Done");
+        } catch (err) {
+            next(err);
+        }
+    },
 }

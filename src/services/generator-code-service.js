@@ -1,9 +1,9 @@
 import generator from 'password-generator';
 
-export const generateVerifyCode = (regex) => {
+export const generateVerifyCode = (lenght,regex) => {
     if (regex) {
-        return generator(6,false,regex)
+        return generator(lenght,false,regex)
     }else{
-        return generator(6,false)
+        return generator(lenght,false,'^[0-9]*$')
     }
 };
