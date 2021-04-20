@@ -28,9 +28,12 @@ const CompanySchema = new Schema({
         type:Boolean,
         default:false
     },
-    instructionsForUse:{
-        type:[{ar:{ type: String},en:{ type: String}}],
-        i18n:true,
+    instructionsForUse: {
+        type: [
+            { title: { ar: { type: String }, en: { type: String } } ,
+             description: { ar: { type: String }, en: { type: String } } }
+        ],
+        i18n: true,
         required: true
     },
     commissionAgreement:{

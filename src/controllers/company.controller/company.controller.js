@@ -38,9 +38,12 @@ export default {
         if (!isUpdate) {
             validations = [
     
-                body('instructionsForUse').not().isEmpty().withMessage(() => { return i18n.__('instructionsForUseRequired') }).isArray().withMessage('Must Be Array'),
-                body('instructionsForUse.*.ar').not().isEmpty().withMessage(() => { return i18n.__('arinstructionsForUseRequired') }),
-                body('instructionsForUse.*.en').not().isEmpty().withMessage(() => { return i18n.__('eninstructionsForUseRequired') }),
+                body('instructionsForUse').optional().not().isEmpty().withMessage(() => { return i18n.__('instructionsForUseRequired') }).isArray().withMessage('Must Be Array'),
+                body('instructionsForUse.*.title.ar').not().isEmpty().withMessage(() => { return i18n.__('arinstructionsForUseRequired') }),
+                body('instructionsForUse.*.title.en').not().isEmpty().withMessage(() => { return i18n.__('eninstructionsForUseRequired') }),
+                body('instructionsForUse.*.description.ar').not().isEmpty().withMessage(() => { return i18n.__('arinstructionsForUseRequired') }),
+                body('instructionsForUse.*.description.en').not().isEmpty().withMessage(() => { return i18n.__('eninstructionsForUseRequired') }),
+
 
                 body('androidUrl').not().isEmpty().withMessage(() => { return i18n.__('androidUrlRequired') }),
                 body('iosUrl').not().isEmpty().withMessage(() => { return i18n.__('iosUrlRequired') }),
@@ -85,8 +88,10 @@ export default {
                 body('driverWaitingTime').optional().not().isEmpty().withMessage(() => { return i18n.__('driverWaitingTimeRequired') }),
 
                 body('instructionsForUse').optional().not().isEmpty().withMessage(() => { return i18n.__('instructionsForUseRequired') }).isArray().withMessage('Must Be Array'),
-                body('instructionsForUse.*.ar').not().isEmpty().withMessage(() => { return i18n.__('arinstructionsForUseRequired') }),
-                body('instructionsForUse.*.en').not().isEmpty().withMessage(() => { return i18n.__('eninstructionsForUseRequired') }),
+                body('instructionsForUse.*.title.ar').not().isEmpty().withMessage(() => { return i18n.__('arinstructionsForUseRequired') }),
+                body('instructionsForUse.*.title.en').not().isEmpty().withMessage(() => { return i18n.__('eninstructionsForUseRequired') }),
+                body('instructionsForUse.*.description.ar').not().isEmpty().withMessage(() => { return i18n.__('arinstructionsForUseRequired') }),
+                body('instructionsForUse.*.description.en').not().isEmpty().withMessage(() => { return i18n.__('eninstructionsForUseRequired') }),
 
                 body('androidUrl').optional().not().isEmpty().withMessage(() => { return i18n.__('androidUrlRequired') }),
                 body('iosUrl').optional().not().isEmpty().withMessage(() => { return i18n.__('iosUrlRequired') }),
@@ -169,6 +174,10 @@ export default {
             if (validatedBody.instructionsForUse) {
                 data.instructionsForUse = validatedBody.instructionsForUse;
                 delete validatedBody.instructionsForUse;
+            }
+            if (validatedBody.instructionsForUse2) {
+                data.instructionsForUse2 = validatedBody.instructionsForUse2;
+                delete validatedBody.instructionsForUse2;
             }
             if (validatedBody.commissionAgreement) {
                 data.commissionAgreement = validatedBody.commissionAgreement;

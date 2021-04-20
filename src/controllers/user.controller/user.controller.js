@@ -778,6 +778,7 @@ export default {
             body('nationalIdImage').optional().not().isEmpty().withMessage(() => { return i18n.__('nationalIdImageRequired') }),
             body('frontCarLicenceImage').optional().not().isEmpty().withMessage(() => { return i18n.__('frontCarLicenceImageRequired') }),
             body('backCarLicenceImage').optional().not().isEmpty().withMessage(() => { return i18n.__('backCarLicenceImageRequired') }),
+            body('insideCarImage').optional().not().isEmpty().withMessage(() => { return i18n.__('insideCarImageRequired') }),
             body('frontDriverLicenceImage').optional().not().isEmpty().withMessage(() => { return i18n.__('frontDriverLicenceImageRequired') }),
             body('backDriverLicenceImage').optional().not().isEmpty().withMessage(() => { return i18n.__('backDriverLicenceImageRequired') }),
             body('internallyCarImage').optional().not().isEmpty().withMessage(() => { return i18n.__('internallyCarImageRequired') }).isArray().withMessage('must be an array'),
@@ -787,6 +788,7 @@ export default {
             body('backCarPlateImage').optional().not().isEmpty().withMessage(() => { return i18n.__('backCarPlateImageRequired') }),
             body('carPlateWithYouImage').optional().not().isEmpty().withMessage(() => { return i18n.__('carPlateWithYouImageRequired') }),
             body('carInsuranceImage').optional().not().isEmpty().withMessage(() => { return i18n.__('carInsuranceImageRequired') }),
+            body('carFormImage').optional().not().isEmpty().withMessage(() => { return i18n.__('carFormImageRequired') }),
             body('ibanNumber').optional().not().isEmpty().withMessage(() => { return i18n.__('ibanNumberRequired') }),
             body('coverImage').optional().not().isEmpty().withMessage(() => { return i18n.__('coverImageRequired') }),
 
@@ -800,7 +802,60 @@ export default {
         return validations;
     },
 
-
+    validateCreateDriver() {
+        let validations = [
+            body('name').not().isEmpty().withMessage(() => { return i18n.__('nameRequired') }),
+            body('email').trim().not().isEmpty().withMessage(() => { return i18n.__('emailRequired') })
+                .isEmail().withMessage(() => { return i18n.__('EmailNotValid') })
+                .custom(async (value, { req }) => {
+                    value = (value.trim()).toLowerCase();
+                    let userQuery = { email: value, deleted: false, _id: { $ne: req.body.userId } };
+                    if (await User.findOne(userQuery))
+                        throw new Error(i18n.__('emailDuplicated'));
+                    else
+                        return true;
+                }),
+            body('password').not().isEmpty().withMessage(() => { return i18n.__('passwordRequired') }),
+            body('phone').not().isEmpty().withMessage(() => { return i18n.__('PhoneIsRequired') })
+                .custom(async (value, { req }) => {
+                    value = (value.trim()).toLowerCase();
+                    let userQuery = { phone: value, deleted: false, _id: { $ne: req.body.userId } };
+    
+                    if (await User.findOne(userQuery))
+                        throw new Error(i18n.__('phoneIsDuplicated'));
+                    else
+                        return true;
+                }),
+            body('language').not().isEmpty().withMessage(() => { return i18n.__('languageRequired') }),
+            body('notification').not().isEmpty().withMessage(() => { return i18n.__('notificationRequired') }),
+            body('countryCode').not().isEmpty().withMessage(() => { return i18n.__('countryCodeRequired') }),
+            body('countryKey').not().isEmpty().withMessage(() => { return i18n.__('countryKeyRequired') }),
+            body('nationalIdImage').not().isEmpty().withMessage(() => { return i18n.__('nationalIdImageRequired') }),
+            body('frontCarLicenceImage').not().isEmpty().withMessage(() => { return i18n.__('frontCarLicenceImageRequired') }),
+            body('backCarLicenceImage').not().isEmpty().withMessage(() => { return i18n.__('backCarLicenceImageRequired') }),
+            body('insideCarImage').not().isEmpty().withMessage(() => { return i18n.__('insideCarImageRequired') }),
+            body('frontDriverLicenceImage').not().isEmpty().withMessage(() => { return i18n.__('frontDriverLicenceImageRequired') }),
+            body('backDriverLicenceImage').not().isEmpty().withMessage(() => { return i18n.__('backDriverLicenceImageRequired') }),
+            body('internallyCarImage').not().isEmpty().withMessage(() => { return i18n.__('internallyCarImageRequired') }).isArray().withMessage('must be an array'),
+            body('frontCarImage').not().isEmpty().withMessage(() => { return i18n.__('frontCarImageRequired') }),
+            body('backCarImage').not().isEmpty().withMessage(() => { return i18n.__('backCarImageRequired') }),
+            body('frontCarPlateImage').not().isEmpty().withMessage(() => { return i18n.__('frontCarPlateImageRequired') }),
+            body('backCarPlateImage').not().isEmpty().withMessage(() => { return i18n.__('backCarPlateImageRequired') }),
+            body('carPlateWithYouImage').not().isEmpty().withMessage(() => { return i18n.__('carPlateWithYouImageRequired') }),
+            body('carInsuranceImage').not().isEmpty().withMessage(() => { return i18n.__('carInsuranceImageRequired') }),
+            body('carFormImage').not().isEmpty().withMessage(() => { return i18n.__('carFormImageRequired') }),
+            body('ibanNumber').not().isEmpty().withMessage(() => { return i18n.__('ibanNumberRequired') }),
+            body('coverImage').not().isEmpty().withMessage(() => { return i18n.__('coverImageRequired') }),
+    
+            body('ajamTaxes').not().isEmpty().withMessage(() => { return i18n.__('taxesRequired') }).isInt({ min: 0, max: 100 }),
+            body('address').not().isEmpty().withMessage(() => { return i18n.__('addressRequired') }),
+            body('workingTimeText').not().isEmpty().withMessage(() => { return i18n.__('workingTimeTextRequired') }),
+            body('paymentMethod').not().isEmpty().withMessage(() => { return i18n.__('paymentMethodRequired') }).isArray().withMessage('must be array').isIn(['VISA','MASTERCARD','CASH','MADA']).withMessage(() => { return i18n.__('userTypeWrong') }),
+    
+        ];
+    
+        return validations;
+    },
     validateUpdateInstitution() {
         let validations = [
             body('name').optional().not().isEmpty().withMessage(() => { return i18n.__('nameRequired') }),
