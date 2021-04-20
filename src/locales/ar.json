@@ -213,5 +213,7 @@
 	"minDeliveryPriceRequired": "minDeliveryPriceRequired",
 	"duplicatedPromoCode": "duplicatedPromoCode",
 	"valueRequired": "valueRequired",
-	"numberRequired": "numberRequired"
+	"numberRequired": "numberRequired",
+	"duplicatedPromoCode": "duplicatedPromoCode",
+	"unauthrized": "unauthrized"
 }
