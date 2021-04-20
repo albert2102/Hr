@@ -6,6 +6,7 @@ import contactUsController from '../src/controllers/contactUs.controller/contact
 import Company from '../src/models/company.model/company.model'
 import advertismentController from '../src/controllers/advertisments.controller/advertisments.controller';
 import issueController from "../src/controllers/issue.controller/issue.controller";
+import adminController from "../src/controllers/admin.controller/admin.controller";
 
 module.exports = {
 
@@ -81,6 +82,7 @@ module.exports = {
             await contactUsController.countNotReplied();
             await advertismentController.countNew();
             await issueController.countNew();
+            await adminController.count();
         })
     },
 

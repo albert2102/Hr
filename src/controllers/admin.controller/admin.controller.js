@@ -9,12 +9,26 @@ import i18n from 'i18n'
 import socketEvents from '../../socketEvents';
 import ConfirmationCode from '../../models/confirmationsCodes.model/confirmationscodes.model'
 import notificationController from '../notif.controller/notif.controller';
-import Category from '../../models/category.model/category.model'
+import Category from '../../models/category.model/category.model';
 let populateQuery = [
     { path: 'rules', model: 'assignRule' },
     { path: 'category', model: 'category' },
     // { path: 'city', model: 'city', populate: [{ path: 'country', model: 'country' }] },
 ];
+
+let count = async (type) => {
+    try {
+        let count = await User.count({ deleted: false, status: 'WAITING', type: type });
+        if (type = 'DRIVER') {
+            adminNSP.emit(socketEvents.WaitingDriverCount, { count: count });
+
+        } else {
+            adminNSP.emit(socketEvents.WaitingInstitutionCount, { count: count });
+        }
+    } catch (error) {
+        throw error;
+    }
+}
 export default {
 
 
@@ -251,8 +265,8 @@ export default {
             }
             const validatedBody = checkValidations(req);
             if (validatedBody.email) {
-            validatedBody.email = (validatedBody.email.trim()).toLowerCase();
-                
+                validatedBody.email = (validatedBody.email.trim()).toLowerCase();
+
             }
 
             if (req.file) {
@@ -271,7 +285,7 @@ export default {
         try {
             var userId = req.query.userId;
             if (!userId) userId = req.user.id;
-            var user = await checkExistThenGet(userId, User, { deleted: false,populate:populateQuery });
+            var user = await checkExistThenGet(userId, User, { deleted: false, populate: populateQuery });
             user = await User.schema.methods.toJSONLocalizedOnly(user, i18n.getLocale());
             res.status(200).send({ user: user });
         } catch (error) {
@@ -295,7 +309,7 @@ export default {
                 let image = handleImg(req, { attributeName: 'image', isUpdate: false });
                 validatedBody.image = image;
             }
-            if(validatedBody.location && validatedBody.location.lat && validatedBody.location.lat){
+            if (validatedBody.location && validatedBody.location.lat && validatedBody.location.lat) {
                 validatedBody.geoLocation = { type: 'Point', coordinates: [validatedBody.location.long, validatedBody.location.lat] }
             }
             user = await User.findOneAndUpdate({ deleted: false, _id: validatedBody.userId }, validatedBody, { new: true })
@@ -347,7 +361,7 @@ export default {
             if (newUser.activated == false) {
                 notificationNSP.to('room-' + validatedBody.userId).emit(socketEvents.LogOut, { newUser })
             }
-            if(newUser.activated == false && newUser.type == 'SUB_ADMIN'){
+            if (newUser.activated == false && newUser.type == 'SUB_ADMIN') {
                 adminNSP.to('room-' + validatedBody.userId).emit(socketEvents.LogOut, { newUser })
             }
             res.status(200).send(newUser);
@@ -422,7 +436,7 @@ export default {
             body('coverImage').optional().not().isEmpty().withMessage(() => { return i18n.__('coverImageRequired') }),
 
             body('ajamTaxes').not().isEmpty().withMessage(() => { return i18n.__('taxesRequired') }).isInt({ min: 0, max: 100 }),
-            
+
         ];
         return validations;
     },
@@ -474,7 +488,7 @@ export default {
             body('coverImage').optional().not().isEmpty().withMessage(() => { return i18n.__('coverImageRequired') }),
 
             body('ajamTaxes').optional().not().isEmpty().withMessage(() => { return i18n.__('taxesRequired') }).isInt({ min: 0, max: 100 }),
-            
+
         ];
 
         return validations;
@@ -544,9 +558,9 @@ export default {
 
             body('address').not().isEmpty().withMessage(() => { return i18n.__('addressRequired') }),
             body('workingTimeText').not().isEmpty().withMessage(() => { return i18n.__('workingTimeTextRequired') }),
-            body('paymentMethod').not().isEmpty().withMessage(() => { return i18n.__('paymentMethodRequired') }).isArray().withMessage('must be array').isIn(['VISA','MASTERCARD','CASH','MADA']).withMessage(() => { return i18n.__('userTypeWrong') }),
+            body('paymentMethod').not().isEmpty().withMessage(() => { return i18n.__('paymentMethodRequired') }).isArray().withMessage('must be array').isIn(['VISA', 'MASTERCARD', 'CASH', 'MADA']).withMessage(() => { return i18n.__('userTypeWrong') }),
             body('productsIncludeTaxes').optional().not().isEmpty().withMessage(() => { return i18n.__('productsIncludeTaxesRequired') }).isBoolean().withMessage('must be boolean'),
-            body('institutionStatus').optional().not().isEmpty().withMessage(() => { return i18n.__('institutionStatusRequired') }).isIn(['OPEN','BUSY','CLOSED']).withMessage(() => { return i18n.__('userTypeWrong') }),
+            body('institutionStatus').optional().not().isEmpty().withMessage(() => { return i18n.__('institutionStatusRequired') }).isIn(['OPEN', 'BUSY', 'CLOSED']).withMessage(() => { return i18n.__('userTypeWrong') }),
             body('openChat').optional().not().isEmpty().withMessage(() => { return i18n.__('openChatRequired') }).isBoolean().withMessage('must be boolean'),
 
             body('deliveryPricePerSecond').not().isEmpty().withMessage(() => { return i18n.__('deliveryPricePerSecondRequired') }),
@@ -599,13 +613,13 @@ export default {
 
             body('address').optional().not().isEmpty().withMessage(() => { return i18n.__('addressRequired') }),
             body('workingTimeText').optional().not().isEmpty().withMessage(() => { return i18n.__('workingTimeTextRequired') }),
-            body('paymentMethod').optional().not().isEmpty().withMessage(() => { return i18n.__('paymentMethodRequired') }).isArray().withMessage('must be array').isIn(['VISA','MASTERCARD','CASH','MADA']).withMessage(() => { return i18n.__('userTypeWrong') }),
+            body('paymentMethod').optional().not().isEmpty().withMessage(() => { return i18n.__('paymentMethodRequired') }).isArray().withMessage('must be array').isIn(['VISA', 'MASTERCARD', 'CASH', 'MADA']).withMessage(() => { return i18n.__('userTypeWrong') }),
             body('productsIncludeTaxes').optional().not().isEmpty().withMessage(() => { return i18n.__('productsIncludeTaxesRequired') }).isBoolean().withMessage('must be boolean'),
-            body('institutionStatus').optional().not().isEmpty().withMessage(() => { return i18n.__('institutionStatusRequired') }).isIn(['OPEN','BUSY','CLOSED']).withMessage(() => { return i18n.__('userTypeWrong') }),
+            body('institutionStatus').optional().not().isEmpty().withMessage(() => { return i18n.__('institutionStatusRequired') }).isIn(['OPEN', 'BUSY', 'CLOSED']).withMessage(() => { return i18n.__('userTypeWrong') }),
             body('openChat').optional().not().isEmpty().withMessage(() => { return i18n.__('openChatRequired') }),
             body('deliveryPricePerSecond').optional().not().isEmpty().withMessage(() => { return i18n.__('deliveryPricePerSecondRequired') }),
             body('minDeliveryPrice').optional().not().isEmpty().withMessage(() => { return i18n.__('minDeliveryPriceRequired') }),
-            
+
         ];
 
         return validations;
@@ -629,7 +643,7 @@ export default {
                 let image = handleImg(req, { attributeName: 'image', isUpdate: false });
                 validatedBody.image = image;
             }
-            
+
             let createdUser = await User.create(validatedBody);
             createdUser = await User.schema.methods.toJSONLocalizedOnly(createdUser, i18n.getLocale());
             res.status(200).send({ user: createdUser });
@@ -642,6 +656,35 @@ export default {
         try {
             let productImage = await handleImg(req, { attributeName: 'image', isUpdate: false });
             res.status(200).send({ link: productImage });
+        } catch (error) {
+            next(error);
+        }
+    },
+
+    count,
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+    validateChangeStatus(){
+        let validation = [
+            body('status').not().isEmpty().withMessage(() => { return i18n.__('statusRequired') }).isIn(['ACCEPTED','REJECTED']),
+            body('userId').not().isEmpty().withMessage(() => { return i18n.__('userIdRequired') })
+        ];
+        return validation ;
+    },
+
+    async changeStatus(req, res, next){
+        try {
+            let user = req.user;
+            if ((user.type != 'ADMIN') && (user.type != 'SUB_ADMIN')) {
+                return next(new ApiError(403, i18n.__('unauth')));
+            }
+            let validatedBody = checkValidations(req);
+            let verifyUser = await checkExistThenGet(validatedBody.userId, User, { deleted: false,status:'WAITING',type:{$in:['INSTITUTION','DRIVER']} });
+            validatedBody.updatedStatusDate = new Date();
+            verifyUser = await User.findByIdAndUpdate(validatedBody.userId , validatedBody,{new: true});
+            res.status(200).send(verifyUser)
+            await count(verifyUser.type);
+
         } catch (error) {
             next(error);
         }

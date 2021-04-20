@@ -17,6 +17,8 @@ import checkValidCoordinates from 'is-valid-coordinates';
 import NotificationController from '../notif.controller/notif.controller';
 import Address from '../../models/address.model/address.model';
 import Product from '../../models/product.model/product.model';
+import AdminController from '../admin.controller/admin.controller';
+import Category from '../../models/category.model/category.model';
 
 const checkUserExistByEmail = async (email) => {
     let user = await User.findOne({ email, deleted: false });
@@ -37,10 +39,11 @@ export default {
             let page = +req.query.page || 1,
                 limit = +req.query.limit || 20;
             var { all, name, type, fromDate, toDate, phone, email, activated, countryKey, countryCode,
-                month, year, day, archive, country,category } = req.query;
+                month, year, day, archive, country,category,status } = req.query;
 
-            var query = { deleted: false, type: { $ne: 'VISITOR' } };
+            var query = { deleted: false, status:{$nin:['WAITING','REJECTED']} };
             if (archive) query.deleted = true;
+            if (status) query.status = status;
             if (name) query.name = { '$regex': name, '$options': 'i' };
             if (phone) query.phone = { '$regex': phone, '$options': 'i' };
             if (email) query.email = { '$regex': email, '$options': 'i' };
@@ -123,9 +126,9 @@ export default {
         try {
             const validatedBody = checkValidations(req);
             var query = { deleted: false, type: validatedBody.type};
+            if(validatedBody.type !='CLIENT') query.status ='ACCEPTED';
             if(validatedBody.countryCode) query.countryCode = validatedBody.countryCode;
             query.phone = validatedBody.phone.trim();
-
             let user = await User.findOne(query).populate(populateQuery);
             if (user) {
                 await user.isValidPassword(validatedBody.password, async function (err, isMatch) {
@@ -746,7 +749,7 @@ export default {
             next(error)
         }
     },
-    /////////////////////////////////////////////////////////////
+    /////////////////////////////////////////////////////////////////////////////////////////////////////////
     validateUpdateDriver() {
         let validations = [
             body('name').optional().not().isEmpty().withMessage(() => { return i18n.__('nameRequired') }),
@@ -802,60 +805,7 @@ export default {
         return validations;
     },
 
-    validateCreateDriver() {
-        let validations = [
-            body('name').not().isEmpty().withMessage(() => { return i18n.__('nameRequired') }),
-            body('email').trim().not().isEmpty().withMessage(() => { return i18n.__('emailRequired') })
-                .isEmail().withMessage(() => { return i18n.__('EmailNotValid') })
-                .custom(async (value, { req }) => {
-                    value = (value.trim()).toLowerCase();
-                    let userQuery = { email: value, deleted: false, _id: { $ne: req.body.userId } };
-                    if (await User.findOne(userQuery))
-                        throw new Error(i18n.__('emailDuplicated'));
-                    else
-                        return true;
-                }),
-            body('password').not().isEmpty().withMessage(() => { return i18n.__('passwordRequired') }),
-            body('phone').not().isEmpty().withMessage(() => { return i18n.__('PhoneIsRequired') })
-                .custom(async (value, { req }) => {
-                    value = (value.trim()).toLowerCase();
-                    let userQuery = { phone: value, deleted: false, _id: { $ne: req.body.userId } };
     
-                    if (await User.findOne(userQuery))
-                        throw new Error(i18n.__('phoneIsDuplicated'));
-                    else
-                        return true;
-                }),
-            body('language').not().isEmpty().withMessage(() => { return i18n.__('languageRequired') }),
-            body('notification').not().isEmpty().withMessage(() => { return i18n.__('notificationRequired') }),
-            body('countryCode').not().isEmpty().withMessage(() => { return i18n.__('countryCodeRequired') }),
-            body('countryKey').not().isEmpty().withMessage(() => { return i18n.__('countryKeyRequired') }),
-            body('nationalIdImage').not().isEmpty().withMessage(() => { return i18n.__('nationalIdImageRequired') }),
-            body('frontCarLicenceImage').not().isEmpty().withMessage(() => { return i18n.__('frontCarLicenceImageRequired') }),
-            body('backCarLicenceImage').not().isEmpty().withMessage(() => { return i18n.__('backCarLicenceImageRequired') }),
-            body('insideCarImage').not().isEmpty().withMessage(() => { return i18n.__('insideCarImageRequired') }),
-            body('frontDriverLicenceImage').not().isEmpty().withMessage(() => { return i18n.__('frontDriverLicenceImageRequired') }),
-            body('backDriverLicenceImage').not().isEmpty().withMessage(() => { return i18n.__('backDriverLicenceImageRequired') }),
-            body('internallyCarImage').not().isEmpty().withMessage(() => { return i18n.__('internallyCarImageRequired') }).isArray().withMessage('must be an array'),
-            body('frontCarImage').not().isEmpty().withMessage(() => { return i18n.__('frontCarImageRequired') }),
-            body('backCarImage').not().isEmpty().withMessage(() => { return i18n.__('backCarImageRequired') }),
-            body('frontCarPlateImage').not().isEmpty().withMessage(() => { return i18n.__('frontCarPlateImageRequired') }),
-            body('backCarPlateImage').not().isEmpty().withMessage(() => { return i18n.__('backCarPlateImageRequired') }),
-            body('carPlateWithYouImage').not().isEmpty().withMessage(() => { return i18n.__('carPlateWithYouImageRequired') }),
-            body('carInsuranceImage').not().isEmpty().withMessage(() => { return i18n.__('carInsuranceImageRequired') }),
-            body('carFormImage').not().isEmpty().withMessage(() => { return i18n.__('carFormImageRequired') }),
-            body('ibanNumber').not().isEmpty().withMessage(() => { return i18n.__('ibanNumberRequired') }),
-            body('coverImage').not().isEmpty().withMessage(() => { return i18n.__('coverImageRequired') }),
-    
-            body('ajamTaxes').not().isEmpty().withMessage(() => { return i18n.__('taxesRequired') }).isInt({ min: 0, max: 100 }),
-            body('address').not().isEmpty().withMessage(() => { return i18n.__('addressRequired') }),
-            body('workingTimeText').not().isEmpty().withMessage(() => { return i18n.__('workingTimeTextRequired') }),
-            body('paymentMethod').not().isEmpty().withMessage(() => { return i18n.__('paymentMethodRequired') }).isArray().withMessage('must be array').isIn(['VISA','MASTERCARD','CASH','MADA']).withMessage(() => { return i18n.__('userTypeWrong') }),
-    
-        ];
-    
-        return validations;
-    },
     validateUpdateInstitution() {
         let validations = [
             body('name').optional().not().isEmpty().withMessage(() => { return i18n.__('nameRequired') }),
@@ -902,11 +852,154 @@ export default {
             body('productsIncludeTaxes').optional().not().isEmpty().withMessage(() => { return i18n.__('productsIncludeTaxesRequired') }).isBoolean().withMessage('must be boolean'),
             body('institutionStatus').optional().not().isEmpty().withMessage(() => { return i18n.__('institutionStatusRequired') }).isIn(['OPEN','BUSY','CLOSED']).withMessage(() => { return i18n.__('userTypeWrong') }),
             
-            body('openChat').optional().not().isEmpty().withMessage(() => { return i18n.__('openChatRequired') }).isBoolean().withMessage('must be boolean')
-        
+            body('openChat').optional().not().isEmpty().withMessage(() => { return i18n.__('openChatRequired') }).isBoolean().withMessage('must be boolean'),
+            body('bank').optional().not().isEmpty().withMessage(() => { return i18n.__('bankRequired') }),
+            
         ];
 
         return validations;
     },
+    ////////////////////////////Driver////////////////////////////////////////////
+    validateCreateDriver() {
+        let validations = [
+            body('name').not().isEmpty().withMessage(() => { return i18n.__('nameRequired') }),
+            body('email').optional().trim().not().isEmpty().withMessage(() => { return i18n.__('emailRequired') })
+                .isEmail().withMessage(() => { return i18n.__('EmailNotValid') })
+                .custom(async (value, { req }) => {
+                    value = (value.trim()).toLowerCase();
+                    let userQuery = { email: value, deleted: false };
+                    if (await User.findOne(userQuery))
+                        throw new Error(i18n.__('emailDuplicated'));
+                    else
+                        return true;
+                }),
+            body('password').not().isEmpty().withMessage(() => { return i18n.__('passwordRequired') }),
+            body('phone').not().isEmpty().withMessage(() => { return i18n.__('PhoneIsRequired') })
+                .custom(async (value, { req }) => {
+                    value = (value.trim()).toLowerCase();
+                    let userQuery = { phone: value, deleted: false };
+                    if (await User.findOne(userQuery))
+                        throw new Error(i18n.__('phoneIsDuplicated'));
+                    else
+                        return true;
+                }),
+            body('countryCode').not().isEmpty().withMessage(() => { return i18n.__('countryCodeRequired') }),
+            body('countryKey').not().isEmpty().withMessage(() => { return i18n.__('countryKeyRequired') }),
 
+            body('nationalIdImage').not().isEmpty().withMessage(() => { return i18n.__('nationalIdImageRequired') }),
+            body('frontCarLicenceImage').not().isEmpty().withMessage(() => { return i18n.__('frontCarLicenceImageRequired') }),
+            body('backCarLicenceImage').not().isEmpty().withMessage(() => { return i18n.__('backCarLicenceImageRequired') }),
+            body('frontDriverLicenceImage').not().isEmpty().withMessage(() => { return i18n.__('frontDriverLicenceImageRequired') }),
+            body('backDriverLicenceImage').not().isEmpty().withMessage(() => { return i18n.__('backDriverLicenceImageRequired') }),
+            body('insideCarImage').not().isEmpty().withMessage(() => { return i18n.__('insideCarImageRequired') }),
+            body('internallyCarImage').not().isEmpty().withMessage(() => { return i18n.__('internallyCarImageRequired') }).isArray().withMessage('must be an array'),
+            body('frontCarImage').not().isEmpty().withMessage(() => { return i18n.__('frontCarImageRequired') }),
+            body('backCarImage').not().isEmpty().withMessage(() => { return i18n.__('backCarImageRequired') }),
+            body('frontCarPlateImage').not().isEmpty().withMessage(() => { return i18n.__('frontCarPlateImageRequired') }),
+            body('backCarPlateImage').not().isEmpty().withMessage(() => { return i18n.__('backCarPlateImageRequired') }),
+            body('carPlateWithYouImage').not().isEmpty().withMessage(() => { return i18n.__('carPlateWithYouImageRequired') }),
+            body('carInsuranceImage').optional().not().isEmpty().withMessage(() => { return i18n.__('carInsuranceImageRequired') }),
+            body('carFormImage').not().isEmpty().withMessage(() => { return i18n.__('carFormImageRequired') }),
+            body('ibanNumber').not().isEmpty().withMessage(() => { return i18n.__('ibanNumberRequired') }),
+            body('coverImage').optional().not().isEmpty().withMessage(() => { return i18n.__('coverImageRequired') }),
+
+
+        ];
+    
+        return validations;
+    },
+
+    async driverSignUp(req, res, next) {
+        try {
+            const validatedBody = checkValidations(req);
+            if (validatedBody.email)
+                validatedBody.email = (validatedBody.email.trim()).toLowerCase();
+
+            if (req.file) {
+                let image = await handleImg(req, { attributeName: 'image', isUpdate: false });
+                validatedBody.image = image;
+            }
+            validatedBody.type = 'DRIVER';
+            validatedBody.status = 'WAITING';
+            validatedBody.password = '12345678';
+            let createdUser = await User.create(validatedBody);
+            res.status(200).send({ user: createdUser});
+            await AdminController.count();
+
+        } catch (err) {
+            next(err);
+        }
+    },
+    ////////////////////////////Institution////////////////////////////////////////////
+
+    validateAddInstitutionBody() {
+        let validations = [
+            body('name').not().isEmpty().withMessage(() => { return i18n.__('nameRequired') }),
+            body('email').optional().trim().not().isEmpty().withMessage(() => { return i18n.__('emailRequired') })
+                .isEmail().withMessage(() => { return i18n.__('EmailNotValid') })
+                .custom(async (value, { req }) => {
+                    value = (value.trim()).toLowerCase();
+                    let userQuery = { email: value, deleted: false };
+                    if (await User.findOne(userQuery))
+                        throw new Error(i18n.__('emailDuplicated'));
+                    else
+                        return true;
+                }),
+            body('password').optional().not().isEmpty().withMessage(() => { return i18n.__('passwordRequired') }),
+            body('phone').not().isEmpty().withMessage(() => { return i18n.__('PhoneIsRequired') })
+                .custom(async (value, { req }) => {
+                    value = (value.trim()).toLowerCase();
+                    let userQuery = { phone: value, deleted: false };
+                    if (await User.findOne(userQuery))
+                        throw new Error(i18n.__('phoneIsDuplicated'));
+                    else
+                        return true;
+                }),
+            body('countryCode').not().isEmpty().withMessage(() => { return i18n.__('countryCodeRequired') }),
+            body('countryKey').not().isEmpty().withMessage(() => { return i18n.__('countryKeyRequired') }),
+
+            body('commercialRegister').optional().not().isEmpty().withMessage(() => { return i18n.__('commercialRegisterRequired') }),
+            body('ibanNumber').optional().not().isEmpty().withMessage(() => { return i18n.__('ibanNumberRequired') }),
+            body('category').not().isEmpty().withMessage(() => { return i18n.__('categoryRequired') }).custom(async (val, { req }) => {
+                await checkExist(val, Category, { deleted: false });
+                return true;
+            }),
+            body('responsibleName').not().isEmpty().withMessage(() => { return i18n.__('responsibleNameRequired') }),
+            body('location').not().isEmpty().withMessage(() => { return i18n.__('locationRequired') }),
+            body('location.long').not().isEmpty().withMessage(() => { return i18n.__('longitudeRequired') }),
+            body('location.lat').not().isEmpty().withMessage(() => { return i18n.__('latitudeRequired') }),
+
+            body('address').not().isEmpty().withMessage(() => { return i18n.__('addressRequired') }),
+            body('workingTimeText').optional().not().isEmpty().withMessage(() => { return i18n.__('workingTimeTextRequired') }),
+            body('paymentMethod').optional().not().isEmpty().withMessage(() => { return i18n.__('paymentMethodRequired') }).isArray().withMessage('must be array').isIn(['VISA', 'MASTERCARD', 'CASH', 'MADA']).withMessage(() => { return i18n.__('userTypeWrong') }),
+            body('productsIncludeTaxes').optional().not().isEmpty().withMessage(() => { return i18n.__('productsIncludeTaxesRequired') }).isBoolean().withMessage('must be boolean'),
+            body('institutionStatus').optional().not().isEmpty().withMessage(() => { return i18n.__('institutionStatusRequired') }).isIn(['OPEN', 'BUSY', 'CLOSED']).withMessage(() => { return i18n.__('userTypeWrong') }),
+            body('openChat').optional().not().isEmpty().withMessage(() => { return i18n.__('openChatRequired') }).isBoolean().withMessage('must be boolean'),
+            body('bank').optional().not().isEmpty().withMessage(() => { return i18n.__('bankRequired') })
+
+        ];
+        return validations;
+    },
+
+    async institutionSignUp(req, res, next) {
+        try {
+            const validatedBody = checkValidations(req);
+            if (validatedBody.email)
+                validatedBody.email = (validatedBody.email.trim()).toLowerCase();
+
+            if (req.file) {
+                let image = await handleImg(req, { attributeName: 'image', isUpdate: false });
+                validatedBody.image = image;
+            }
+            validatedBody.type = 'INSTITUTION';
+            validatedBody.status = 'WAITING';
+            validatedBody.password = '12345678';
+            let createdUser = await User.create(validatedBody);
+            res.status(200).send({ user: createdUser });
+            await AdminController.count();
+
+        } catch (err) {
+            next(err);
+        }
+    },
 };

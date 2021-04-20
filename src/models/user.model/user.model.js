@@ -202,6 +202,17 @@ const userSchema = new Schema({
         type: Number,
         default : 10
     },
+    status:{
+        type: String,
+        enum:['WAITING','ACCEPTED','REJECTED'],
+        default: 'ACCEPTED'
+    },
+    updatedStatusDate:{
+        type: Date
+    },
+    bank:{
+        type: String
+    }
 }, { timestamps: true });
 
 

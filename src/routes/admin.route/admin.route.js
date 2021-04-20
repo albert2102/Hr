@@ -59,4 +59,6 @@ router.route('/institution')
 
 router.post('/uploadImage', requireAuth, multerSaveTo('admins').single('image'), adminController.uploadImage)
 
+router.route('/changeStatus').put(requireAuth,adminController.validateChangeStatus(),adminController.changeStatus)
+
 export default router;

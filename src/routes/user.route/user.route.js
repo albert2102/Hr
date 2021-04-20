@@ -2,21 +2,27 @@ import express from 'express';
 import { requireAuth } from '../../services/passport';
 import { multerSaveTo } from '../../services/multer-service';
 import userController from '../../controllers/user.controller/user.controller';
-import {parseObject} from '../../controllers/shared.controller/shared.controller';
+import { parseObject } from '../../controllers/shared.controller/shared.controller';
 
-const parseArray = ['location','internallyCarImage','paymentMethod']
+const parseArray = ['location', 'internallyCarImage', 'paymentMethod']
 
-const uploadedFiles =[
-    {name:"image",maxCount:1},
-    {name:"coverImage",maxCount:1},
+const uploadedFiles = [
+    { name: "image", maxCount: 1 },
+    { name: "coverImage", maxCount: 1 },
 ]
 const router = express.Router();
 
 router.route('/institution/updateInfo')
-    .put(requireAuth,multerSaveTo('users').fields(uploadedFiles),parseObject(parseArray), userController.validateUpdateInstitution(), userController.updateInfo);
+    .put(requireAuth, multerSaveTo('users').fields(uploadedFiles), parseObject(parseArray), userController.validateUpdateInstitution(), userController.updateInfo);
+
+router.route('/institution/signup')
+    .post(multerSaveTo('users').fields(uploadedFiles), parseObject(parseArray), userController.validateAddInstitutionBody(), userController.institutionSignUp);
 
 router.route('/driver/updateInfo')
-    .put(requireAuth,multerSaveTo('users').fields(uploadedFiles),parseObject(parseArray), userController.validateUpdateDriver(), userController.updateInfo);
+    .put(requireAuth, multerSaveTo('users').fields(uploadedFiles), parseObject(parseArray), userController.validateUpdateDriver(), userController.updateInfo);
+
+router.route('/driver/signup')
+    .post(multerSaveTo('users').fields(uploadedFiles), parseObject(parseArray), userController.validateCreateDriver(), userController.driverSignUp);
 
 router.get('/Home', userController.Home);
 
@@ -49,7 +55,7 @@ router.post('/checkExistEmail', userController.validateCheckEmail(), userControl
 router.put('/user/updateInfo',
     requireAuth,
     multerSaveTo('users').fields(uploadedFiles),
-    parseObject(parseArray), 
+    parseObject(parseArray),
     userController.validateUserUpdate(true),
     userController.updateInfo);
 
