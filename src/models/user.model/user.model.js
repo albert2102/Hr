@@ -125,6 +125,9 @@ const userSchema = new Schema({
     backCarImage:{// صورة السيارة من الخلف
         type: String
     },
+    insideCarImage:{// صورة السيارة من الداخل
+        type: String
+    },
     frontCarPlateImage:{// صورة لوحة السيارة مع اللوحة من الامام
         type: String
     },
@@ -134,7 +137,10 @@ const userSchema = new Schema({
     carPlateWithYouImage:{// صورة لك مع لوحة السيارة 
         type: String
     },
-    carInsuranceImage:{// صورة تفويض السيارة
+    carInsuranceImage:{// صورة تأمين السيارة
+        type: String
+    },
+    carFormImage:{// صورة استمارة السيارة
         type: String
     },
     ibanNumber:{

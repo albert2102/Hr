@@ -409,6 +409,7 @@ export default {
             body('backCarLicenceImage').not().isEmpty().withMessage(() => { return i18n.__('backCarLicenceImageRequired') }),
             body('frontDriverLicenceImage').not().isEmpty().withMessage(() => { return i18n.__('frontDriverLicenceImageRequired') }),
             body('backDriverLicenceImage').not().isEmpty().withMessage(() => { return i18n.__('backDriverLicenceImageRequired') }),
+            body('insideCarImage').not().isEmpty().withMessage(() => { return i18n.__('insideCarImageRequired') }),
             body('internallyCarImage').not().isEmpty().withMessage(() => { return i18n.__('internallyCarImageRequired') }).isArray().withMessage('must be an array'),
             body('frontCarImage').not().isEmpty().withMessage(() => { return i18n.__('frontCarImageRequired') }),
             body('backCarImage').not().isEmpty().withMessage(() => { return i18n.__('backCarImageRequired') }),
@@ -416,6 +417,7 @@ export default {
             body('backCarPlateImage').not().isEmpty().withMessage(() => { return i18n.__('backCarPlateImageRequired') }),
             body('carPlateWithYouImage').not().isEmpty().withMessage(() => { return i18n.__('carPlateWithYouImageRequired') }),
             body('carInsuranceImage').optional().not().isEmpty().withMessage(() => { return i18n.__('carInsuranceImageRequired') }),
+            body('carFormImage').not().isEmpty().withMessage(() => { return i18n.__('carFormImageRequired') }),
             body('ibanNumber').not().isEmpty().withMessage(() => { return i18n.__('ibanNumberRequired') }),
             body('coverImage').optional().not().isEmpty().withMessage(() => { return i18n.__('coverImageRequired') }),
 
@@ -457,6 +459,7 @@ export default {
             body('nationalIdImage').optional().not().isEmpty().withMessage(() => { return i18n.__('nationalIdImageRequired') }),
             body('frontCarLicenceImage').optional().not().isEmpty().withMessage(() => { return i18n.__('frontCarLicenceImageRequired') }),
             body('backCarLicenceImage').optional().not().isEmpty().withMessage(() => { return i18n.__('backCarLicenceImageRequired') }),
+            body('insideCarImage').optional().not().isEmpty().withMessage(() => { return i18n.__('insideCarImageRequired') }),
             body('frontDriverLicenceImage').optional().not().isEmpty().withMessage(() => { return i18n.__('frontDriverLicenceImageRequired') }),
             body('backDriverLicenceImage').optional().not().isEmpty().withMessage(() => { return i18n.__('backDriverLicenceImageRequired') }),
             body('internallyCarImage').optional().not().isEmpty().withMessage(() => { return i18n.__('internallyCarImageRequired') }).isArray().withMessage('must be an array'),
@@ -466,6 +469,7 @@ export default {
             body('backCarPlateImage').optional().not().isEmpty().withMessage(() => { return i18n.__('backCarPlateImageRequired') }),
             body('carPlateWithYouImage').optional().not().isEmpty().withMessage(() => { return i18n.__('carPlateWithYouImageRequired') }),
             body('carInsuranceImage').optional().not().isEmpty().withMessage(() => { return i18n.__('carInsuranceImageRequired') }),
+            body('carFormImage').optional().not().isEmpty().withMessage(() => { return i18n.__('carFormImageRequired') }),
             body('ibanNumber').optional().not().isEmpty().withMessage(() => { return i18n.__('ibanNumberRequired') }),
             body('coverImage').optional().not().isEmpty().withMessage(() => { return i18n.__('coverImageRequired') }),
 
