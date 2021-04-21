@@ -38,7 +38,11 @@ export default {
         if (!isUpdate) {
             validations = [
     
-                body('instructionsForUse').optional().not().isEmpty().withMessage(() => { return i18n.__('instructionsForUseRequired') }).isArray().withMessage('Must Be Array'),
+                body('contactusReasons').not().isEmpty().withMessage(() => { return i18n.__('contactusReasonsRequired') }).isArray().withMessage('Must Be Array'),
+                body('contactusReasons.*.ar').not().isEmpty().withMessage(() => { return i18n.__('arcontactusReasonsRequired') }),
+                body('contactusReasons.*.en').not().isEmpty().withMessage(() => { return i18n.__('encontactusReasonsRequired') }),
+
+                body('instructionsForUse').not().isEmpty().withMessage(() => { return i18n.__('instructionsForUseRequired') }).isArray().withMessage('Must Be Array'),
                 body('instructionsForUse.*.title.ar').not().isEmpty().withMessage(() => { return i18n.__('arinstructionsForUseRequired') }),
                 body('instructionsForUse.*.title.en').not().isEmpty().withMessage(() => { return i18n.__('eninstructionsForUseRequired') }),
                 body('instructionsForUse.*.description.ar').not().isEmpty().withMessage(() => { return i18n.__('arinstructionsForUseRequired') }),
@@ -71,15 +75,21 @@ export default {
                 body('commissionAgreement.ar').not().isEmpty().withMessage(() => { return i18n.__('arCommissionAgreementRequired') }),
                 body('commissionAgreement.en').not().isEmpty().withMessage(() => { return i18n.__('enCommissionAgreementRequired') }),
 
-                body('driver_androidUrl').optional().not().isEmpty().withMessage(() => { return i18n.__('driver_androidUrlRequired') }),
-                body('driver_iosUrl').optional().not().isEmpty().withMessage(() => { return i18n.__('driver_iosUrlRequired') }),
+                body('driver_androidUrl').not().isEmpty().withMessage(() => { return i18n.__('driver_androidUrlRequired') }),
+                body('driver_iosUrl').not().isEmpty().withMessage(() => { return i18n.__('driver_iosUrlRequired') }),
 
-                body('store_androidUrl').optional().not().isEmpty().withMessage(() => { return i18n.__('store_androidUrlRequired') }),
-                body('store_iosUrl').optional().not().isEmpty().withMessage(() => { return i18n.__('store_iosUrlRequired') }),
+                body('store_androidUrl').not().isEmpty().withMessage(() => { return i18n.__('store_androidUrlRequired') }),
+                body('store_iosUrl').not().isEmpty().withMessage(() => { return i18n.__('store_iosUrlRequired') }),
+                body('numberOfRowsForAdvertisments').not().isEmpty().withMessage(() => { return i18n.__('numberOfRowsForAdvertismentsRequired') }),
+                
             ];
         }
         else {
             validations = [
+                body('contactusReasons').optional().not().isEmpty().withMessage(() => { return i18n.__('contactusReasonsRequired') }).isArray().withMessage('Must Be Array'),
+                body('contactusReasons.*.ar').not().isEmpty().withMessage(() => { return i18n.__('arcontactusReasonsRequired') }),
+                body('contactusReasons.*.en').not().isEmpty().withMessage(() => { return i18n.__('encontactusReasonsRequired') }),
+
                 body('numberOfRowsForAdvertisments').optional().not().isEmpty().withMessage(() => { return i18n.__('numberOfRowsForAdvertismentsRequired') }),
                 body('fixedCategoryName').optional().not().isEmpty().withMessage(() => { return i18n.__('categoryRequired') }),
                 body('fixedCategoryName.ar').optional().not().isEmpty().withMessage(() => { return i18n.__('arCategoryRequired') }),
@@ -117,7 +127,6 @@ export default {
 
                 body('store_androidUrl').optional().not().isEmpty().withMessage(() => { return i18n.__('store_androidUrlRequired') }),
                 body('store_iosUrl').optional().not().isEmpty().withMessage(() => { return i18n.__('store_iosUrlRequired') }),
-
 
             ];
         }
@@ -175,9 +184,9 @@ export default {
                 data.instructionsForUse = validatedBody.instructionsForUse;
                 delete validatedBody.instructionsForUse;
             }
-            if (validatedBody.instructionsForUse2) {
-                data.instructionsForUse2 = validatedBody.instructionsForUse2;
-                delete validatedBody.instructionsForUse2;
+            if (validatedBody.contactusReasons) {
+                data.contactusReasons = validatedBody.contactusReasons;
+                delete validatedBody.contactusReasons;
             }
             if (validatedBody.commissionAgreement) {
                 data.commissionAgreement = validatedBody.commissionAgreement;

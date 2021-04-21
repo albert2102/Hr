@@ -18,7 +18,7 @@ const populateQuery = [
 
 ];
 
-let create = async (resource, target, description, subject, subjectType, order,addvertisment) => {
+let create = async (resource, target, description, subject, subjectType, order) => {
     try {
         var query = { resource, target, description, subject, subjectType }
         if (subjectType == "PROMOCODE") query.promoCode = subject;
@@ -31,9 +31,6 @@ let create = async (resource, target, description, subject, subjectType, order,a
         }
         if (order) {
             query.order = order;
-        }
-        if (addvertisment) {
-            query.addvertisment = addvertisment;
         }
 
         var newNotification = new Notif(query);
@@ -128,15 +125,13 @@ export default {
             console.log(err.message);
         }
     },
-    // NewNotification
 
-
-    async pushNotification(targetUser, subjectType, subjectId, text, title) {
+    async pushNotification(targetUser, subjectType, subjectId, text,targetUserData) {
         try {
-            var user = await checkExistThenGet(targetUser, User, { deleted: false });
+            var user = targetUserData ? targetUserData : await checkExistThenGet(targetUser, User, { deleted: false });
             if (user.notification) {
-                let data = { targetUser: user, subjectType: subjectType, subjectId: subjectId, text: text, title: title }
-
+                let notifTitle = config.notificationTitle;
+                let data = { targetUser: user, subjectType: subjectType, subjectId: subjectId, text: text[user.language], title: notifTitle[user.language] }
                 sendPushNotification(data);
             } else {
                 return true;
@@ -148,11 +143,10 @@ export default {
 
     validateAdminSendToAll() {
         let validations = [
-            body('titleOfNotification.ar').not().isEmpty().withMessage('titleOfNotification is required'),
-            body('titleOfNotification.en').not().isEmpty().withMessage('titleOfNotification is required'),
-            body('text.ar').not().isEmpty().withMessage('text is required'),
-            body('text.en').not().isEmpty().withMessage('text is required'),
-
+            body('titleOfNotification.ar').not().isEmpty().withMessage(()=>i18n.__('arabicTitleRequired')),
+            body('titleOfNotification.en').not().isEmpty().withMessage(()=>i18n.__('englishTitleRequired')),
+            body('text.ar').not().isEmpty().withMessage(()=>i18n.__('arabicTextRequired')),
+            body('text.en').not().isEmpty().withMessage(()=>i18n.__('englishTextRequired')),
         ];
         return validations;
     },
@@ -163,39 +157,28 @@ export default {
             if (user.type != 'ADMIN' && user.type != 'SUB_ADMIN') {
                 return next(new ApiError(403, ('admin.auth')));
             }
+            const url = req.protocol + '://' + req.get('host'); //+ '/';
             let validatedBody = checkValidations(req);
             if (req.file) {
                 let image = await handleImg(req, { attributeName: 'image', isUpdate: false });
                 validatedBody.image = image;
             }
-            let notifiObj = { resource: req.user.id, type: "ALL", subjectType: "ADMIN", description: validatedBody.text };
+            let notifiObj = {titleOfNotification :validatedBody.titleOfNotification, resource: req.user.id, type: "ALL", subjectType: "ADMIN", description: validatedBody.text };
             if(validatedBody.image) notifiObj.image = validatedBody.image
             await Notif.create(notifiObj)
-            var allUsers = await User.find({ deleted: false, type: 'CLIENT' });
+            var allUsers = await User.find({ deleted: false, type: {$nin : ['ADMIN','SUB_ADMIN']} });
+
             allUsers.forEach(async (user) => {
                 if (user.notification) {
-                    if (user.language == 'ar') {
-                        sendPushNotification(
-                            {
-                                targetUser: user,
-                                subjectType: "ADMIN",
-                                subjectId: 1,
-                                text: validatedBody.text.ar,
-                                title: validatedBody.titleOfNotification.ar,
-                                image: (validatedBody.image) ? config.backend_endpoint + validatedBody.image : ''
-                            });
-                    }
-                    else {
-                        sendPushNotification(
-                            {
-                                targetUser: user,
-                                subjectType: "ADMIN",
-                                subjectId: 1,
-                                text: validatedBody.text.en,
-                                title: validatedBody.titleOfNotification.en,
-                                image: (validatedBody.image) ? config.backend_endpoint + validatedBody.image : ''
-                            });
-                    }
+                    sendPushNotification(
+                        {
+                            targetUser: user,
+                            subjectType: "ADMIN",
+                            subjectId: 1,
+                            text: validatedBody.text[user.language],
+                            title: validatedBody.titleOfNotification[user.language],
+                            image: (validatedBody.image) ? url + validatedBody.image : ''
+                        });
                 }
                 notificationNSP.to('room-'+user.id).emit(socketEvents.NotificationsCount, { count:await Notif.count({$or:[{target: user.id},{users:user.id}],informed: { $ne: user.id },deleted: false,usersDeleted: { $ne: user.id }}) });
 
@@ -208,16 +191,20 @@ export default {
 
     validateAdminSendToSpecificUsers() {
         let validations = [
-            body('titleOfNotification.ar').not().isEmpty().withMessage('titleOfNotification is required'),
-            body('titleOfNotification.en').not().isEmpty().withMessage('titleOfNotification is required'),
-            body('text.ar').not().isEmpty().withMessage('text is required'),
-            body('text.en').not().isEmpty().withMessage('text is required'),
-            body('users').not().isEmpty().withMessage('users is required').isArray().withMessage('must be array').custom(async (val, { req }) => {
-                for (let index = 0; index < val.length; index++) {
-                    await checkExist(val[index], User, { deleted: false });
-                }
-                return true;
-            }),
+            body('titleOfNotification.ar').not().isEmpty().withMessage(()=>i18n.__('arabicTitleRequired')),
+            body('titleOfNotification.en').not().isEmpty().withMessage(()=>i18n.__('englishTitleRequired')),
+
+            body('text.ar').not().isEmpty().withMessage(()=>i18n.__('arabicTextRequired')),
+            body('text.en').not().isEmpty().withMessage(()=>i18n.__('englishTextRequired')),
+
+            body('users').not().isEmpty().withMessage(()=>i18n.__('userRequired'))
+            .isArray().withMessage(()=>i18n.__('muntBeArray'))
+                .custom(async (val, { req }) => {
+                    for (let index = 0; index < val.length; index++) {
+                        await checkExist(val[index], User, { deleted: false });
+                    }
+                    return true;
+                })
         ];
         return validations;
     },
@@ -228,34 +215,23 @@ export default {
                 let image = await handleImg(req, { attributeName: 'image', isUpdate: false });
                 validatedBody.image = image;
             }
-            let notifiObj = { resource: req.user.id, type: "USERS", subjectType: "ADMIN", description: validatedBody.text, users: validatedBody.users };
+            const url = req.protocol + '://' + req.get('host'); //+ '/';
+
+            let notifiObj = {titleOfNotification :validatedBody.titleOfNotification, resource: req.user.id, type: "USERS", subjectType: "ADMIN", description: validatedBody.text, users: validatedBody.users };
             if(validatedBody.image) notifiObj.image = validatedBody.image
             await Notif.create(notifiObj)
             var allUsers = await User.find({ deleted: false, _id: { $in: validatedBody.users } });
             allUsers.forEach(async (user) => {
                 if (user.notification) {
-                    if (user.language == 'ar') {
-                        sendPushNotification(
-                            {
-                                targetUser: user,
-                                subjectType: "ADMIN",
-                                subjectId: 1,
-                                text: validatedBody.text.ar,
-                                title: validatedBody.titleOfNotification.ar,
-                                image: (validatedBody.image) ? config.backend_endpoint + validatedBody.image : ''
-                            });
-                    }
-                    else {
-                        sendPushNotification(
-                            {
-                                targetUser: user,
-                                subjectType: "ADMIN",
-                                subjectId: 1,
-                                text: validatedBody.text.en,
-                                title: validatedBody.titleOfNotification.en,
-                                image: (validatedBody.image) ? config.backend_endpoint + validatedBody.image : ''
-                            });
-                    }
+                    sendPushNotification(
+                        {
+                            targetUser: user,
+                            subjectType: "ADMIN",
+                            subjectId: 1,
+                            text: validatedBody.text[user.language],
+                            title: validatedBody.titleOfNotification[user.language],
+                            image: (validatedBody.image) ? url + validatedBody.image : ''
+                        });
                 }
                 notificationNSP.to('room-'+user.id).emit(socketEvents.NotificationsCount, { count:await Notif.count({$or:[{target: user.id},{users:user.id}],informed: { $ne: user.id },deleted: false,usersDeleted: { $ne: user.id }}) });
 
@@ -271,14 +247,14 @@ export default {
     async findAll(req, res, next) {
         try {
             let page = +req.query.page || 1, limit = +req.query.limit || 20;
-            let { resource, admin } = req.query;
+            let { resource, admin ,removeLanguage} = req.query;
             let query = { deleted: false, subjectType: "ADMIN", type: { $ne: null } };
             if (resource) query.resource = resource;
             var notifs = await Notif.find(query).populate(populateQuery)
                 .sort({ _id: -1 })
                 .limit(limit)
                 .skip((page - 1) * limit);
-            if (!admin)
+            if (!removeLanguage)
                 notifs = Notif.schema.methods.toJSONLocalizedOnly(notifs, i18n.getLocale());
             const notifsCount = await Notif.count(query);
             const pageCount = Math.ceil(notifsCount / limit);

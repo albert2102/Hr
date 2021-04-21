@@ -1,4 +1,5 @@
 import ShippingCard from "../../models/shipping-card.model/shipping-card.model";
+import User from "../../models/user.model/user.model";
 import ApiResponse from "../../helpers/ApiResponse";
 import { checkExistThenGet, checkExist } from "../../helpers/CheckMethods";
 import { body } from 'express-validator/check';
@@ -7,6 +8,8 @@ import i18n from 'i18n';
 import moment from 'moment'
 import ApiError from "../../helpers/ApiError";
 import { generateVerifyCode } from '../../services/generator-code-service'
+import socketEvents from '../../socketEvents';
+import notifyController from '../notif.controller/notif.controller';
 
 let populateQuery = [{ path: 'user', model: 'user' }];
 
@@ -52,7 +55,7 @@ export default {
     async findAll(req, res, next) {
         try {
             let page = +req.query.page || 1, limit = +req.query.limit || 20;
-
+            await ShippingCard.updateMany({_id:{$gte:1}},{$unset:{user:1}})
             var { number, price, value, month, year, user } = req.query;
             let query = { deleted: false };
 
@@ -97,7 +100,7 @@ export default {
                 return next(new ApiError(403, i18n.__('unauthrized')));
 
             let validatedBody = checkValidations(req);
-            validatedBody.user = user.id;
+            validatedBody.createdBy = user.id;
             let shippingCard = await ShippingCard.create(validatedBody);
 
             ///////////////////////////////////////////////////////////////////
@@ -169,7 +172,7 @@ export default {
                 return next(new ApiError(403, i18n.__('unauthrized')));
 
             let validatedBody = checkValidations(req);
-            validatedBody.user = user.id;
+            validatedBody.createdBy = user.id;
             for (let index = 0; index < validatedBody.count; index++) {
                 let shippingCard = await ShippingCard.create(validatedBody);
                 ///////////////////////////////////////////////////////////////////
@@ -180,6 +183,71 @@ export default {
                 await shippingCard.save();
             }
             res.status(200).send("Done");
+        } catch (err) {
+            next(err);
+        }
+    },
+    //////////////////////////////////////////////////////////////////////////////
+    validateUseCard() {
+        return [
+            body('number').not().isEmpty().withMessage(() => { return i18n.__('numberRequired') })
+                .isNumeric().withMessage(() => { return i18n.__('invalidNumber') })
+                .custom(async (val, { req }) => {
+                    let query = { number: val, deleted: false,used:true };
+                    req.card = await ShippingCard.findOne(query).lean();
+                    if (req.card)
+                        throw new Error(i18n.__('invalidCard'));
+                    return true;
+                })
+        ];
+    },
+    async useCard(req, res, next) {
+        try {
+            let validatedBody = checkValidations(req);
+
+            let user = req.user;
+            let shippingCard =await ShippingCard.findOne({number:validatedBody.number})
+            shippingCard.user = user.id;
+            shippingCard.used = true;
+            shippingCard.usedDate = new Date();
+            await shippingCard.save();
+            /////////////////////////////////////////////////////////
+            user.wallet = user.wallet + shippingCard.value;
+            await user.save();
+            res.status(200).send({user:user });
+
+            notificationNSP.to('room-' + user.id).emit(socketEvents.NewUser, { user:user });
+        } catch (err) {
+            next(err);
+        }
+    },
+
+    //////////////////////////////////////////////////////////////////////////////
+    validateAdminAddToWallet() {
+        return [
+            body('value').not().isEmpty().withMessage(() => { return i18n.__('numberRequired') }).isNumeric().withMessage('must be a numeric'),
+            body('userId').not().isEmpty().withMessage(() => { return i18n.__('userIdRequired') })
+
+        ];
+    },
+    async adminAddToWallet(req, res, next) {
+        try {
+            let validatedBody = checkValidations(req);
+            let authUser = req.user;
+
+            if (authUser.type != 'ADMIN' && authUser.type != 'SUB_ADMIN') {
+                return next(new ApiError(403, ('admin.auth')));
+            }
+            let user = await checkExistThenGet(validatedBody.userId, User, { deleted: false });
+
+            user.wallet = user.wallet + validatedBody.value;
+            await user.save();
+            res.status(200).send({user:user });
+
+            let description = { ar: ' تم زيادة رصيدك بمبلغ ' +  ' : ' + validatedBody.value , en: 'Your wallet was increased by an amount : ' + validatedBody.value};
+            await notifyController.create(req.user.id, user.id, description, user.id, 'ADDED_TO_WALLET');
+            notifyController.pushNotification(user.id, 'ADDED_TO_WALLET', user.id,description);
+            notificationNSP.to('room-' + user.id).emit(socketEvents.NewUser, { user:user });
         } catch (err) {
             next(err);
         }

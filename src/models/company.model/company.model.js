@@ -40,6 +40,9 @@ const CompanySchema = new Schema({
         type: String,
         i18n: true
     },
+    contactusReasons:{
+        type:[{ ar: { type: String }, en: { type: String }}]
+    },
     androidUrl:{
         type: String,
         required: true

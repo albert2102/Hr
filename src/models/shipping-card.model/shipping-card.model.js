@@ -20,8 +20,16 @@ const shippingCardSchema = new Schema({
         type:Boolean,
         default:false
     },
+    usedDate:{
+        type: Date
+    },
+    createdBy:{
+        type:Number,
+        ref: 'user'
+    },
     user:{
-        type:Number
+        type:Number,
+        ref: 'user'
     },
     deleted:{
         type:Boolean,

@@ -127,13 +127,7 @@ export default {
             let newContactUs = await Contactus.findOneAndUpdate({ deleted: false, _id: contactUsId }, { $push: { reply: validatedBody.reply } }, { new: true })
             res.status(200).send({ newContactUs });
             await notifyController.create(req.user.id, newContactUs.user, { en: validatedBody.reply, ar: validatedBody.reply }, newContactUs.id, 'CONTACTUS');
-            if (req.user.language == 'ar'){
-                await notifyController.pushNotification(newContactUs.user, 'CONTACTUS', newContactUs.id, validatedBody.reply,config.notificationTitle.ar );
-
-            }else{
-            await notifyController.pushNotification(newContactUs.user, 'CONTACTUS', newContactUs.id, validatedBody.reply,config.notificationTitle.ar );
-
-            }
+            await notifyController.pushNotification(newContactUs.user, 'CONTACTUS', newContactUs.id, validatedBody.reply );
             await sendEmail(contactUs.email, validatedBody.reply);
             await countNotReplied();
         }
