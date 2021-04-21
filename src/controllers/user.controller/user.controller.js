@@ -921,7 +921,6 @@ export default {
             }
             validatedBody.type = 'DRIVER';
             validatedBody.status = 'WAITING';
-            validatedBody.password = '12345678';
             let createdUser = await User.create(validatedBody);
             res.status(200).send({ user: createdUser});
             await AdminController.count();

@@ -83,7 +83,17 @@ let updateSeen = async (user)=>{
 
 
 export default {
-    validate() {
+
+    validateCreateDefault() {
+        let validation = [
+            body('text').optional().not().isEmpty().withMessage(() => i18n.__('messageRequired')),
+            body('reciver').not().isEmpty().withMessage(() => i18n.__('reciverRequired')),
+
+        ]
+        return validation;
+    },
+
+    validateComplaint() {
         let validation = [
             body('text').optional().not().isEmpty().withMessage(() => i18n.__('messageRequired')),
             body('reciver').optional().not().isEmpty().withMessage(() => i18n.__('reciverRequired')),
@@ -95,15 +105,13 @@ export default {
         ]
         return validation;
     },
-
     async create(req, res, next) {
         try {
             let user = req.user;
-            
             let data = checkValidations(req);
             let complaint = req.complaint;
             
-            let message = { sender: user.id, message: {},complaint:complaint.id,reciver:{} };
+            let message = { sender: user.id, message: {},reciver:{} };
 
             
             if (!(data.text || req.file)) {
