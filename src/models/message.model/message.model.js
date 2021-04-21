@@ -41,6 +41,10 @@ var message = {
         type: Boolean,
         default: 0
     },
+    complaint:{
+        type: Number,
+        ref:'complaint'
+    }
 }
 
 var messageSchema = new Schema(message, { timestamps: true });

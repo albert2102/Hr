@@ -8,6 +8,8 @@ router.route('/')
     .get(shippingCardController.findAll)
     .post(requireAuth,shippingCardController.validateBody(),shippingCardController.create)
 
+router.route('/useCard').post(requireAuth,shippingCardController.validateUseCard(),shippingCardController.useCard)
+router.route('/addedToWallet').post(requireAuth,shippingCardController.validateAdminAddToWallet(),shippingCardController.adminAddToWallet)
 
 router.route('/:shippingCardId')
     .get(requireAuth,shippingCardController.findById)

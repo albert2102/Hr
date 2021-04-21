@@ -1002,4 +1002,12 @@ export default {
             next(err);
         }
     },
+    async uploadImage(req, res, next) {
+        try {
+            let productImage = await handleImg(req, { attributeName: 'image', isUpdate: false });
+            res.status(200).send({ link: productImage });
+        } catch (error) {
+            next(error);
+        }
+    },
 };

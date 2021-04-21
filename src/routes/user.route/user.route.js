@@ -81,4 +81,6 @@ router.put('/phonePasswordChange', userController.validateUpdatePasswordByPhone(
 
 router.route('/account').delete(requireAuth, userController.deleteAccount);
 
+router.post('/uploadImage', multerSaveTo('users').single('image'), userController.uploadImage)
+
 export default router;

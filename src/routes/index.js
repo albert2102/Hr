@@ -15,18 +15,14 @@ import appadvertismentsRoute from './app-advertisment.route/app-advertisment.rou
 import issueRoute from './issue.route/issue.route';
 import favoriteRoute from './favorites.route/favorites.route';
 import creditRouter from './credit.route/credit.route';
-
-// import countryRouter from './country.route/country.route';
-// import cityRouter from './city.route/city.route';
-// import subcategoryRouter from './sub-category.route/sub-category.route';
-// import branchesRoute from './branches.route/branches.route';
 import orderRouter from './order.route/order.route'
 import addressRoute from './address.route/address.route';
 import shippingRoute from './shipping-card.route/shipping-card.route';
-// import notifRouter from './notif.route/notif.route';
-// import dashBoardRouter from './dashboard.route/dashboard.route';
+import notifRouter from './notif.route/notif.route';
 import promocodeRoute from './promocode.route/promocode.route';
-// import chatRouter from './message.route/message.route';
+import chatRouter from './message.route/message.route';
+import complaintRouter from './complaint.route/complaint.route';
+import dashBoardRouter from './dashboard.route/dashboard.route';
 
 
 router.use('/',userRoute);
@@ -44,19 +40,12 @@ router.use('/issue',issueRoute);
 router.use('/favorites',favoriteRoute);
 router.use('/credit', creditRouter)
 router.use('/shipping-card',shippingRoute )
-
-// router.use('/country',countryRouter)
-// router.use('/city',cityRouter)
-// router.use('/sub-category',subcategoryRouter)
-// // router.use('/product',productRoute);
 router.use('/address',addressRoute);
 router.use('/promocode',promocodeRoute)
-// router.use('/notif',notifRouter);
+router.use('/notif',notifRouter);
 router.use('/order', orderRouter);
-// router.use('/chat', chatRouter);
-// router.use('/branches',branchesRoute);
-
-
-// router.use('/dashboard',dashBoardRouter);
+router.use('/chat', chatRouter);
+router.use('/complaint', complaintRouter)
+router.use('/dashboard',dashBoardRouter);
 
 export default router;

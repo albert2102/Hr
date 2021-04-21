@@ -9,9 +9,9 @@ import i18n from 'i18n'
 import ApiError from "../../helpers/ApiError";
 import notificationController from '../notif.controller/notif.controller'
 import ApiResponse from "../../helpers/ApiResponse";
-import config from '../../config'
+import Complaint from '../../models/complaint.model/complaint.model';
 
-let popQuery = [{ path: 'sender', model: 'user' }, { path: 'reciver.user', model: 'user' }]
+let popQuery = [{ path: 'sender', model: 'user' }, { path: 'reciver.user', model: 'user' }, { path: 'complaint', model: 'complaint' }]
  
 let countUnseen = async (id)=>{
     try {
@@ -49,18 +49,18 @@ let handelNewMessageSocket = async (message) => {
             if (message.reciver.user.activeChatHead == false) {
                 let text = (message.message.text) ? message.message.text : ' رسالة جديدة ';
                 if (message.reciver.user.language == 'ar') {
-                    await notificationController.pushNotification(message.reciver.user.id, 'MESSAGE', message.sender.id, text, config.notificationTitle.ar)
+                    await notificationController.pushNotification(message.reciver.user.id, 'MESSAGE', message.sender.id, text)
                 } else {
-                    await notificationController.pushNotification(message.reciver.user.id, 'MESSAGE', message.sender.id, text, config.notificationTitle.en)
+                    await notificationController.pushNotification(message.reciver.user.id, 'MESSAGE', message.sender.id, text)
                 }
             }
         } else if(message.reciver && message.reciver.user && !chatNSP.adapter.rooms['room-' + message.reciver.user.id]) {
             await countUnseen(message.reciver.user.id)
             let text = (message.message.text) ? message.message.text :' رسالة جديدة ';
             if (message.reciver.user.language == 'ar') {
-                await notificationController.pushNotification(message.reciver.user.id, 'MESSAGE', message.sender.id, text, config.notificationTitle.ar)
+                await notificationController.pushNotification(message.reciver.user.id, 'MESSAGE', message.sender.id, text)
             } else {
-                await notificationController.pushNotification(message.reciver.user.id, 'MESSAGE', message.sender.id, text, config.notificationTitle.en)
+                await notificationController.pushNotification(message.reciver.user.id, 'MESSAGE', message.sender.id, text)
             }
         }else if(!message.reciver.user){
             chatNSP.to('room-admin').emit(SocketEvents.NewMessage, { message: message });
@@ -83,13 +83,14 @@ let updateSeen = async (user)=>{
 
 
 export default {
-
-    
-
     validate() {
         let validation = [
             body('text').optional().not().isEmpty().withMessage(() => i18n.__('messageRequired')),
             body('reciver').optional().not().isEmpty().withMessage(() => i18n.__('reciverRequired')),
+            body('complaint').not().isEmpty().withMessage(() => i18n.__('complaintRequired'))
+            .custom(async (value,{req}) => {
+                req.complaint = await checkExistThenGet(value, Complaint, { deleted: false });
+            }),
 
         ]
         return validation;
@@ -98,12 +99,13 @@ export default {
     async create(req, res, next) {
         try {
             let user = req.user;
-            if (user.type != 'CLIENT' && !req.body.reciver) {
-                return next(new ApiError(404, i18n.__('reciverRequired')))
-            }
+            
             let data = checkValidations(req);
-            let message = { sender: user.id, message: {} };
+            let complaint = req.complaint;
+            
+            let message = { sender: user.id, message: {},complaint:complaint.id,reciver:{} };
 
+            
             if (!(data.text || req.file)) {
                 return next(new ApiError(404, i18n.__('messageRequired')))
             }
@@ -125,21 +127,20 @@ export default {
             }
 
             if (user.type != 'CLIENT' ) {
-                let friend = await checkExistThenGet(data.reciver, User, { deleted: false });
-                message.reciver = { user: friend.id }
+                message.reciver.user = complaint.user;
             }else{
                 delete message.reciver ;
             }
-
+            console.log(message)
             message.lastMessage = true;
             let createdMessage = await Message.create(message);
             createdMessage = await Message.populate(createdMessage, popQuery);
             res.status(200).send(createdMessage);
             if (user.type == 'CLIENT' ) {
-                await Message.updateMany({deleted:false , _id:{$ne:createdMessage.id} ,$or:[{sender:user.id},{'reciver.user':user.id}]},{$set:{lastMessage:false}});
+                await Message.updateMany({deleted:false , _id:{$ne:createdMessage.id} ,complaint: complaint.id,$or:[{sender:user.id},{'reciver.user':user.id}]},{$set:{lastMessage:false}});
                 
             }else{
-                await Message.updateMany({deleted:false , _id:{$ne:createdMessage.id} ,$or:[{sender:data.reciver},{'reciver.user':data.reciver}]},{$set:{lastMessage:false}});
+                await Message.updateMany({deleted:false , _id:{$ne:createdMessage.id} ,complaint: complaint.id,$or:[{sender:data.reciver},{'reciver.user':data.reciver}]},{$set:{lastMessage:false}});
             }
             handelNewMessageSocket(createdMessage);
 
@@ -172,19 +173,21 @@ export default {
 
     async getChatForUser(req, res, next) {
         try {
-            if (req.user.type != 'ADMIN' && req.user.type != 'SUB_ADMIN')
-                return next(new ApiError(403, ('admin.auth')));
-
             let page = +req.query.page || 1,
                 limit = +req.query.limit || 20;
-            let { user } = req.query;
+            
+            let {complaint } = req.query;
+            if(!complaint) return next(new ApiError(403, 'complaint in query is required'));
+            let user = (await checkExistThenGet(complaint,Complaint,{deleted: false})).user;
             let query = {
                 deleted: false,
                 $or: [{ sender: user },
-                { 'reciver.user': user }
-                ]
+                    { 'reciver.user': user }
+                    ],
+                complaint: complaint
             };
-            await Message.updateMany({ deleted: false, sender: user,'reciver.read':false }, { $set: { 'reciver.read': true, 'reciver.readDate': new Date() } })
+            let updatedMessageQuery = { deleted: false, sender: user,'reciver.read':false,complaint:complaint }
+            await Message.updateMany(updatedMessageQuery, { $set: { 'reciver.read': true, 'reciver.readDate': new Date() } })
             var chats = await Message.find(query).populate(popQuery).sort({ _id: -1 }).limit(limit).skip((page - 1) * limit)
             const chatCount = await Message.count(query);
             const pageCount = Math.ceil(chatCount / limit);
@@ -195,43 +198,33 @@ export default {
         }
     },
 
-    async getMyChat(req, res, next) {
+    async getLastChatsForAdmin(req, res, next) {
         try {
-            let user = req.user.id;
             let page = +req.query.page || 1,
                 limit = +req.query.limit || 20;
+            if(req.user.type != 'ADMIN'  && req.user.type != 'SUB_ADMIN' && req.user.type != 'COMPANY'){
+                return next(new ApiError(403, ('unauthorized')));
+            }
+            let {complaint,complaintNumber } = req.query;
+
             let query = {
                 deleted: false,
-                $or: [{ sender: user },
-                { 'reciver.user': user}
-                ]
+                lastMessage: true
             };
-            await Message.updateMany({ deleted: false, 'reciver.user': user ,'reciver.read':false}, { $set: { 'reciver.read': true, 'reciver.readDate': new Date() } })
+            if(complaint) query.complaint = complaint;
+            if(complaintNumber) {
+                let complaints = await Complaint.find({deleted: false,number:{ '$regex': complaintNumber, '$options': 'i' }}).distinct('_id');
+                query.complaint = {$in: complaints};
+            }
             var chats = await Message.find(query).populate(popQuery).sort({ _id: -1 }).limit(limit).skip((page - 1) * limit)
             const chatCount = await Message.count(query);
             const pageCount = Math.ceil(chatCount / limit);
             res.send(new ApiResponse(chats, page, pageCount, limit, chatCount, req));
-
+            await countUnseenForAdmin();
         } catch (error) {
             next(error)
         }
     },
-
-    async getLastContactsForAdminSupport(req, res, next){
-        try {
-            
-            let page = +req.query.page || 1, limit = +req.query.limit || 20;
-            let query = { deleted: false ,lastMessage:true};
-            let messages = await Message.find(query).populate(popQuery).sort({ createdAt: -1 }).limit(limit).skip((page - 1) * limit);
-            let messagesCount = await Message.count(query);
-            const pageCount = Math.ceil(messagesCount / limit);
-            res.send(new ApiResponse(messages, page, pageCount, limit, messagesCount, req));
-            //adminNSP.emit(SocketEvents.NewMessageCount, {count:0 });
-        } catch (error) {
-            next(error);
-        }
-    },
-
     countUnseen,
     updateSeen,
     countUnseenForAdmin
