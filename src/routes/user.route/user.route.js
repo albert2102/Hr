@@ -13,16 +13,16 @@ const uploadedFiles = [
 const router = express.Router();
 
 router.route('/institution/updateInfo')
-    .put(requireAuth, multerSaveTo('users').fields(uploadedFiles), parseObject(parseArray), userController.validateUpdateInstitution(), userController.updateInfo);
+    .put(requireAuth, multerSaveTo('users').single('image'), parseObject(parseArray), userController.validateUpdateInstitution(), userController.updateInfo);
 
 router.route('/institution/signup')
-    .post(multerSaveTo('users').fields(uploadedFiles), parseObject(parseArray), userController.validateAddInstitutionBody(), userController.institutionSignUp);
+    .post(multerSaveTo('users').single('image'), parseObject(parseArray), userController.validateAddInstitutionBody(), userController.institutionSignUp);
 
 router.route('/driver/updateInfo')
-    .put(requireAuth, multerSaveTo('users').fields(uploadedFiles), parseObject(parseArray), userController.validateUpdateDriver(), userController.updateInfo);
+    .put(requireAuth, multerSaveTo('users').single('image'), parseObject(parseArray), userController.validateUpdateDriver(), userController.updateInfo);
 
 router.route('/driver/signup')
-    .post(multerSaveTo('users').fields(uploadedFiles), parseObject(parseArray), userController.validateCreateDriver(), userController.driverSignUp);
+    .post(multerSaveTo('users').single('image'), parseObject(parseArray), userController.validateCreateDriver(), userController.driverSignUp);
 
 router.get('/Home', userController.Home);
 

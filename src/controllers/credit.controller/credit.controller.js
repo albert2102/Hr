@@ -33,7 +33,6 @@ export default {
                 .isNumeric().withMessage(() => { return i18n.__('expireDateMonthValueError')})
                 .isLength({min:2,max:2}).withMessage(() => { return i18n.__('expireDateMonthValueError')}),
             body('holder').not().isEmpty().withMessage(() => { return i18n.__('holderRequired')}),
-            body('paymentType').not().isEmpty().withMessage(() => { return i18n.__('paymentTypeRequired') }).isIn(['VISA','MASTERCARD','MADA']).withMessage('Wrong type'),
         ];
         
         return validator;
