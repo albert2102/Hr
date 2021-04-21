@@ -8,7 +8,7 @@ const router = express.Router();
 
 router.route('/').post(requireAuth,
     multerSaveTo('chat').single('file'),
-    messageController.validate(),
+    messageController.validateCreateDefault(),
     messageController.create
 )
 

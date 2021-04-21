@@ -39,9 +39,9 @@ export default {
             let page = +req.query.page || 1,
                 limit = +req.query.limit || 20;
             var { all, name, type, fromDate, toDate, phone, email, activated, countryKey, countryCode,
-                month, year, day, archive, country,category,status } = req.query;
+                month, year, day, archive, country, category, status } = req.query;
 
-            var query = { deleted: false, status:{$nin:['WAITING','REJECTED']} };
+            var query = { deleted: false, status: { $nin: ['WAITING', 'REJECTED'] } };
             if (archive) query.deleted = true;
             if (status) query.status = status;
             if (name) query.name = { '$regex': name, '$options': 'i' };
@@ -55,7 +55,7 @@ export default {
                 let userCountries = await Address.find({ deleted: false, country: country }).distinct('user');
                 query._id = { $in: userCountries }
             }
-            if (category) query.category =category;
+            if (category) query.category = category;
 
             if (fromDate && toDate) {
                 let startOfDate = moment(fromDate).startOf('day');
@@ -117,7 +117,7 @@ export default {
             body('phone').not().isEmpty().withMessage(() => { return i18n.__('usernameOrPhoneRequired') }),
             body('password').not().isEmpty().withMessage(() => { return i18n.__('passwordRequired') }),
             body('type').not().isEmpty().withMessage(() => { return i18n.__('typeIsRequired') })
-                .isIn(['CLIENT','INSTITUTION','DRIVER']).withMessage(() => { return i18n.__('userTypeWrong') }),
+                .isIn(['CLIENT', 'INSTITUTION', 'DRIVER']).withMessage(() => { return i18n.__('userTypeWrong') }),
         ];
         return validations;
     },
@@ -125,9 +125,9 @@ export default {
     async signIn(req, res, next) {
         try {
             const validatedBody = checkValidations(req);
-            var query = { deleted: false, type: validatedBody.type};
-            if(validatedBody.type !='CLIENT') query.status ='ACCEPTED';
-            if(validatedBody.countryCode) query.countryCode = validatedBody.countryCode;
+            var query = { deleted: false, type: validatedBody.type };
+            if (validatedBody.type != 'CLIENT') query.status = 'ACCEPTED';
+            if (validatedBody.countryCode) query.countryCode = validatedBody.countryCode;
             query.phone = validatedBody.phone.trim();
             let user = await User.findOne(query).populate(populateQuery);
             if (user) {
@@ -138,7 +138,7 @@ export default {
                         if (!user.activated) {
                             return next(new ApiError(403, i18n.__('accountStop')));
                         }
-                        
+
                         user = await User.schema.methods.toJSONLocalizedOnly(user, i18n.getLocale());
                         return res.status(200).send({ user, token: generateToken(user.id) });
                     } else {
@@ -265,7 +265,7 @@ export default {
             body('currentPassword').optional().not().isEmpty().withMessage(() => { return i18n.__('CurrentPasswordRequired') }),
             body('countryCode').optional().not().isEmpty().withMessage(() => { return i18n.__('countryCodeRequired') }),
             body('countryKey').optional().not().isEmpty().withMessage(() => { return i18n.__('countryKeyRequired') }),
-            
+
             body('location').optional().not().isEmpty().withMessage(() => { return i18n.__('locationRequired') }),
             body('location.long').optional().not().isEmpty().withMessage(() => { return i18n.__('longitudeRequired') }),
             body('location.lat').optional().not().isEmpty().withMessage(() => { return i18n.__('latitudeRequired') }),
@@ -288,7 +288,7 @@ export default {
                 let coverImage = fieldhandleImg(req, { attributeName: 'coverImage' });
                 validatedBody.coverImage = coverImage[0];
             }
-            if(validatedBody.location && validatedBody.location.lat && validatedBody.location.lat){
+            if (validatedBody.location && validatedBody.location.lat && validatedBody.location.lat) {
                 validatedBody.geoLocation = { type: 'Point', coordinates: [validatedBody.location.long, validatedBody.location.lat] }
             }
             if (validatedBody.newPassword) {
@@ -302,7 +302,7 @@ export default {
                         delete validatedBody.currentPassword;
                         user = await User.findOneAndUpdate({ deleted: false, _id: userId }, validatedBody, { new: true }).populate(populateQuery);
                         user = await User.schema.methods.toJSONLocalizedOnly(user, i18n.getLocale());
-                        
+
                         res.status(200).send(user);
                     } else {
                         return next(new ApiError(403, i18n.__('currentPasswordInvalid')))
@@ -319,7 +319,7 @@ export default {
             } else {
                 user = await User.findOneAndUpdate({ deleted: false, _id: userId }, validatedBody, { new: true }).populate(populateQuery);
                 user = await User.schema.methods.toJSONLocalizedOnly(user, i18n.getLocale());
-    
+
                 res.status(200).send(user);
             }
 
@@ -360,7 +360,7 @@ export default {
         return [
             body('email').not().isEmpty().withMessage(() => { return i18n.__('emailRequired') }),
             body('type').not().isEmpty().withMessage(() => { return i18n.__('typeIsRequired') })
-                .isIn(['ADMIN','SUB_ADMIN','CLIENT','INSTITUTION','DRIVER']).withMessage(() => { return i18n.__('userTypeWrong') }),
+                .isIn(['ADMIN', 'SUB_ADMIN', 'CLIENT', 'INSTITUTION', 'DRIVER']).withMessage(() => { return i18n.__('userTypeWrong') }),
         ];
     },
     async forgetPassword(req, res, next) {
@@ -389,7 +389,7 @@ export default {
             body('email').not().isEmpty().withMessage(() => { return i18n.__('emailRequired') }),
             body('code').not().isEmpty().withMessage(() => { return i18n.__('codeRequired') }),
             body('type').not().isEmpty().withMessage(() => { return i18n.__('typeIsRequired') })
-                .isIn(['ADMIN','SUB_ADMIN','CLIENT','INSTITUTION','DRIVER']).withMessage(() => { return i18n.__('userTypeWrong') }),
+                .isIn(['ADMIN', 'SUB_ADMIN', 'CLIENT', 'INSTITUTION', 'DRIVER']).withMessage(() => { return i18n.__('userTypeWrong') }),
         ];
     },
     async verifyForgetPasswordCode(req, res, next) {
@@ -435,7 +435,7 @@ export default {
             body('countryCode').not().isEmpty().withMessage(() => { return i18n.__('countryCodeRequired') }),
             body('phone').not().isEmpty().withMessage(() => { return i18n.__('phoneRequired') }),
             body('type').not().isEmpty().withMessage(() => { return i18n.__('typeIsRequired') })
-                .isIn(['ADMIN','SUB_ADMIN','CLIENT','INSTITUTION','DRIVER']).withMessage(() => { return i18n.__('userTypeWrong') }),
+                .isIn(['ADMIN', 'SUB_ADMIN', 'CLIENT', 'INSTITUTION', 'DRIVER']).withMessage(() => { return i18n.__('userTypeWrong') }),
         ];
     },
     async forgetPasswordByPhone(req, res, next) {
@@ -443,7 +443,7 @@ export default {
             let validatedBody = checkValidations(req);
             var phone = validatedBody.phone;
             phone = phone.trim()
-            var user = await User.findOne({ phone: phone, deleted: false,type:validatedBody.type,countryCode: validatedBody.countryCode });
+            var user = await User.findOne({ phone: phone, deleted: false, type: validatedBody.type, countryCode: validatedBody.countryCode });
             if (!user)
                 return next(new ApiError(403, i18n.__('userNotFound')));
             twilioSend('+2' + phone, user.language || 'ar');
@@ -459,7 +459,7 @@ export default {
             body('phone').not().isEmpty().withMessage(() => { return i18n.__('phoneRequired') }),
             body('countryCode').not().isEmpty().withMessage(() => { return i18n.__('countryCodeRequired') }),
             body('type').not().isEmpty().withMessage(() => { return i18n.__('typeIsRequired') })
-                .isIn(['ADMIN','SUB_ADMIN','CLIENT','INSTITUTION','DRIVER']).withMessage(() => { return i18n.__('userTypeWrong') }),
+                .isIn(['ADMIN', 'SUB_ADMIN', 'CLIENT', 'INSTITUTION', 'DRIVER']).withMessage(() => { return i18n.__('userTypeWrong') }),
         ];
     },
     async verifyForgetPasswordByPhone(req, res, next) {
@@ -467,7 +467,7 @@ export default {
             let validatedBody = checkValidations(req);
             var phone = validatedBody.phone;
             phone = phone.trim()
-            var user = await User.findOne({ phone: phone, deleted: false,type:validatedBody.type,countryCode: validatedBody.countryCode });
+            var user = await User.findOne({ phone: phone, deleted: false, type: validatedBody.type, countryCode: validatedBody.countryCode });
             if (!user)
                 return next(new ApiError(403, i18n.__('userNotFound')));
             twilioVerify('+' + user.countryCode + phone, validatedBody.code, user, res, next);
@@ -482,14 +482,14 @@ export default {
             body('phone').not().isEmpty().withMessage(() => { return i18n.__('phoneRequired') }),
             body('countryCode').not().isEmpty().withMessage(() => { return i18n.__('countryCodeRequired') }),
             body('type').not().isEmpty().withMessage(() => { return i18n.__('typeIsRequired') })
-                .isIn(['ADMIN','SUB_ADMIN','CLIENT','INSTITUTION','DRIVER']).withMessage(() => { return i18n.__('userTypeWrong') }),
+                .isIn(['ADMIN', 'SUB_ADMIN', 'CLIENT', 'INSTITUTION', 'DRIVER']).withMessage(() => { return i18n.__('userTypeWrong') }),
         ];
     },
     async updatePasswordByPhone(req, res, next) {
         try {
             let validatedBody = checkValidations(req);
             validatedBody.phone = validatedBody.phone.trim();
-            let user = await User.findOne({ deleted: false, phone: validatedBody.phone,type:validatedBody.type,countryCode: validatedBody.countryCode });
+            let user = await User.findOne({ deleted: false, phone: validatedBody.phone, type: validatedBody.type, countryCode: validatedBody.countryCode });
             if (!user) {
                 return next(new ApiError(403, i18n.__('userNotFound')));
             }
@@ -509,7 +509,7 @@ export default {
         return [
             body('email').not().isEmpty().withMessage(() => { return i18n.__('emailRequired') }),
             body('newPassword').not().isEmpty().withMessage(() => { return i18n.__('newPasswordRequired') }),
-            body('type').not().isEmpty().withMessage(() => { return i18n.__('typeIsRequired') }).isIn(['ADMIN','SUB_ADMIN','CLIENT','INSTITUTION','DRIVER']).withMessage(() => { return i18n.__('userTypeWrong') }),
+            body('type').not().isEmpty().withMessage(() => { return i18n.__('typeIsRequired') }).isIn(['ADMIN', 'SUB_ADMIN', 'CLIENT', 'INSTITUTION', 'DRIVER']).withMessage(() => { return i18n.__('userTypeWrong') }),
         ];
     },
 
@@ -708,11 +708,11 @@ export default {
         try {
             let page = +req.query.page || 1,
                 limit = +req.query.limit || 20;
-            var { text, hasOffer, open, long,lat,category } = req.query;
+            var { text, hasOffer, open, long, lat, category } = req.query;
 
-            var query = { deleted: false,type:'INSTITUTION'};
+            var query = { deleted: false, type: 'INSTITUTION' };
 
-            if(open) query.online = true; // مفتوح
+            if (open) query.online = true; // مفتوح
             if (category) {
                 if (Array.isArray(category)) {
                     query.category = { $in: category };
@@ -721,26 +721,26 @@ export default {
                 }
             }
 
-            if(hasOffer){ // الاوفر
-                let tradersOffers = await Product.find({deleted: false,offer:{$ne:0}}).distinct('trader');
-                query._id = {$in: tradersOffers}
+            if (hasOffer) { // الاوفر
+                let tradersOffers = await Product.find({ deleted: false, offer: { $ne: 0 } }).distinct('trader');
+                query._id = { $in: tradersOffers }
             }
-            if (text){
-                let traders = await Product.find({deleted: false,$or : [{ 'name.en': { '$regex': text, '$options': 'i' } }, { 'name.ar': { '$regex': text, '$options': 'i' } }]}).distinct('trader')
-                query.$or = [{name:{ '$regex': text, '$options': 'i' }},{_id:{$in: traders}}];
+            if (text) {
+                let traders = await Product.find({ deleted: false, $or: [{ 'name.en': { '$regex': text, '$options': 'i' } }, { 'name.ar': { '$regex': text, '$options': 'i' } }] }).distinct('trader')
+                query.$or = [{ name: { '$regex': text, '$options': 'i' } }, { _id: { $in: traders } }];
             }
             let aggregateQuery = [
-                {$match: query},
-                {$limit: limit},
-                {$skip: (page - 1) * limit}];
-            
+                { $match: query },
+                { $limit: limit },
+                { $skip: (page - 1) * limit }];
+
             if (lat && long) { // الاقرب والابعد
-                aggregateQuery.unshift({$geoNear: {near: {type: "Point",coordinates: [+long, +lat]},distanceField: "dist.calculated"}})
+                aggregateQuery.unshift({ $geoNear: { near: { type: "Point", coordinates: [+long, +lat] }, distanceField: "dist.calculated" } })
             }
             let users = await User.aggregate(aggregateQuery)
             let pageCount;
             const userCount = await User.count(query);
-            users = await User.populate(users,populateQuery);
+            users = await User.populate(users, populateQuery);
             pageCount = Math.ceil(userCount / limit);
             // users = User.schema.methods.toJSONLocalizedOnly(users, i18n.getLocale());
 
@@ -798,14 +798,14 @@ export default {
             body('ajamTaxes').optional().not().isEmpty().withMessage(() => { return i18n.__('taxesRequired') }).isInt({ min: 0, max: 100 }),
             body('address').optional().not().isEmpty().withMessage(() => { return i18n.__('addressRequired') }),
             body('workingTimeText').optional().not().isEmpty().withMessage(() => { return i18n.__('workingTimeTextRequired') }),
-            body('paymentMethod').optional().not().isEmpty().withMessage(() => { return i18n.__('paymentMethodRequired') }).isArray().withMessage('must be array').isIn(['VISA','MASTERCARD','CASH','MADA']).withMessage(() => { return i18n.__('userTypeWrong') }),
+            body('paymentMethod').optional().not().isEmpty().withMessage(() => { return i18n.__('paymentMethodRequired') }).isArray().withMessage('must be array').isIn(['VISA', 'MASTERCARD', 'CASH', 'MADA']).withMessage(() => { return i18n.__('userTypeWrong') }),
 
         ];
 
         return validations;
     },
 
-    
+
     validateUpdateInstitution() {
         let validations = [
             body('name').optional().not().isEmpty().withMessage(() => { return i18n.__('nameRequired') }),
@@ -848,13 +848,13 @@ export default {
 
             body('address').optional().not().isEmpty().withMessage(() => { return i18n.__('addressRequired') }),
             body('workingTimeText').optional().not().isEmpty().withMessage(() => { return i18n.__('workingTimeTextRequired') }),
-            body('paymentMethod').optional().not().isEmpty().withMessage(() => { return i18n.__('paymentMethodRequired') }).isArray().withMessage('must be array').isIn(['VISA','MASTERCARD','CASH','MADA']).withMessage(() => { return i18n.__('userTypeWrong') }),
+            body('paymentMethod').optional().not().isEmpty().withMessage(() => { return i18n.__('paymentMethodRequired') }).isArray().withMessage('must be array').isIn(['VISA', 'MASTERCARD', 'CASH', 'MADA']).withMessage(() => { return i18n.__('userTypeWrong') }),
             body('productsIncludeTaxes').optional().not().isEmpty().withMessage(() => { return i18n.__('productsIncludeTaxesRequired') }).isBoolean().withMessage('must be boolean'),
-            body('institutionStatus').optional().not().isEmpty().withMessage(() => { return i18n.__('institutionStatusRequired') }).isIn(['OPEN','BUSY','CLOSED']).withMessage(() => { return i18n.__('userTypeWrong') }),
-            
+            body('institutionStatus').optional().not().isEmpty().withMessage(() => { return i18n.__('institutionStatusRequired') }).isIn(['OPEN', 'BUSY', 'CLOSED']).withMessage(() => { return i18n.__('userTypeWrong') }),
+
             body('openChat').optional().not().isEmpty().withMessage(() => { return i18n.__('openChatRequired') }).isBoolean().withMessage('must be boolean'),
             body('bank').optional().not().isEmpty().withMessage(() => { return i18n.__('bankRequired') }),
-            
+
         ];
 
         return validations;
@@ -905,7 +905,7 @@ export default {
 
 
         ];
-    
+
         return validations;
     },
 
@@ -922,7 +922,7 @@ export default {
             validatedBody.type = 'DRIVER';
             validatedBody.status = 'WAITING';
             let createdUser = await User.create(validatedBody);
-            res.status(200).send({ user: createdUser});
+            res.status(200).send({ user: createdUser, token: generateToken(createdUser.id) });
             await AdminController.count();
 
         } catch (err) {
@@ -992,7 +992,8 @@ export default {
             }
             validatedBody.type = 'INSTITUTION';
             validatedBody.status = 'WAITING';
-            validatedBody.password = '12345678';
+            if (!validatedBody.password)
+                validatedBody.password = '12345678';
             let createdUser = await User.create(validatedBody);
             res.status(200).send({ user: createdUser });
             await AdminController.count();
