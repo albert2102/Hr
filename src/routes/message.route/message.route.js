@@ -11,8 +11,19 @@ router.route('/').post(requireAuth,
     messageController.validateCreateDefault(),
     messageController.create
 )
+router.route('/compalint').post(requireAuth,
+    multerSaveTo('chat').single('file'),
+    messageController.validateComplaint(),
+    messageController.create
+)
+router.route('/order').post(requireAuth,
+    multerSaveTo('chat').single('file'),
+    messageController.validateOrder(),
+    messageController.create
+)
+router.route('/specificChat').get(requireAuth,messageController.getChatHistory)
+router.route('/lastContacts').get(requireAuth,messageController.getLastContacts)
 
-router.route('/specificChat').get(requireAuth, messageController.getChatForUser)
 router.route('/lastChats').get(requireAuth, messageController.getLastChatsForAdmin)
 
 
