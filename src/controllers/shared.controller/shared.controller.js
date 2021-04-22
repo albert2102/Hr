@@ -5,6 +5,17 @@ import { matchedData } from 'express-validator/filter';
 import { toImgUrl, toFileUrl } from '../../utils';
 
 
+export function createPromise(query) {
+    let newPromise = new Promise(async (resolve, reject) => {
+        try {
+            const result = await query;
+            resolve(result);
+        } catch (error) {
+            reject(error);
+        }
+    });
+    return newPromise;
+}
 
 function deleteTempImages(req) {
     if (req.files) {
