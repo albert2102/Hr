@@ -139,6 +139,7 @@ export default {
 
     async delete(req, res, next) {
         try {
+            let user = req.user
             let { AdvertismentsId } = req.params;
             let advertisment = await checkExistThenGet(AdvertismentsId, Advertisments, { deleted: false });
             advertisment.deleted = true;

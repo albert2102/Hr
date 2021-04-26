@@ -20,6 +20,7 @@ export default {
         let validations
         if (!isUpdate) {
             validations = [
+                body('type').not().isEmpty().withMessage(() => { return i18n.__('typeRequired') }).isIn(['DELIVERY', 'FROM_STORE']).withMessage('Wrong type'),
                 body('price').not().isEmpty().withMessage(() => { return i18n.__('priceRequired') }),
                 body('value').not().isEmpty().withMessage(() => { return i18n.__('valueRequired') }),
                 // body('number').not().isEmpty().withMessage(() => { return i18n.__('numberRequired') })
@@ -35,6 +36,7 @@ export default {
         }
         else {
             validations = [
+                body('type').optional().not().isEmpty().withMessage(() => { return i18n.__('typeRequired') }).isIn(['DELIVERY', 'FROM_STORE']).withMessage('Wrong type'),
                 body('price').optional().not().isEmpty().withMessage(() => { return i18n.__('priceRequired') }),
                 body('value').optional().not().isEmpty().withMessage(() => { return i18n.__('valueRequired') }),
                 // body('number').optional().not().isEmpty().withMessage(() => { return i18n.__('numberRequired') })
@@ -55,10 +57,11 @@ export default {
     async findAll(req, res, next) {
         try {
             let page = +req.query.page || 1, limit = +req.query.limit || 20;
-            await ShippingCard.updateMany({_id:{$gte:1}},{$unset:{user:1}})
-            var { number, price, value, month, year, user } = req.query;
+            await ShippingCard.updateMany({ _id: { $gte: 1 } }, { $unset: { user: 1 } })
+            var { number, price, value, month, year, user,type } = req.query;
             let query = { deleted: false };
 
+            if (type) query.type = type;
             if (user) query.user = user;
             if (number) query.number = { '$regex': number, '$options': 'i' };
             if (price) query.price = price;
@@ -146,6 +149,10 @@ export default {
 
     async delete(req, res, next) {
         try {
+            let user = req.user;
+            if (user.type != 'ADMIN' && user.type != 'SUB_ADMIN')
+                return next(new ApiError(403, i18n.__('unauthrized')));
+
             let { shippingCardId } = req.params;
             let shippingCard = await checkExistThenGet(shippingCardId, ShippingCard, { deleted: false });
             shippingCard.deleted = true;
@@ -161,7 +168,8 @@ export default {
         return [
             body('price').not().isEmpty().withMessage(() => { return i18n.__('priceRequired') }),
             body('value').not().isEmpty().withMessage(() => { return i18n.__('valueRequired') }),
-            body('count').not().isEmpty().withMessage(() => { return i18n.__('countRequired') }).isNumeric().withMessage('must be numeric')
+            body('count').not().isEmpty().withMessage(() => { return i18n.__('countRequired') }).isNumeric().withMessage('must be numeric'),
+            body('type').not().isEmpty().withMessage(() => { return i18n.__('typeRequired') }).isIn(['DELIVERY', 'FROM_STORE']).withMessage('Wrong type'),
         ];
     },
 
@@ -193,7 +201,7 @@ export default {
             body('number').not().isEmpty().withMessage(() => { return i18n.__('numberRequired') })
                 .isNumeric().withMessage(() => { return i18n.__('invalidNumber') })
                 .custom(async (val, { req }) => {
-                    let query = { number: val, deleted: false,used:true };
+                    let query = { number: val, deleted: false, used: true };
                     req.card = await ShippingCard.findOne(query).lean();
                     if (req.card)
                         throw new Error(i18n.__('invalidCard'));
@@ -206,7 +214,7 @@ export default {
             let validatedBody = checkValidations(req);
 
             let user = req.user;
-            let shippingCard =await ShippingCard.findOne({number:validatedBody.number})
+            let shippingCard = await ShippingCard.findOne({ number: validatedBody.number })
             shippingCard.user = user.id;
             shippingCard.used = true;
             shippingCard.usedDate = new Date();
@@ -214,9 +222,9 @@ export default {
             /////////////////////////////////////////////////////////
             user.wallet = user.wallet + shippingCard.value;
             await user.save();
-            res.status(200).send({user:user });
+            res.status(200).send({ user: user });
 
-            notificationNSP.to('room-' + user.id).emit(socketEvents.NewUser, { user:user });
+            notificationNSP.to('room-' + user.id).emit(socketEvents.NewUser, { user: user });
         } catch (err) {
             next(err);
         }
@@ -242,13 +250,34 @@ export default {
 
             user.wallet = user.wallet + validatedBody.value;
             await user.save();
-            res.status(200).send({user:user });
+            res.status(200).send({ user: user });
 
-            let description = { ar: ' تم زيادة رصيدك بمبلغ ' +  ' : ' + validatedBody.value , en: 'Your wallet was increased by an amount : ' + validatedBody.value};
+            let description = { ar: ' تم زيادة رصيدك بمبلغ ' + ' : ' + validatedBody.value, en: 'Your wallet was increased by an amount : ' + validatedBody.value };
             await notifyController.create(req.user.id, user.id, description, user.id, 'ADDED_TO_WALLET');
-            notifyController.pushNotification(user.id, 'ADDED_TO_WALLET', user.id,description);
-            notificationNSP.to('room-' + user.id).emit(socketEvents.NewUser, { user:user });
+            notifyController.pushNotification(user.id, 'ADDED_TO_WALLET', user.id, description);
+            notificationNSP.to('room-' + user.id).emit(socketEvents.NewUser, { user: user });
         } catch (err) {
+            next(err);
+        }
+    },
+
+    //////////////////////////////////////////////////////////////////////////////
+    validateDeleteMulti() {
+        return [
+            body('ids').not().isEmpty().withMessage(() => { return i18n.__('idsRequired') }).isArray().withMessage('must be array'),
+        ];
+    },
+    async deleteMuti(req, res, next) {
+        try {
+            let user = req.user;
+            if (user.type != 'ADMIN' && user.type != 'SUB_ADMIN')
+                return next(new ApiError(403, i18n.__('unauthrized')));
+
+            let validatedBody = checkValidations(req);
+            await ShippingCard.updateMany({ _id: { $in: validatedBody.ids }, deleted: false }, { deleted: true, deletedDate: new Date() })
+            res.status(200).send("Deleted Successfully");
+        }
+        catch (err) {
             next(err);
         }
     },
