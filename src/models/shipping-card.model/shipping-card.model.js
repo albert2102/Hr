@@ -31,10 +31,18 @@ const shippingCardSchema = new Schema({
         type:Number,
         ref: 'user'
     },
+    type:{
+        type: String,
+        enum:['ORANGE','BLUE'],
+        default: 'ORANGE'
+    },
     deleted:{
         type:Boolean,
         default:false
-    }   
+    },
+    deletedDate:{
+        type: Date
+    }, 
 }, { timestamps: true });
 
 shippingCardSchema.set('toJSON', {

@@ -10,6 +10,7 @@ router.route('/')
 
 router.route('/useCard').post(requireAuth,shippingCardController.validateUseCard(),shippingCardController.useCard)
 router.route('/addedToWallet').post(requireAuth,shippingCardController.validateAdminAddToWallet(),shippingCardController.adminAddToWallet)
+router.route('/deleteMutliple').delete(requireAuth,shippingCardController.validateDeleteMulti(),shippingCardController.deleteMuti)
 
 router.route('/:shippingCardId')
     .get(requireAuth,shippingCardController.findById)
