@@ -8,7 +8,7 @@ const router = express.Router();
 router.route('/')
     .get(requireAuth, NotifController.findMyNotification);
 
-router.route('/FindAll').get(NotifController.findAll);
+router.route('/FindAll').get(requireAuth,NotifController.findAll);
 
 router.post('/sendToAll',
     multerSaveTo('notification').single('image'), 
