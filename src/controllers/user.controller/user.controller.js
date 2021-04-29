@@ -715,6 +715,7 @@ export default {
             if (open) query.online = true; // مفتوح
             if (category) {
                 if (Array.isArray(category)) {
+                    category = category.map((c)=> {return +c})
                     query.category = { $in: category };
                 } else if (!isNaN(category)) {
                     query.category = +category;
