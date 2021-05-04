@@ -47,6 +47,10 @@ const advertismentsSchema = new Schema({
         type: Number,
         default: 0
     },
+    price:{
+        type: Number,
+        default: 100
+    },
     deleted: {
         type: Boolean,
         default: false
