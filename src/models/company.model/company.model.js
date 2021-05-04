@@ -36,9 +36,19 @@ const CompanySchema = new Schema({
         i18n: true,
         required: true
     },
-    commissionAgreement:{
-        type: String,
-        i18n: true
+    commissionAgreement:{ //اتفاقية العمولة
+        type:[{ ar: { type: String }, en: { type: String }}],
+    },
+    quranicVerse:{ //الآية القرآنية في اتفاقية العمولة
+        type: String
+    },
+    commissionRatio:{ // %
+        type: Number,
+        default: 1
+    },
+    commissionDays:{ // days
+        type: Number,
+        default: 10
     },
     contactusReasons:{
         type:[{ ar: { type: String }, en: { type: String }}]

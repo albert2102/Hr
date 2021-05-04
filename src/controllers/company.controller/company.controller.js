@@ -71,9 +71,14 @@ export default {
                 body('transportPrice').optional().not().isEmpty().withMessage(() => { return i18n.__('transportPriceRequired') }),
                 body('taxes').optional().not().isEmpty().withMessage(() => { return i18n.__('taxesRequired') }),
 
-                body('commissionAgreement').not().isEmpty().withMessage(() => { return i18n.__('commissionAgreementRequired') }),
-                body('commissionAgreement.ar').not().isEmpty().withMessage(() => { return i18n.__('arCommissionAgreementRequired') }),
-                body('commissionAgreement.en').not().isEmpty().withMessage(() => { return i18n.__('enCommissionAgreementRequired') }),
+                body('commissionAgreement').not().isEmpty().withMessage(() => { return i18n.__('commissionAgreementRequired') })
+                .isArray().withMessage(() => { return i18n.__('mustBeArray') }),
+                body('commissionAgreement.*.ar').not().isEmpty().withMessage(() => { return i18n.__('arCommissionAgreementRequired') }),
+                body('commissionAgreement.*.en').not().isEmpty().withMessage(() => { return i18n.__('enCommissionAgreementRequired') }),
+
+                body('quranicVerse').not().isEmpty().withMessage(() => { return i18n.__('quranicVerseRequired') }),
+                body('commissionRatio').not().isEmpty().withMessage(() => { return i18n.__('commissionRatioRequired') }),
+                body('commissionDays').not().isEmpty().withMessage(() => { return i18n.__('commissionDaysRequired') }),
 
                 body('driver_androidUrl').not().isEmpty().withMessage(() => { return i18n.__('driver_androidUrlRequired') }),
                 body('driver_iosUrl').not().isEmpty().withMessage(() => { return i18n.__('driver_iosUrlRequired') }),
@@ -118,9 +123,14 @@ export default {
                 body('transportPrice').optional().not().isEmpty().withMessage(() => { return i18n.__('transportPriceRequired') }),
                 body('taxes').optional().not().isEmpty().withMessage(() => { return i18n.__('taxesRequired') }),
 
-                body('commissionAgreement').optional().not().isEmpty().withMessage(() => { return i18n.__('commissionAgreementRequired') }),
-                body('commissionAgreement.ar').optional().not().isEmpty().withMessage(() => { return i18n.__('arCommissionAgreementRequired') }),
-                body('commissionAgreement.en').optional().not().isEmpty().withMessage(() => { return i18n.__('enCommissionAgreementRequired') }),
+                body('commissionAgreement').optional().not().isEmpty().withMessage(() => { return i18n.__('commissionAgreementRequired') })
+                .isArray().withMessage(() => { return i18n.__('mustBeArray') }),
+                body('commissionAgreement.*.ar').optional().not().isEmpty().withMessage(() => { return i18n.__('arCommissionAgreementRequired') }),
+                body('commissionAgreement.*.en').optional().not().isEmpty().withMessage(() => { return i18n.__('enCommissionAgreementRequired') }),
+
+                body('quranicVerse').optional().not().isEmpty().withMessage(() => { return i18n.__('quranicVerseRequired') }),
+                body('commissionRatio').optional().not().isEmpty().withMessage(() => { return i18n.__('commissionRatioRequired') }),
+                body('commissionDays').optional().not().isEmpty().withMessage(() => { return i18n.__('commissionDaysRequired') }),
 
                 body('driver_androidUrl').optional().not().isEmpty().withMessage(() => { return i18n.__('driver_androidUrlRequired') }),
                 body('driver_iosUrl').optional().not().isEmpty().withMessage(() => { return i18n.__('driver_iosUrlRequired') }),
