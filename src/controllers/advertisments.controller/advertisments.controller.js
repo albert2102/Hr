@@ -29,7 +29,7 @@ export default {
 
             let { status, address, description, phone, whatsappNumber, contactBy, price, lat, long, user } = req.query
 
-            let query = { deleted: false };
+            let query = { deleted: false,status:{$ne:'DELETED'} };
             if (user) query.user = +user;
             if (status) query.status = status;
             if (address) query.address = { '$regex': address, '$options': 'i' };
@@ -145,7 +145,11 @@ export default {
             let user = req.user
             let { AdvertismentsId } = req.params;
             let advertisment = await checkExistThenGet(AdvertismentsId, Advertisments, { deleted: false });
-            advertisment.deleted = true;
+            if(user.type == 'ADMIN' && user.type == 'SUB_ADMIN'){
+                advertisment.deleted = true;
+            }else{
+                advertisment.status = 'DELETED';
+            }
             await advertisment.save();
             res.status(200).send("Deleted Successfully");
         }
@@ -209,6 +213,8 @@ export default {
             next(error)
         }
     },
-    countNew
+    countNew,
+
+
 }
 
