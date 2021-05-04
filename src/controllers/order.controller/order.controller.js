@@ -140,7 +140,7 @@ const orderService = async (order) => {
         date = date + company.driverWaitingTime;
         date = new Date(date);
         let jobName = 'order-' + order.id;
-        let currentOrder = await checkExistThenGet(order.id, Order,{populate:populateQuery});
+        let currentOrder = await checkExistThenGet(order.id, Order, { populate: populateQuery });
 
         var j = schedule.scheduleJob(jobName, date, async (fireDate) => {
             try {
@@ -326,7 +326,6 @@ export default {
 
             /////////////////////////// Taxes ///////////////////////////////
             let company = await Company.findOne({ deleted: false });
-            validatedBody.taxes = company.taxes;
             let trader = resuktCheckAval.trader;
             validatedBody.trader = trader.id;
             if ((trader.type == 'INSTITUTION' && !trader.productsIncludeTaxes) || trader.type == 'ADMIN' || trader.type == 'SUB_ADMIN') {
@@ -335,14 +334,18 @@ export default {
                 validatedBody.taxes = 0;
             }
             //////////////////////////Transportation Price////////////////////////////////
-            let duration = 0;
-            duration = await duration_time({ lat: req.user.geoLocation.coordinates[1], long: req.user.geoLocation.coordinates[0] }, { lat: trader.geoLocation.coordinates[1], long: trader.geoLocation.coordinates[0] });
-            let durationPrice = duration * Number(trader.deliveryPricePerSecond);
-            validatedBody.durationDelivery = duration;
-            if (durationPrice < trader.minDeliveryPrice) {
-                validatedBody.transportPrice = trader.minDeliveryPrice;
+            if (validatedBody.orderType == 'DELIVERY') {
+                let duration = 0;
+                duration = await duration_time({ lat: req.user.geoLocation.coordinates[1], long: req.user.geoLocation.coordinates[0] }, { lat: trader.geoLocation.coordinates[1], long: trader.geoLocation.coordinates[0] });
+                let durationPrice = duration * Number(trader.deliveryPricePerSecond);
+                validatedBody.durationDelivery = duration;
+                if (durationPrice < trader.minDeliveryPrice) {
+                    validatedBody.transportPrice = trader.minDeliveryPrice;
+                } else {
+                    validatedBody.transportPrice = durationPrice;
+                }
             } else {
-                validatedBody.transportPrice = durationPrice;
+                validatedBody.transportPrice = 0;
             }
 
             ///////////////////////////////////////////////////////////////////////////////
@@ -354,12 +357,12 @@ export default {
             let order = await Order.create(validatedBody);
             order.orderNumber = order.orderNumber + order.id;
             await order.save();
-            if (validatedBody.paymentMethod == 'CASH') {
+            //if (validatedBody.paymentMethod == 'CASH') {
                 res.status(200).send(order);
                 order = await Order.populate(order, populateQuery)
                 let newOrdersCount = await Order.count({ deleted: false, adminInformed: false });
                 adminNSP.emit(socketEvents.UpdateOrderCount, { count: newOrdersCount });
-            }
+           // }
 
         } catch (err) {
             next(err);
@@ -457,11 +460,11 @@ export default {
                 return next(new ApiError(403, ('notAllowToChangeStatus')));
 
             let { orderId } = req.params;
-            await checkExist(orderId, Order, { deleted: false, status: 'ACCEPTED',driver:req.user.id });
+            await checkExist(orderId, Order, { deleted: false, status: 'ACCEPTED', driver: req.user.id });
             let validatedBody = checkValidations(req);
-            if(validatedBody.status == 'ACCEPTED'){
-                validatedBody.status ='DRIVER_ACCEPTED';
-            }else{
+            if (validatedBody.status == 'ACCEPTED') {
+                validatedBody.status = 'DRIVER_ACCEPTED';
+            } else {
                 validatedBody['$addToSet'] = { rejectedDrivers: req.user.id };
                 delete validatedBody.status;
             }
