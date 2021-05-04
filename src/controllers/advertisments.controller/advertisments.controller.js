@@ -17,7 +17,10 @@ let countNew = async () => {
     } catch (error) {
         throw error;
     }
-}
+} 
+const populateQuery = [
+    {path:'user',model:'user'}
+]
 export default {
 
     async find(req, res, next) {
@@ -27,14 +30,14 @@ export default {
             let { status, address, description, phone, whatsappNumber, contactBy, price, lat, long, user } = req.query
 
             let query = { deleted: false };
-            if (user) query.user = user;
+            if (user) query.user = +user;
             if (status) query.status = status;
             if (address) query.address = { '$regex': address, '$options': 'i' };
             if (description) query.description = { '$regex': description, '$options': 'i' };
             if (phone) query.phone = { '$regex': phone, '$options': 'i' };
             if (whatsappNumber) query.whatsappNumber = { '$regex': whatsappNumber, '$options': 'i' };
             if (contactBy) query.contactBy = contactBy;
-            if (price) query.price = price;
+            if (price) query.price = +price;
 
             let aggregateQuery = [
                 { $match: query },
@@ -46,7 +49,7 @@ export default {
             }
             console.log(aggregateQuery)
             let advertisment = await Advertisments.aggregate(aggregateQuery)
-
+            advertisment = await Advertisments.populate(advertisment,populateQuery)
             const advertismentCount = await Advertisments.count(query);
             const pageCount = Math.ceil(advertismentCount / limit);
             res.status(200).send(new ApiResponse(advertisment, page, pageCount, limit, advertismentCount, req));
@@ -111,7 +114,7 @@ export default {
         try {
             let validatedBody = checkValidations(req);
             let { AdvertismentsId } = req.params;
-            let advertisment = await checkExistThenGet(AdvertismentsId, Advertisments, { deleted: false });
+            let advertisment = await checkExistThenGet(AdvertismentsId, Advertisments, { deleted: false,populate:populateQuery });
 
             if (req.files && req.files.length > 0) {
                 validatedBody.images = await handleImgs(req, { attributeName: 'images' });
@@ -129,7 +132,7 @@ export default {
     async findById(req, res, next) {
         try {
             let { AdvertismentsId } = req.params;
-            let advertisment = await checkExistThenGet(AdvertismentsId, Advertisments, { deleted: false });
+            let advertisment = await checkExistThenGet(AdvertismentsId, Advertisments, { deleted: false,populate:populateQuery});
             res.status(200).send(advertisment);
         }
         catch (err) {
