@@ -14,7 +14,7 @@ import schedule from 'node-schedule'
 
 let countNew = async () => {
     try {
-        let count = await Advertisments.count({ deleted: false, status: 'WAITING' });
+        let count = await Advertisments.count({ deleted: false, status: {$in:['WAITING','UPDATED']} });
         adminNSP.emit(socketEvents.WaitingAdvCount, { count: count });
     } catch (error) {
         throw error;
@@ -28,7 +28,7 @@ const advertismentJob = async () => {
     
     var j = schedule.scheduleJob('*/1 * * * *', async function (fireDate) {
         var date = new Date();
-        let advertisments = await Advertisments.find({deleted:false , endedDate : {$lte:date},status:{$nin:['REJECTED','DELETED','ENDED']} });
+        let advertisments = await Advertisments.find({deleted:false , endedDate : {$lte:date},status:{$nin:['REJECTED','DELETED','ENDED','UPDATED']} });
         let desc={
             ar : 'لقد انتهى عرض اعلانك في التطبيق ,يمكنك إعادة نشره مرة أخري',
             en :"Your advertisment has expired in the app, you can re-post it again."
@@ -62,6 +62,7 @@ export default {
 
             let aggregateQuery = [
                 { $match: query },
+                { $sort:{ createdAt: -1 }},
                 { $limit: limit },
                 { $skip: (page - 1) * limit }];
 
@@ -136,6 +137,7 @@ export default {
 
     async update(req, res, next) {
         try {
+            let user = req.user;
             let validatedBody = checkValidations(req);
             let { AdvertismentsId } = req.params;
             let advertisment = await checkExistThenGet(AdvertismentsId, Advertisments, { deleted: false,populate:populateQuery });
@@ -145,6 +147,7 @@ export default {
             if (validatedBody.lat && validatedBody.long) {
                 validatedBody.geoLocation = { type: 'Point', coordinates: [validatedBody.long, validatedBody.lat] }
             }
+            if(user.type == 'CLIENT') validatedBody.status = 'UPDATED';
             advertisment = await Advertisments.findByIdAndUpdate(AdvertismentsId, validatedBody, { new: true });
             res.status(200).send(advertisment);
         } catch (error) {
@@ -184,6 +187,7 @@ export default {
     validateAdminChangeStatus() {
         return [
             body('commetion').optional().not().isEmpty().withMessage(() => { return i18n.__('commetionRequired') }),
+            body('rejectedReason').optional().not().isEmpty().withMessage(() => { return i18n.__('rejectedReasonRequired') }),
             body('status').not().isEmpty().withMessage(() => { return i18n.__('statusRequired') })
                 .isIn(['ACCEPTED', 'REJECTED']).withMessage(() => { return i18n.__('invalidType') }),
         ]
@@ -199,6 +203,9 @@ export default {
             if ((validatedBody.status =='ACCEPTED')&& (!validatedBody.commetion)) {
                 return next(new ApiError(404,i18n.__('commetionRequired')));
             }
+            if ((validatedBody.status =='REJECTED')&& (!validatedBody.rejectedReason)) {
+                return next(new ApiError(404,i18n.__('rejectedReasonRequired')));
+            }
             let { AdvertismentsId } = req.params;
             let advertisment = await checkExistThenGet(AdvertismentsId, Advertisments, { deleted: false });
             advertisment = await Advertisments.findByIdAndUpdate(AdvertismentsId, validatedBody, { new: true });
@@ -207,9 +214,9 @@ export default {
 
             if (validatedBody.status == 'ACCEPTED') {
                 description  = {en:`You advertisment has been accepted in ajam and the commetion for this is ${validatedBody.commetion}`,
-                ar:`تم قبول اعلانك في أجَمْ و يجب دفع عمولة بقيمة ${validatedBody.commetion}`};
+                ar:` تم قبول اعلانك في أجَمْ و يجب دفع عمولة بقيمة ${validatedBody.commetion}`};
             } else {
-                description  = {en:`Your advertisment has been rejected in Ajam`,ar:`تم رفضا اعلانك في أجَمْ`};
+                description  = {en:`Your advertisment has been rejected in Ajam as ${validatedBody.rejectedReason}`,ar:` تم رفضا اعلانك في أجَمْ بسبب ${validatedBody.rejectedReason}`};
             }
 
 

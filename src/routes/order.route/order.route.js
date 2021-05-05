@@ -4,7 +4,12 @@ import orderController from "../../controllers/order.controller/order.controller
 import { requireAuth } from '../../services/passport';
 import { multerSaveTo } from '../../services/multer-service';
 
+//////////////////////////////////////////Rate/////////////////////////////////////////////////////////
+router.route('/traderRate')
+    .get(requireAuth, orderController.getRates)
+    .post(requireAuth, orderController.validateTraderRate(), orderController.traderRate)
 
+///////////////////////////////////////////////////////////////////////////////////////////////////////
 router.route('/')
     .get(requireAuth, orderController.findAll)
     .post(requireAuth,
@@ -21,5 +26,6 @@ router.route('/:orderId/canceled').put(requireAuth, orderController.canceled)
 router.route('/:orderId')
     .get(requireAuth, orderController.findById)
     .delete(requireAuth, orderController.delete)
+
 
 export default router;

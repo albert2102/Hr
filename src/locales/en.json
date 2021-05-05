@@ -157,5 +157,6 @@
 	"promoCodeInvalid": "Invalid PromoCode",
 	"taxesRequired": "taxesRequired",
 	"workingTimeTextRequired": "workingTimeTextRequired",
-	"complaintRequired": "complaintRequired"
+	"complaintRequired": "complaintRequired",
+	"traderBusy":"The store is not available now."
 }

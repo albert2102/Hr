@@ -174,10 +174,12 @@ const userSchema = new Schema({
         enum:['VISA','MASTERCARD','CASH','MADA']
     },
     totalRate:{
-        type: Number
+        type: Number,
+        default: 0
     },
     totalRateCount:{
-        type: Number
+        type: Number,
+        default: 0
     },
     wallet:{
         type: Number,

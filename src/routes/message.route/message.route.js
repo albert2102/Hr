@@ -24,7 +24,10 @@ router.route('/order').post(requireAuth,
 router.route('/specificChat').get(requireAuth,messageController.getChatHistory)
 router.route('/lastContacts').get(requireAuth,messageController.getLastContacts)
 
+router.route('/complaintslastChats').get(requireAuth, messageController.getLastComplaintsChatsForAdmin)
+router.route('/orderslastChats').get(requireAuth, messageController.getLastOrdersChatsForAdmin)
 router.route('/lastChats').get(requireAuth, messageController.getLastChatsForAdmin)
+router.route('/adminGetSpecificChat').get(requireAuth, messageController.getSpecificChat)
 
 
 router.route('/:id')

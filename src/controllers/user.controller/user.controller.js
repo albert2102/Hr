@@ -708,11 +708,12 @@ export default {
         try {
             let page = +req.query.page || 1,
                 limit = +req.query.limit || 20;
-            var { text, hasOffer, open, long, lat, category } = req.query;
+            var { text, hasOffer, open, long, lat, category,highestRated} = req.query;
 
-            var query = { deleted: false, type: 'INSTITUTION' };
-
+            let query = { deleted: false, type: 'INSTITUTION' };
+            let sortQuery = {createdAt:-1};
             if (open) query.online = true; // مفتوح
+            if (highestRated) sortQuery = {totalRate:-1}; //الاعلي تقييما
             if (category) {
                 if (Array.isArray(category)) {
                     category = category.map((c)=> {return +c})
@@ -732,6 +733,7 @@ export default {
             }
             let aggregateQuery = [
                 { $match: query },
+                { $sort: sortQuery },
                 { $limit: limit },
                 { $skip: (page - 1) * limit }];
 

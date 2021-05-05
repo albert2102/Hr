@@ -32,7 +32,7 @@ const advertismentsSchema = new Schema({
     },
     status:{
         type: String,
-        enum:['WAITING','ACCEPTED','REJECTED','DELETED','ENDED'],
+        enum:['WAITING','ACCEPTED','REJECTED','DELETED','ENDED','UPDATED'],
         default: 'WAITING'
     },
     commetion:{
@@ -61,6 +61,9 @@ const advertismentsSchema = new Schema({
     },
     endedDate:{
         type: Date
+    },
+    rejectedReason:{
+        type: String
     }
 }, { timestamps: true });
 
