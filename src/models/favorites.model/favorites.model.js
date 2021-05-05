@@ -7,7 +7,7 @@ const favoritesSchema = new Schema({
         required: true
     },
     product:{
-        type:String,
+        type:Number,
         ref: 'product',
         required:true
     },

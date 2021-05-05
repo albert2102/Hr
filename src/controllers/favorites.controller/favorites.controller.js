@@ -9,8 +9,9 @@ import { checkValidations } from "../shared.controller/shared.controller";
 import i18n from 'i18n';
 
 let populateQuery = [
-    { path: 'product', model: 'product', 
-        populate: [{ path: 'trader', model: 'user' },{ path: 'productCategory', model: 'productCategory' }] 
+    {
+        path: 'product', model: 'product',
+        populate: [{ path: 'trader', model: 'user' }, { path: 'productCategory', model: 'productCategory' }]
     },
     { path: 'user', model: 'user' }
 ];
@@ -22,7 +23,7 @@ export default {
         let validations = [
             body('product').not().isEmpty().withMessage(() => { return i18n.__('productRequired') })
                 .custom(async (value) => {
-                    await checkExistThenGet(value, Product, { deleted: false})
+                    await checkExistThenGet(value, Product, { deleted: false })
                 })
         ];
         return validations;
@@ -31,15 +32,44 @@ export default {
     async findAll(req, res, next) {
         try {
             let page = +req.query.page || 1, limit = +req.query.limit || 20;
-            var { user, product } = req.query;
+            var { user, product, admin } = req.query;
             let query = { deleted: false };
-            if (user) query.user = user;
-            if (product) query.product = product;
-            
-            let favs = await Favorites.find(query)
-                .limit(limit).skip((page - 1) * limit)
-                .sort({ createdAt: -1 }).populate(populateQuery);
-            favs = Favorites.schema.methods.toJSONLocalizedOnly(favs, i18n.getLocale());
+            if (user) query.user = +user;
+            if (product) query.product = +product;
+            let aggregateQuery = [
+                { $match: query },
+                {
+                    $lookup: {
+                        from: Product.collection.name,
+                        localField: "product",
+                        foreignField: "_id",
+                        as: "product"
+                    }
+                },
+                { $unwind: '$product' },
+
+                { $group: { _id: { trader: '$product.trader' },favorites:{$push:'$$ROOT'} } },
+                {
+                    $lookup: {
+                        from: User.collection.name,
+                        localField: "_id.trader",
+                        foreignField: "_id",
+                        as: "_id.trader"
+                    }
+                },
+                { $unwind: '$_id.trader' },
+                { $limit: limit },
+                { $skip: (page - 1) * limit }
+            ]
+            let favs = [];
+            if (!admin) {
+                favs = await Favorites.aggregate(aggregateQuery)
+            }
+            else {
+                favs = await Favorites.find(query)
+                    .limit(limit).skip((page - 1) * limit)
+                    .sort({ createdAt: -1 }).populate(populateQuery);
+            }
             const favCount = await Favorites.count(query);
             const pageCount = Math.ceil(favCount / limit);
             res.send(new ApiResponse(favs, page, pageCount, limit, favCount, req));
