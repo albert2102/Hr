@@ -224,4 +224,6 @@
 	"carFormImageRequired": "carFormImageRequired",
 	"ibanNumberRequired": "ibanNumberRequired",
 	"invalidCard": "invalidCard"
+	"unauthrized": "unauthrized",
+	"AdvertismentsNotFound": "AdvertismentsNotFound"
 }

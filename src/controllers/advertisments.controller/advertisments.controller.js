@@ -9,6 +9,8 @@ import ApiError from '../../helpers/ApiError';
 import socketEvents from '../../socketEvents';
 import notifyController from '../notif.controller/notif.controller';
 import config from "../../config";
+import moment from 'moment';
+import schedule from 'node-schedule'
 
 let countNew = async () => {
     try {
@@ -21,15 +23,34 @@ let countNew = async () => {
 const populateQuery = [
     {path:'user',model:'user'}
 ]
+
+const advertismentJob = async () => {
+    
+    var j = schedule.scheduleJob('*/1 * * * *', async function (fireDate) {
+        var date = new Date();
+        let advertisments = await Advertisments.find({deleted:false , endedDate : {$lte:date},status:{$nin:['REJECTED','DELETED','ENDED']} });
+        let desc={
+            ar : 'لقد انتهى عرض اعلانك في التطبيق ,يمكنك إعادة نشره مرة أخري',
+            en :"Your advertisment has expired in the app, you can re-post it again."
+        };
+        for (let index = 0; index < advertisments.length; index++) {
+            await notifyController.create(advertisments[index].user, advertisments[index].user,desc, 1, 'ADVERTISMENT');
+            notifyController.pushNotification(advertisments[index].user, 'ADVERTISMENT', advertisments[index].id, desc, config.notificationTitle);
+            notificationNSP.to('room-' + advertisments[index].user).emit(socketEvents.ChangeAdvertismentStatus, { advertisment: advertisments[index] });
+        }
+        await Advertisments.updateMany({_id:{$in:advertisments}} , {status:'ENDED'} );
+    })
+}
 export default {
 
     async find(req, res, next) {
         try {
             let page = +req.query.page || 1, limit = +req.query.limit || 20;
 
-            let { status, address, description, phone, whatsappNumber, contactBy, price, lat, long, user } = req.query
+            let { status, address, description, phone, whatsappNumber, contactBy, price, lat, long, user,archive} = req.query
 
-            let query = { deleted: false };
+            let query = { deleted: false,status:{$ne:'DELETED'} };
+            if (archive) query.deleted = true;
             if (user) query.user = +user;
             if (status) query.status = status;
             if (address) query.address = { '$regex': address, '$options': 'i' };
@@ -67,7 +88,7 @@ export default {
                 body('phone').not().isEmpty().withMessage(() => { return i18n.__('phoneRequired') }),
                 body('whatsappNumber').optional().not().isEmpty().withMessage(() => { return i18n.__('whatsappNumberRequired') }),
                 body('contactBy').not().isEmpty().withMessage(() => { return i18n.__('contactByRequired') })
-                    .isIn(['PHONE', 'CONVERSATION']).withMessage(() => { return i18n.__('invalidType') }),
+                .isArray().withMessage('must be array').isIn(['PHONE', 'CONVERSATION']).withMessage(() => { return i18n.__('invalidType') }),
                 body('long').not().isEmpty().withMessage(() => { return i18n.__('longRequired') }),
                 body('lat').not().isEmpty().withMessage(() => { return i18n.__('latRequired') }),
                 body('price').not().isEmpty().withMessage(() => { return i18n.__('priceRequired') }),
@@ -80,7 +101,7 @@ export default {
                 body('phone').optional().not().isEmpty().withMessage(() => { return i18n.__('phoneRequired') }),
                 body('whatsappNumber').optional().not().isEmpty().withMessage(() => { return i18n.__('whatsappNumberRequired') }),
                 body('contactBy').optional().not().isEmpty().withMessage(() => { return i18n.__('contactByRequired') })
-                    .isIn(['PHONE', 'CONVERSATION']).withMessage(() => { return i18n.__('invalidType') }),
+                .isArray().withMessage('must be array').isIn(['PHONE', 'CONVERSATION']).withMessage(() => { return i18n.__('invalidType') }),
                 body('long').optional().not().isEmpty().withMessage(() => { return i18n.__('longRequired') }),
                 body('lat').optional().not().isEmpty().withMessage(() => { return i18n.__('latRequired') }),
                 body('price').optional().not().isEmpty().withMessage(() => { return i18n.__('priceRequired') }),
@@ -102,6 +123,9 @@ export default {
             if (validatedBody.lat && validatedBody.long) {
                 validatedBody.geoLocation = { type: 'Point', coordinates: [validatedBody.long, validatedBody.lat] }
             }
+            let currDate = moment();
+            let endedDate = moment(currDate).add(1,'M');
+            validatedBody.endedDate = endedDate;
             let advertisment = await Advertisments.create(validatedBody);
             res.status(200).send(advertisment);
             await countNew();
@@ -115,7 +139,6 @@ export default {
             let validatedBody = checkValidations(req);
             let { AdvertismentsId } = req.params;
             let advertisment = await checkExistThenGet(AdvertismentsId, Advertisments, { deleted: false,populate:populateQuery });
-
             if (req.files && req.files.length > 0) {
                 validatedBody.images = await handleImgs(req, { attributeName: 'images' });
             }
@@ -145,7 +168,11 @@ export default {
             let user = req.user
             let { AdvertismentsId } = req.params;
             let advertisment = await checkExistThenGet(AdvertismentsId, Advertisments, { deleted: false });
-            advertisment.deleted = true;
+            if(user.type == 'ADMIN' && user.type == 'SUB_ADMIN'){
+                advertisment.deleted = true;
+            }else{
+                advertisment.status = 'DELETED';
+            }
             await advertisment.save();
             res.status(200).send("Deleted Successfully");
         }
@@ -209,6 +236,48 @@ export default {
             next(error)
         }
     },
-    countNew
+    countNew,
+
+    validateRepublish(){
+        return[
+            body('advertisment').not().isEmpty().withMessage(() => { return i18n.__('productRequired') })
+                .custom(async (val, { req }) => {
+                    req.advertisment = await checkExistThenGet(val, Advertisments, { deleted: false,status:'ENDED' });
+                    return true;
+                }),
+        ]
+    },
+
+    async republish(req, res, next) {
+        try {
+            let validatedBody = checkValidations(req);
+            let user = req.user;
+            let advertisment = req.advertisment;
+            validatedBody.advertisment = advertisment._id;
+            validatedBody.images = advertisment.images;
+            validatedBody.address = advertisment.address;
+            validatedBody.contactBy = advertisment.contactBy;
+            validatedBody.geoLocation = advertisment.geoLocation;
+            validatedBody.price = advertisment.price;
+            validatedBody.description = advertisment.description;
+            validatedBody.phone = advertisment.phone;
+            validatedBody.user = advertisment.user;
+            if(advertisment.whatsappNumber) validatedBody.whatsappNumber = advertisment.whatsappNumber;
+            let currDate = moment();
+            let endedDate = moment(currDate).add(1,'M');
+            validatedBody.endedDate = endedDate;
+            
+            if(user.id != advertisment.user){
+                return next(new ApiError(401, 'غير مسموح'));
+            }
+            advertisment = await Advertisments.create(validatedBody);
+            res.status(200).send(advertisment);
+        }
+        catch (err) {
+            next(err);
+        }
+    },
+
+    advertismentJob
 }
 
