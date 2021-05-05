@@ -23,7 +23,7 @@ const advertismentsSchema = new Schema({
         type: String
     },
     contactBy:{
-        type: String,
+        type: [String],
         enum:['PHONE','CONVERSATION']
     },
     geoLocation: {
@@ -32,7 +32,7 @@ const advertismentsSchema = new Schema({
     },
     status:{
         type: String,
-        enum:['WAITING','ACCEPTED','REJECTED','DELETED'],
+        enum:['WAITING','ACCEPTED','REJECTED','DELETED','ENDED'],
         default: 'WAITING'
     },
     commetion:{
@@ -55,6 +55,13 @@ const advertismentsSchema = new Schema({
         type: Boolean,
         default: false
     },
+    advertisment:{
+        type: Number,
+        ref:'advertisment'
+    },
+    endedDate:{
+        type: Date
+    }
 }, { timestamps: true });
 
 advertismentsSchema.set('toJSON', {

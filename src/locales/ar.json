@@ -210,5 +210,6 @@
 	"numberDublicated": "numberDublicated",
 	"commetionRequired": "commetionRequired",
 	"duplicatedPromoCode": "duplicatedPromoCode",
-	"unauthrized": "unauthrized"
+	"unauthrized": "unauthrized",
+	"AdvertismentsNotFound": "AdvertismentsNotFound"
 }
