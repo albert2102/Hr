@@ -26,7 +26,7 @@ router.route('/:AdvertismentsId')
         advertismentController.validateBody(true),
         advertismentController.update)
     .delete(requireAuth,advertismentController.delete)
-    .get(requireAuth,advertismentController.findById)
+    .get(advertismentController.findById)
 
     
 export default router;
