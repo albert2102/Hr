@@ -97,6 +97,16 @@ const orderSchema = new Schema({
     },
     rejectedDrivers:{
         type: [Number]
+    },
+    traderRateEmotion:{
+        type: String,
+        enum:['BAD','GOOD','EXCELLENT']
+    },
+    traderRateValue:{
+        type: Number
+    },
+    traderRateComment:{
+        type: String
     }
 }, { timestamps: true });
 orderSchema.set('toJSON', {

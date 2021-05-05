@@ -149,7 +149,7 @@ const orderService = async (order) => {
                 if (order.status == 'DRIVER_ACCEPTED') {
                     let validatedBody = { $addToSet: { rejectedDrivers: currentOrder.driver }, $unset: { driver: 1 } };
                     let updatedOrder = await Order.findByIdAndUpdate(order.id, validatedBody, { new: true }).populate(populateQuery);
-                    notificationNSP.to('room-' + currentOrder.driver).emit(socketEvents.OrderExpired, { order: updatedOrder });
+                    notificationNSP.to('room-' + currentOrder.driver).emit(socketEvents.ChangeOrderStatus, { order: updatedOrder });
                     findDriver(updatedOrder);
                 }
             } catch (error) {
@@ -194,13 +194,14 @@ const findDriver = async (order) => {
         }
 
         if (driver) {
+            console.log("in ifffffffffffffffffffffffffffffffffffff")
             order.driver = driver._id;
-            await order.save();
+            order = await Order.findByIdAndUpdate(order.id, { driver: driver._id });
             orderService(order);
             notificationNSP.to('room-' + driver._id).emit(socketEvents.NewOrder, { order: order });
         } else {
-            order.status = 'NOT_ASSIGN';
-            await order.save();
+            console.log("in elseeeeeeeeeeeeeeeeeeeeeeee")
+            order = await Order.findByIdAndUpdate(order.id, { status: 'NOT_ASSIGN' });
         }
     } catch (error) {
         throw error;
@@ -210,13 +211,45 @@ export default {
 
     async findAll(req, res, next) {
         try {
-
             let page = +req.query.page || 1, limit = +req.query.limit || 20;
             let { user, status, paymentMethod, month, year, fromDate, toDate, type, formDate,
-                userName, _id, price, orderDate, totalPrice, promoCode,
-                orderNumber, numberOfProducts, visitorsOrder
+                userName, price, orderDate, totalPrice, promoCode,
+                orderNumber, numberOfProducts, waitingOrders, currentOrders, finishedOrders
             } = req.query;
-            let query = { deleted: false, $or: [{ paymentMethod: 'CREDIT', paymentStatus: 'SUCCESSED' }, { paymentMethod: 'CASH' }] };
+            let query = { deleted: false, $or: [{ paymentMethod: 'CREDIT', paymentStatus: 'SUCCESSED' }, { paymentMethod: { $in: ['CASH', 'WALLET'] } }] };
+
+            if (req.user.type == 'CLIENT') {
+                query.user = req.user.id;
+                if (currentOrders) {
+                    query.status = { $in: ['WAITING', 'ACCEPTED', 'DRIVER_ACCEPTED', 'SHIPPED', 'NOT_ASSIGN'] }
+                } else if (finishedOrders) {
+                    query.status = { $in: ['DELIVERED'] }
+
+                }
+            }
+            else if (req.user.type == 'INSTITUTION') {
+                query.trader = req.user.id;
+                if (waitingOrders) {
+                    query.status = { $in: ['WAITING'] }
+
+                } else if (currentOrders) {
+                    query.status = { $in: ['ACCEPTED', 'DRIVER_ACCEPTED', 'SHIPPED'] }
+
+                } else if (finishedOrders) {
+                    query.status = { $in: ['DELIVERED'] }
+
+                }
+
+            }
+            else if (req.user.type == 'DRIVER') {
+                query.driver = req.user.id;
+                if (currentOrders) {
+                    query.status = { $in: ['ACCEPTED', 'DRIVER_ACCEPTED', 'SHIPPED'] }
+
+                } else if (finishedOrders) {
+                    query.status = { $in: ['DELIVERED'] }
+                }
+            }
             let date = new Date();
 
             if (orderDate) query.createdAt = { $gte: new Date(moment(orderDate).startOf('day')), $lt: new Date(moment(orderDate).endOf('day')) };
@@ -279,7 +312,10 @@ export default {
         return [
             body('products.*.product').not().isEmpty().withMessage(() => { return i18n.__('productRequired') })
                 .custom(async (val, { req }) => {
-                    req.product = await checkExistThenGet(val, Product, { deleted: false }, i18n.__('productNotFound'));
+                    let product = await checkExistThenGet(val, Product, { deleted: false, populate: [{ path: 'trader', model: 'user' }] }, i18n.__('productNotFound'));
+                    if (product.trader.institutionStatus != 'OPEN') {
+                        throw new Error(i18n.__('traderBusy'));
+                    }
                     return true;
                 }),
             body('products.*.quantity').not().isEmpty().withMessage(() => { return i18n.__('quantityRequired') }),
@@ -358,11 +394,11 @@ export default {
             order.orderNumber = order.orderNumber + order.id;
             await order.save();
             //if (validatedBody.paymentMethod == 'CASH') {
-                res.status(200).send(order);
-                order = await Order.populate(order, populateQuery)
-                let newOrdersCount = await Order.count({ deleted: false, adminInformed: false });
-                adminNSP.emit(socketEvents.UpdateOrderCount, { count: newOrdersCount });
-           // }
+            res.status(200).send(order);
+            order = await Order.populate(order, populateQuery)
+            let newOrdersCount = await Order.count({ deleted: false, adminInformed: false });
+            adminNSP.emit(socketEvents.UpdateOrderCount, { count: newOrdersCount });
+            // }
 
         } catch (err) {
             next(err);
@@ -414,7 +450,7 @@ export default {
                 return next(new ApiError(403, ('notAllowToChangeStatus')));
 
             let { orderId } = req.params;
-            await checkExist(orderId, Order, { deleted: false, status: 'WAITING' });
+            await checkExist(orderId, Order, { deleted: false/*, status: 'WAITING'*/ });
             let validatedBody = checkValidations(req);
             let updatedOrder = await Order.findByIdAndUpdate(orderId, validatedBody, { new: true }).populate(populateQuery);
             updatedOrder = Order.schema.methods.toJSONLocalizedOnly(updatedOrder, i18n.getLocale());
@@ -461,14 +497,17 @@ export default {
 
             let { orderId } = req.params;
             await checkExist(orderId, Order, { deleted: false, status: 'ACCEPTED', driver: req.user.id });
+            let updatedOrder;
             let validatedBody = checkValidations(req);
             if (validatedBody.status == 'ACCEPTED') {
                 validatedBody.status = 'DRIVER_ACCEPTED';
+                updatedOrder = await Order.findByIdAndUpdate(orderId, validatedBody, { new: true }).populate(populateQuery);
             } else {
                 validatedBody['$addToSet'] = { rejectedDrivers: req.user.id };
                 delete validatedBody.status;
+                updatedOrder = await Order.findByIdAndUpdate(orderId, validatedBody, { new: true }).populate(populateQuery);
+                await findDriver(updatedOrder);
             }
-            let updatedOrder = await Order.findByIdAndUpdate(orderId, validatedBody, { new: true }).populate(populateQuery);
             updatedOrder = Order.schema.methods.toJSONLocalizedOnly(updatedOrder, i18n.getLocale());
             res.status(200).send(updatedOrder);
 
@@ -483,7 +522,7 @@ export default {
                 return next(new ApiError(403, ('admin.auth')));
 
             let { orderId } = req.params;
-            await checkExist(orderId, Order, { deleted: false, status: "ACCEPTED" });
+            await checkExist(orderId, Order, { deleted: false, $or: [{ status: "ACCEPTED", orderType: "FROM_STORE" }, { status: "DRIVER_ACCEPTED", orderType: "DELIVERY" }] });
             let updatedOrder = await Order.findByIdAndUpdate(orderId, { status: 'SHIPPED' }, { new: true }).populate(populateQuery);
             updatedOrder = Order.schema.methods.toJSONLocalizedOnly(updatedOrder, i18n.getLocale());
             res.status(200).send(updatedOrder);
@@ -505,11 +544,9 @@ export default {
 
     async delivered(req, res, next) {
         try {
-            if (req.user.type != 'ADMIN' && req.user.type != 'SUB_ADMIN')
-                return next(new ApiError(403, ('admin.auth')));
 
             let { orderId } = req.params;
-            await checkExist(orderId, Order, { deleted: false, status: "SHIPPED" });
+            await checkExist(orderId, Order, { deleted: false, $or: [{ status: "ACCEPTED", orderType: "FROM_STORE" }, { status: "SHIPPED", orderType: "DELIVERY" }] });
             let updatedOrder = await Order.findByIdAndUpdate(orderId, { status: 'DELIVERED', deliveredDate: new Date() }, { new: true }).populate(populateQuery);
             updatedOrder = Order.schema.methods.toJSONLocalizedOnly(updatedOrder, i18n.getLocale());
             res.status(200).send(updatedOrder);
@@ -545,6 +582,58 @@ export default {
             await order.save();
             await reversProductQuantity(order.products);
             res.status(200).send(order);
+        } catch (err) {
+            next(err);
+        }
+    },
+
+    ///////////////////////////////Rate/////////////////////////////////////////
+    validateTraderRate() {
+        let validations = [
+            body('traderRateEmotion').not().isEmpty().withMessage(() => { return i18n.__('traderRateEmotionRequired') })
+                .isIn(['BAD', 'GOOD', 'EXCELLENT']).withMessage(() => { return i18n.__('WrongType') }),
+            body('traderRateComment').optional().not().isEmpty().withMessage(() => { return i18n.__('traderRateCommentRequired') }),
+            body('order').not().isEmpty().withMessage(() => { return i18n.__('traderRateCommentRequired') }).custom(async (val, { req }) => {
+                req.order = await checkExistThenGet(val, Order, { deleted: false,/*traderRateEmotion:null,*/status: "DELIVERED", user: req.user.id })
+                return true;
+            }),
+        ];
+        return validations;
+    },
+    async traderRate(req, res, next) {
+        try {
+            let validatedBody = checkValidations(req);
+            let order = req.order;
+            if (validatedBody.traderRateEmotion == 'BAD') {
+                validatedBody.traderRateValue = 1;
+            } else if (validatedBody.traderRateEmotion == 'GOOD') {
+                validatedBody.traderRateValue = 3;
+            } else {
+                validatedBody.traderRateValue = 5;
+            }
+            let updatedOrder = await Order.findByIdAndUpdate(order._id, validatedBody, { new: true }).populate(populateQuery);
+            let trader = await User.findOne({ _id: order.trader });
+            trader.totalRateCount = trader.totalRateCount + 1;
+            trader.totalRate = trader.totalRate + validatedBody.traderRateValue;
+            await trader.save();
+            res.status(200).send(updatedOrder);
+        } catch (err) {
+            next(err);
+        }
+    },
+
+    async getRates(req, res, next) {
+        try {
+
+            let page = +req.query.page || 1, limit = +req.query.limit || 20;
+            let user = req.user;
+            let query = { deleted: false, trader: user.id, traderRateValue: { $ne: null } };
+
+            let orders = await Order.find(query).select(['user', 'traderRateValue', 'traderRateEmotion', 'traderRateComment']).sort({ createdAt: -1 }).limit(limit).skip((page - 1) * limit).populate(populateQuery);
+            let ordersCount = await Order.count(query);
+            const pageCount = Math.ceil(ordersCount / limit);
+            res.send(new ApiResponse(orders, page, pageCount, limit, ordersCount, req));
+
         } catch (err) {
             next(err);
         }

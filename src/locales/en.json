@@ -155,5 +155,6 @@
 	"catrgoryNameEnRequired": "category english name is required",
 	"transportPriceRequired": "transport Price is Required",
 	"promoCodeInvalid": "Invalid PromoCode",
-	"taxesRequired": "taxesRequired"
+	"taxesRequired": "taxesRequired",
+	"traderBusy":"The store is not available now."
 }

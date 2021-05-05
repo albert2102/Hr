@@ -211,5 +211,6 @@
 	"commetionRequired": "commetionRequired",
 	"duplicatedPromoCode": "duplicatedPromoCode",
 	"unauthrized": "unauthrized",
-	"AdvertismentsNotFound": "AdvertismentsNotFound"
+	"AdvertismentsNotFound": "AdvertismentsNotFound",
+	"traderBusy":"المتجر غير متاح الان"
 }

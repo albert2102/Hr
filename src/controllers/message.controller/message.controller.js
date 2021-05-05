@@ -53,21 +53,20 @@ let handelNewMessageSocket = async (message) => {
             await countUnseen(message.reciver.user.id)
             chatNSP.to('room-' + message.reciver.user.id).emit(SocketEvents.NewMessage, { message: message });
             if (message.reciver.user.activeChatHead == false) {
-                let text = (message.message.text) ? message.message.text : ' رسالة جديدة ';
-                if (message.reciver.user.language == 'ar') {
-                    await notificationController.pushNotification(message.reciver.user.id, 'MESSAGE', message.sender.id, text)
-                } else {
-                    await notificationController.pushNotification(message.reciver.user.id, 'MESSAGE', message.sender.id, text)
-                }
+                let text= {
+                    ar:(message.message.text) ? message.message.text : ' رسالة جديدة ',
+                    en: (message.message.text) ? message.message.text :'New Message :'
+                };
+                await notificationController.pushNotification(message.reciver.user.id, 'MESSAGE', message.sender.id, text)
+                
             }
         } else if (message.reciver && message.reciver.user && !chatNSP.adapter.rooms['room-' + message.reciver.user.id]) {
             await countUnseen(message.reciver.user.id)
-            let text = (message.message.text) ? message.message.text : ' رسالة جديدة ';
-            if (message.reciver.user.language == 'ar') {
-                await notificationController.pushNotification(message.reciver.user.id, 'MESSAGE', message.sender.id, text)
-            } else {
-                await notificationController.pushNotification(message.reciver.user.id, 'MESSAGE', message.sender.id, text)
-            }
+            let text= {
+                ar:(message.message.text) ? message.message.text : ' رسالة جديدة ',
+                en: (message.message.text) ? message.message.text :'New Message :'
+            };
+            await notificationController.pushNotification(message.reciver.user.id, 'MESSAGE', message.sender.id, text)
         } else if (!message.reciver.user) {
             chatNSP.to('room-admin').emit(SocketEvents.NewMessage, { message: message });
             await countUnseenForAdmin();
@@ -220,7 +219,7 @@ export default {
             if (friend) {
                 query.complaint = null;
                 query.order = null;
-                query.$or = [{ sender: user, reciver: { $elemMatch: { user: friend } } }, { sender: friend, reciver: { $elemMatch: { user: user } } }];
+                query.$or = [{ sender: user, 'reciver.user': friend }, { sender: friend, 'reciver.user': user}];
             } else if (complaint) {
                 query.order = null;
                 query.complaint = complaint;
@@ -292,7 +291,8 @@ export default {
     },
 
     //////////////////////////////////Admin Requests/////////////////////////////////////////
-    async getLastChatsForAdmin(req, res, next) {
+
+    async getLastComplaintsChatsForAdmin(req, res, next) {
         try {
             let page = +req.query.page || 1,
                 limit = +req.query.limit || 20;
@@ -321,6 +321,96 @@ export default {
         }
     },
 
+    async getLastChatsForAdmin(req, res, next) {
+        try {
+            let page = +req.query.page || 1,
+                limit = +req.query.limit || 20;
+            if (req.user.type != 'ADMIN' && req.user.type != 'SUB_ADMIN') {
+                return next(new ApiError(403, ('unauthorized')));
+            }
+
+            let query = {
+                deleted: false,
+                lastMessage: true,
+                complaint: null,
+                order: null
+            };
+
+            var chats = await Message.find(query).populate(popQuery).sort({ _id: -1 }).limit(limit).skip((page - 1) * limit)
+            const chatCount = await Message.count(query);
+            const pageCount = Math.ceil(chatCount / limit);
+            res.send(new ApiResponse(chats, page, pageCount, limit, chatCount, req));
+            await countUnseenForAdmin();
+        } catch (error) {
+            next(error)
+        }
+    },
+
+    async getLastOrdersChatsForAdmin(req, res, next) {
+        try {
+            let page = +req.query.page || 1,
+                limit = +req.query.limit || 20;
+            if (req.user.type != 'ADMIN' && req.user.type != 'SUB_ADMIN') {
+                return next(new ApiError(403, ('unauthorized')));
+            }
+
+            let query = {
+                deleted: false,
+                lastMessage: true,
+                complaint: null,
+                order: {$ne: null}
+                 
+            };
+            
+            var chats = await Message.find(query).populate(popQuery).sort({ _id: -1 }).limit(limit).skip((page - 1) * limit)
+            const chatCount = await Message.count(query);
+            const pageCount = Math.ceil(chatCount / limit);
+            res.send(new ApiResponse(chats, page, pageCount, limit, chatCount, req));
+            await countUnseenForAdmin();
+        } catch (error) {
+            next(error)
+        }
+    },
+
+    async getSpecificChat(req, res, next) {
+        try {
+
+            if (req.user.type != 'ADMIN' && req.user.type != 'SUB_ADMIN') {
+                return next(new ApiError(403, ('unauthorized')));
+            }
+            let { user,friend, complaint, order } = req.query;
+            if(user && !friend) return next(new ApiError(403, ('friend is required')));
+            if(!user && friend) return next(new ApiError(403, ('friend is required')));
+
+            let page = +req.query.page || 1,
+                limit = +req.query.limit || 20;
+            let query = { deleted: false };
+
+            if (friend && user) {
+                query.complaint = null;
+                query.order = null;
+                query.$or = [{ sender: user, 'reciver.user': friend }, { sender: friend, 'reciver.user': user}];
+            } else if (complaint) {
+                query.order = null;
+                query.complaint = complaint;
+
+            } else if (order) {
+                query.complaint = null;
+                query.order = order;
+            }
+            else {
+                return next(new ApiError(404, i18n.__('targetRequired')));
+            }
+            console.log(query.$or)
+            let chats = await Message.find(query).populate(popQuery).sort({ _id: -1 }).limit(limit).skip((page - 1) * limit);
+            const chatCount = await Message.count(query);
+            const pageCount = Math.ceil(chatCount / limit);
+            res.send(new ApiResponse(chats, page, pageCount, limit, chatCount, req));
+
+        } catch (error) {
+            next(error);
+        }
+    },
 
     countUnseen,
     updateSeen,
