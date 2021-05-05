@@ -156,5 +156,6 @@
 	"transportPriceRequired": "transport Price is Required",
 	"promoCodeInvalid": "Invalid PromoCode",
 	"taxesRequired": "taxesRequired",
-	"workingTimeTextRequired": "workingTimeTextRequired"
+	"workingTimeTextRequired": "workingTimeTextRequired",
+	"complaintRequired": "complaintRequired"
 }

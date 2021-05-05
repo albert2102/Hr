@@ -214,6 +214,14 @@
 	"duplicatedPromoCode": "duplicatedPromoCode",
 	"valueRequired": "valueRequired",
 	"numberRequired": "numberRequired",
-	"duplicatedPromoCode": "duplicatedPromoCode",
-	"unauthrized": "unauthrized"
+	"unauthrized": "unauthrized",
+	"frontCarLicenceImageRequired": "frontCarLicenceImageRequired",
+	"backCarLicenceImageRequired": "backCarLicenceImageRequired",
+	"reciverRequired": "reciverRequired",
+	"addressNameRequired": "addressNameRequired",
+	"flatNumberRequired": "flatNumberRequired",
+	"insideCarImageRequired": "insideCarImageRequired",
+	"carFormImageRequired": "carFormImageRequired",
+	"ibanNumberRequired": "ibanNumberRequired",
+	"invalidCard": "invalidCard"
 }
