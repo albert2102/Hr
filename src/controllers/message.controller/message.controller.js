@@ -238,7 +238,6 @@ export default {
             res.send(new ApiResponse(chats, page, pageCount, limit, chatCount, req));
 
             if (friend) {
-                emitUserSeen([friend], user, null);
                 await Message.updateMany({ deleted: false, sender: friend, 'reciver.user': user, 'reciver.read': false }, { $set: { 'reciver.read': true, 'reciver.readDate': new Date() } });
             } else if (complaint) {
                 complaint = await Complaint.findOne({ _id: complaint });
