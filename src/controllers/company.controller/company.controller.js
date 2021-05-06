@@ -48,6 +48,18 @@ export default {
                 body('instructionsForUse.*.description.ar').not().isEmpty().withMessage(() => { return i18n.__('arinstructionsForUseRequired') }),
                 body('instructionsForUse.*.description.en').not().isEmpty().withMessage(() => { return i18n.__('eninstructionsForUseRequired') }),
 
+                body('instructionsForUseForDriver').not().isEmpty().withMessage(() => { return i18n.__('instructionsForUseRequired') }).isArray().withMessage('Must Be Array'),
+                body('instructionsForUseForDriver.*.title.ar').not().isEmpty().withMessage(() => { return i18n.__('arinstructionsForUseRequired') }),
+                body('instructionsForUseForDriver.*.title.en').not().isEmpty().withMessage(() => { return i18n.__('eninstructionsForUseRequired') }),
+                body('instructionsForUseForDriver.*.description.ar').not().isEmpty().withMessage(() => { return i18n.__('arinstructionsForUseRequired') }),
+                body('instructionsForUseForDriver.*.description.en').not().isEmpty().withMessage(() => { return i18n.__('eninstructionsForUseRequired') }),
+
+                body('instructionsForUseForTrader').not().isEmpty().withMessage(() => { return i18n.__('instructionsForUseRequired') }).isArray().withMessage('Must Be Array'),
+                body('instructionsForUseForTrader.*.title.ar').not().isEmpty().withMessage(() => { return i18n.__('arinstructionsForUseRequired') }),
+                body('instructionsForUseForTrader.*.title.en').not().isEmpty().withMessage(() => { return i18n.__('eninstructionsForUseRequired') }),
+                body('instructionsForUseForTrader.*.description.ar').not().isEmpty().withMessage(() => { return i18n.__('arinstructionsForUseRequired') }),
+                body('instructionsForUseForTrader.*.description.en').not().isEmpty().withMessage(() => { return i18n.__('eninstructionsForUseRequired') }),
+
 
                 body('androidUrl').not().isEmpty().withMessage(() => { return i18n.__('androidUrlRequired') }),
                 body('iosUrl').not().isEmpty().withMessage(() => { return i18n.__('iosUrlRequired') }),
@@ -107,6 +119,18 @@ export default {
                 body('instructionsForUse.*.title.en').not().isEmpty().withMessage(() => { return i18n.__('eninstructionsForUseRequired') }),
                 body('instructionsForUse.*.description.ar').not().isEmpty().withMessage(() => { return i18n.__('arinstructionsForUseRequired') }),
                 body('instructionsForUse.*.description.en').not().isEmpty().withMessage(() => { return i18n.__('eninstructionsForUseRequired') }),
+
+                body('instructionsForUseForDriver').optional().not().isEmpty().withMessage(() => { return i18n.__('instructionsForUseRequired') }).isArray().withMessage('Must Be Array'),
+                body('instructionsForUseForDriver.*.title.ar').not().isEmpty().withMessage(() => { return i18n.__('arinstructionsForUseRequired') }),
+                body('instructionsForUseForDriver.*.title.en').not().isEmpty().withMessage(() => { return i18n.__('eninstructionsForUseRequired') }),
+                body('instructionsForUseForDriver.*.description.ar').not().isEmpty().withMessage(() => { return i18n.__('arinstructionsForUseRequired') }),
+                body('instructionsForUseForDriver.*.description.en').not().isEmpty().withMessage(() => { return i18n.__('eninstructionsForUseRequired') }),
+
+                body('instructionsForUseForTrader').optional().not().isEmpty().withMessage(() => { return i18n.__('instructionsForUseRequired') }).isArray().withMessage('Must Be Array'),
+                body('instructionsForUseForTrader.*.title.ar').not().isEmpty().withMessage(() => { return i18n.__('arinstructionsForUseRequired') }),
+                body('instructionsForUseForTrader.*.title.en').not().isEmpty().withMessage(() => { return i18n.__('eninstructionsForUseRequired') }),
+                body('instructionsForUseForTrader.*.description.ar').not().isEmpty().withMessage(() => { return i18n.__('arinstructionsForUseRequired') }),
+                body('instructionsForUseForTrader.*.description.en').not().isEmpty().withMessage(() => { return i18n.__('eninstructionsForUseRequired') }),
 
                 body('androidUrl').optional().not().isEmpty().withMessage(() => { return i18n.__('androidUrlRequired') }),
                 body('iosUrl').optional().not().isEmpty().withMessage(() => { return i18n.__('iosUrlRequired') }),
@@ -193,6 +217,14 @@ export default {
             if (validatedBody.instructionsForUse) {
                 data.instructionsForUse = validatedBody.instructionsForUse;
                 delete validatedBody.instructionsForUse;
+            }
+            if (validatedBody.instructionsForUseForDriver) {
+                data.instructionsForUseForDriver = validatedBody.instructionsForUseForDriver;
+                delete validatedBody.instructionsForUseForDriver;
+            }
+            if (validatedBody.instructionsForUseForTrader) {
+                data.instructionsForUseForTrader = validatedBody.instructionsForUseForTrader;
+                delete validatedBody.instructionsForUseForTrader;
             }
             if (validatedBody.contactusReasons) {
                 data.contactusReasons = validatedBody.contactusReasons;

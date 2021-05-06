@@ -36,6 +36,22 @@ const CompanySchema = new Schema({
         i18n: true,
         required: true
     },
+    instructionsForUseForDriver: {
+        type: [
+            { title: { ar: { type: String }, en: { type: String } } ,
+             description: { ar: { type: String }, en: { type: String } } }
+        ],
+        i18n: true,
+        required: true
+    },
+    instructionsForUseForTrader: {
+        type: [
+            { title: { ar: { type: String }, en: { type: String } } ,
+             description: { ar: { type: String }, en: { type: String } } }
+        ],
+        i18n: true,
+        required: true
+    },
     commissionAgreement:{ //اتفاقية العمولة
         type:[{ ar: { type: String }, en: { type: String }}],
     },
