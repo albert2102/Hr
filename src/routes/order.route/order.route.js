@@ -4,6 +4,10 @@ import orderController from "../../controllers/order.controller/order.controller
 import { requireAuth } from '../../services/passport';
 import { multerSaveTo } from '../../services/multer-service';
 
+
+router.route('/resendOrder')
+    .post(requireAuth, orderController.validateResendOrderToTrader(), orderController.resendOrderToTrader)
+    
 //////////////////////////////////////////Rate/////////////////////////////////////////////////////////
 router.route('/traderRate')
     .get(requireAuth, orderController.getRates)

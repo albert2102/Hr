@@ -7,6 +7,7 @@ import Company from '../src/models/company.model/company.model'
 import advertismentController from '../src/controllers/advertisments.controller/advertisments.controller';
 import issueController from "../src/controllers/issue.controller/issue.controller";
 import adminController from "../src/controllers/admin.controller/admin.controller";
+import orderController from '../src/controllers/order.controller/order.controller';
 
 module.exports = {
 
@@ -23,6 +24,8 @@ module.exports = {
                 notificationNSP.to(roomName).emit(socketEvents.NewUser, { user: user });
                 notificationNSP.to(roomName).emit(socketEvents.Company, { company: company });
                 await NotificationController.getCountNotification(id);
+                if(user.type == 'INSTITUTION') await orderController.traderOrdersCount(id);
+                if(user.type == 'DRIVER') await orderController.driverOrdersCount(id);
             } else {
                 notificationNSP.emit(socketEvents.Company, { company: company });
             }

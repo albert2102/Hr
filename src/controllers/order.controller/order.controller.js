@@ -19,6 +19,7 @@ import Company from '../../models/company.model/company.model';
 import config from '../../config';
 import { sendEmail } from '../../services/emailMessage.service';
 import { duration_time } from '../../calculateDistance'
+import schedule from 'node-schedule';
 
 let populateQuery = [
     { path: 'user', model: 'user' },
@@ -48,6 +49,7 @@ let traderOrdersCount = async (userId) => {
             Order.count(newOrdersQuery), Order.count(currentOrdersQuery), Order.count(finishedOrdersQuery)
         ];
         let result = await Promise.all(promiseData);
+        console.log(result)
         notificationNSP.to('room-' + userId).emit(socketEvents.NewOrdersCount, { count: result[0] });
         notificationNSP.to('room-' + userId).emit(socketEvents.CurrentOrdersCount, { count: result[1] });
         notificationNSP.to('room-' + userId).emit(socketEvents.FinishedOrdersCount, { count: result[2] });
@@ -242,9 +244,15 @@ const findDriver = async (order) => {
         if (driver) {
             console.log("in ifffffffffffffffffffffffffffffffffffff")
             order.driver = driver._id;
-            order = await Order.findByIdAndUpdate(order.id, { driver: driver._id });
+            order = await Order.findByIdAndUpdate(order.id, { driver: driver._id }).populate(populateQuery)
             orderService(order);
             notificationNSP.to('room-' + driver._id).emit(socketEvents.NewOrder, { order: order });
+            let description = {
+                ar:order.orderNumber +' : ' +  'لديك طلب جديد ',
+                en:order.orderNumber +' : ' + 'You have a new Order'
+            }
+            await notifyController.create(order.user.id, order.trader.id, description, order.id, 'ORDER', order.id);
+            notifyController.pushNotification(order.trader.id, 'ORDER', order.id, description, config.notificationTitle);
             driverOrdersCount(driver._id);
         } else {
             console.log("in elseeeeeeeeeeeeeeeeeeeeeeee")
@@ -263,7 +271,7 @@ const traderService = async (order) => {
         date = new Date(date);
         let jobName = 'order-' + order.id;
         let currentOrder = await checkExistThenGet(order.id, Order, { populate: populateQuery });
-
+        console.log(date)
         var j = schedule.scheduleJob(jobName, date, async (fireDate) => {
             try {
                 console.log(jobName, ' fire date ', fireDate);
@@ -288,7 +296,7 @@ export default {
             let page = +req.query.page || 1, limit = +req.query.limit || 20;
             let { user, status, paymentMethod, month, year, fromDate, toDate, type, formDate,
                 userName, price, orderDate, totalPrice, promoCode,
-                orderNumber, numberOfProducts, waitingOrders, currentOrders, finishedOrders
+                orderNumber, numberOfProducts, waitingOrders, currentOrders, finishedOrders,traderNotResponse
             } = req.query;
             let query = { deleted: false, $or: [{ paymentMethod: 'CREDIT', paymentStatus: 'SUCCESSED' }, { paymentMethod: { $in: ['CASH', 'WALLET'] } }] };
 
@@ -326,7 +334,7 @@ export default {
                 }
             }
             let date = new Date();
-
+            if (traderNotResponse) query.traderNotResponse = traderNotResponse
             if (orderDate) query.createdAt = { $gte: new Date(moment(orderDate).startOf('day')), $lt: new Date(moment(orderDate).endOf('day')) };
 
             if (formDate) {
@@ -482,6 +490,12 @@ export default {
             await order.save();
             res.status(200).send(order);
             order = await Order.populate(order, populateQuery)
+            let description = {
+                ar:order.orderNumber +' : ' +  'لديك طلب جديد ',
+                en:order.orderNumber +' : ' + 'You have a new Order'
+            }
+            await notifyController.create(req.user.id, order.trader.id, description, order.id, 'ORDER', order.id);
+            notifyController.pushNotification(order.trader.id, 'ORDER', order.id, description, config.notificationTitle);
             notificationNSP.to('room-' + order.trader.id).emit(socketEvents.NewOrder, { order: order });
             traderOrdersCount(order.trader.id);
             traderService(order);
@@ -535,7 +549,7 @@ export default {
                 return next(new ApiError(403, ('notAllowToChangeStatus')));
 
             let { orderId } = req.params;
-            await checkExist(orderId, Order, { deleted: false/*, status: 'WAITING'*/ });
+            await checkExist(orderId, Order, { deleted: false, status: 'WAITING' });
             let validatedBody = checkValidations(req);
             let updatedOrder = await Order.findByIdAndUpdate(orderId, validatedBody, { new: true }).populate(populateQuery);
             updatedOrder = Order.schema.methods.toJSONLocalizedOnly(updatedOrder, i18n.getLocale());
@@ -623,7 +637,6 @@ export default {
             notifyController.pushNotification(updatedOrder.user.id, 'CHANGE_ORDER_STATUS', updatedOrder.id, description, config.notificationTitle);
             
             notificationNSP.to('room-' + updatedOrder.user.id).emit(socketEvents.ChangeOrderStatus, { order: updatedOrder });
-            notificationNSP.to('room-' + updatedOrder.trader.id).emit(socketEvents.ChangeOrderStatus, { order: updatedOrder });
             
             if (updatedOrder.user.language == "ar") {
                 await sendEmail(updatedOrder.user.email, description.ar)
@@ -699,8 +712,8 @@ export default {
             body('traderRateEmotion').not().isEmpty().withMessage(() => { return i18n.__('traderRateEmotionRequired') })
                 .isIn(['BAD', 'GOOD', 'EXCELLENT']).withMessage(() => { return i18n.__('WrongType') }),
             body('traderRateComment').optional().not().isEmpty().withMessage(() => { return i18n.__('traderRateCommentRequired') }),
-            body('order').not().isEmpty().withMessage(() => { return i18n.__('traderRateCommentRequired') }).custom(async (val, { req }) => {
-                req.order = await checkExistThenGet(val, Order, { deleted: false,/*traderRateEmotion:null,*/status: "DELIVERED", user: req.user.id })
+            body('order').not().isEmpty().withMessage(() => { return i18n.__('orderRequired') }).custom(async (val, { req }) => {
+                req.order = await checkExistThenGet(val, Order, { deleted: false,traderRateEmotion:null,status: "DELIVERED", user: req.user.id })
                 return true;
             }),
         ];
@@ -744,5 +757,36 @@ export default {
             next(err);
         }
     },
+    traderOrdersCount,
+    driverOrdersCount,
+    TraderNotResponseCount,
+    /////////////////////////////////////////////////////////////////////////////////
 
+    validateResendOrderToTrader() {
+        let validations = [
+           body('order').not().isEmpty().withMessage(() => { return i18n.__('orderRequired') })
+        ];
+        return validations;
+    },
+    async resendOrderToTrader(req, res, next) {
+        try {
+            if (req.user.type != 'ADMIN' && req.user.type != 'SUB_ADMIN')
+                return next(new ApiError(403, ('notAllowToChangeStatus')));
+
+            let validatedBody = checkValidations(req);
+            await checkExist(validatedBody.order, Order, { deleted: false, status: 'WAITING',traderNotResponse: true});
+            let updatedOrder = await Order.findByIdAndUpdate(orderId, {traderNotResponse:false}, { new: true }).populate(populateQuery);
+            updatedOrder = Order.schema.methods.toJSONLocalizedOnly(updatedOrder, i18n.getLocale());
+            res.status(200).send(updatedOrder);
+            let description = { en: updatedOrder.orderNumber + ' : ' + 'The admin sent the order back to you. Please accept the order as soon as possible.', ar: updatedOrder.orderNumber + ' : ' + '  قام الادمن بإعادة ارسال الطلب اليك مرة اخري من فضلك وافق على الطلب في اسرع وقت ' };
+            
+            await notifyController.create(req.user.id, updatedOrder.trader.id, description, updatedOrder.id, 'ORDER', updatedOrder.id);
+            notifyController.pushNotification(updatedOrder.trader.id, 'ORDER', updatedOrder.id, description, config.notificationTitle);
+            notificationNSP.to('room-' + updatedOrder.trader.id).emit(socketEvents.NewOrder, { order: updatedOrder });
+            traderOrdersCount(updatedOrder.trader.id);
+
+        } catch (err) {
+            next(err);
+        }
+    },
 }
