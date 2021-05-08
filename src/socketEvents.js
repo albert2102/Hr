@@ -25,4 +25,12 @@ socketEvents.OrderExpired = 'OrderExpired';
 
 socketEvents.WaitingDriverCount = 'WaitingDriverCount';
 socketEvents.WaitingInstitutionCount = 'WaitingInstitutionCount';
+
+////////////////////////////////////////////////////////
+socketEvents.NewOrder = 'NewOrder';
+socketEvents.ChangeOrderStatus = 'ChangeOrderStatus';
+socketEvents.NewOrdersCount = 'NewOrdersCount';
+socketEvents.CurrentOrderCount = 'CurrentOrderCount';
+socketEvents.FinishedOrderCount = 'FinishedOrderCount';
+socketEvents.TraderNotResponseCount = 'TraderNotResponseCount';
 export default socketEvents;

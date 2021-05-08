@@ -107,6 +107,10 @@ const orderSchema = new Schema({
     },
     traderRateComment:{
         type: String
+    },
+    traderNotResponse:{
+        type: Boolean,
+        default: false
     }
 }, { timestamps: true });
 orderSchema.set('toJSON', {
