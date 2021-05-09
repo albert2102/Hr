@@ -32,16 +32,16 @@ let populateQuery = [
 
 let TraderNotResponseCount = async () => {
     try {
-        let count = await Order.count({ deleted: false, traderNotResponse: true,status:'WAITING' });
+        let count = await Order.count({ deleted: false, traderNotResponse: true, status: 'WAITING' });
         adminNSP.emit(socketEvents.TraderNotResponseCount, { count: count });
-        
+
     } catch (error) {
         throw error;
     }
 }
 let traderOrdersCount = async (userId) => {
     try {
-        let newOrdersQuery = { deleted: false, status: 'WAITING', trader: userId,traderNotResponse:false };
+        let newOrdersQuery = { deleted: false, status: 'WAITING', trader: userId, traderNotResponse: false };
         let currentOrdersQuery = { deleted: false, trader: userId, status: { $in: ['ACCEPTED', 'DRIVER_ACCEPTED', 'SHIPPED'] } };
         let finishedOrdersQuery = { deleted: false, trader: userId, status: { $in: ['DELIVERED'] } };
 
@@ -209,11 +209,11 @@ const orderService = async (order) => {
 
 const findDriver = async (order) => {
     try {
-        let busyDrivers = await Order.find({ deleted: false, status: { $in: ['ACCEPTED','DRIVER_ACCEPTED', 'SHIPPED'], } }).distinct('driver');
+        let busyDrivers = await Order.find({ deleted: false, status: { $in: ['ACCEPTED', 'DRIVER_ACCEPTED', 'SHIPPED'], } }).distinct('driver');
         let userQuery = {
             deleted: false,
             online: true,
-            status:'ACCEPTED',
+            status: 'ACCEPTED',
             type: 'DRIVER',
             _id: { $nin: busyDrivers },
         };
@@ -248,8 +248,8 @@ const findDriver = async (order) => {
             orderService(order);
             notificationNSP.to('room-' + driver._id).emit(socketEvents.NewOrder, { order: order });
             let description = {
-                ar:order.orderNumber +' : ' +  'لديك طلب جديد ',
-                en:order.orderNumber +' : ' + 'You have a new Order'
+                ar: order.orderNumber + ' : ' + 'لديك طلب جديد ',
+                en: order.orderNumber + ' : ' + 'You have a new Order'
             }
             await notifyController.create(order.user.id, order.trader.id, description, order.id, 'ORDER', order.id);
             notifyController.pushNotification(order.trader.id, 'ORDER', order.id, description, config.notificationTitle);
@@ -277,7 +277,7 @@ const traderService = async (order) => {
                 console.log(jobName, ' fire date ', fireDate);
                 currentOrder = await checkExistThenGet(order.id, Order);
                 if (order.status == 'WAITING') {
-                    let updatedOrder = await Order.findByIdAndUpdate(order.id, {traderNotResponse: true}, { new: true }).populate(populateQuery);
+                    let updatedOrder = await Order.findByIdAndUpdate(order.id, { traderNotResponse: true }, { new: true }).populate(populateQuery);
                     notificationNSP.to('room-' + currentOrder.trader.id).emit(socketEvents.OrderExpired, { order: updatedOrder });
                     TraderNotResponseCount();
                 }
@@ -296,10 +296,10 @@ export default {
             let page = +req.query.page || 1, limit = +req.query.limit || 20;
             let { user, status, paymentMethod, month, year, fromDate, toDate, type, formDate,
                 userName, price, orderDate, totalPrice, promoCode,
-                orderNumber, numberOfProducts, waitingOrders, currentOrders, finishedOrders,traderNotResponse
+                orderNumber, numberOfProducts, waitingOrders, currentOrders, finishedOrders, traderNotResponse, trader
             } = req.query;
             let query = { deleted: false, $or: [{ paymentMethod: 'CREDIT', paymentStatus: 'SUCCESSED' }, { paymentMethod: { $in: ['CASH', 'WALLET'] } }] };
-
+            if (trader) query.trader = trader;
             if (req.user.type == 'CLIENT') {
                 query.user = req.user.id;
                 if (currentOrders) {
@@ -313,7 +313,7 @@ export default {
                 query.trader = req.user.id;
                 if (waitingOrders) {
                     query.status = { $in: ['WAITING'] },
-                    query.traderNotResponse = false;
+                        query.traderNotResponse = false;
 
                 } else if (currentOrders) {
                     query.status = { $in: ['ACCEPTED', 'DRIVER_ACCEPTED', 'SHIPPED'] }
@@ -485,14 +485,30 @@ export default {
                 return next(new ApiError(400, i18n.__('notAvaliableNow')));
             }
 
+            /////////////////////////////////////////////////////////////////////////////////////////////
+            validatedBody.ajamTaxes = Number(trader.ajamTaxes);
+
+            if (validatedBody.orderType == 'FROM_STORE') {
+                let ajamprice = (validatedBody.totalPrice - validatedBody.transportPrice);
+                validatedBody.ajamDues = (ajamprice * (Number(validatedBody.ajamTaxes) / 100)).toFixed(2);
+                validatedBody.driverDues = 0;
+                validatedBody.traderDues = ajamprice - Number(validatedBody.ajamDues);
+            } else {
+                let ajamprice = (validatedBody.totalPrice - validatedBody.transportPrice);
+                validatedBody.ajamDues = (ajamprice * (Number(validatedBody.ajamTaxes) / 100)).toFixed(2);
+                validatedBody.driverDues = validatedBody.transportPrice;
+                validatedBody.traderDues = ajamprice - Number(validatedBody.ajamDues);
+            }
+            /////////////////////////////////////////////////////////////////////////////////////////////
+
             let order = await Order.create(validatedBody);
             order.orderNumber = order.orderNumber + order.id;
             await order.save();
             res.status(200).send(order);
             order = await Order.populate(order, populateQuery)
             let description = {
-                ar:order.orderNumber +' : ' +  'لديك طلب جديد ',
-                en:order.orderNumber +' : ' + 'You have a new Order'
+                ar: order.orderNumber + ' : ' + 'لديك طلب جديد ',
+                en: order.orderNumber + ' : ' + 'You have a new Order'
             }
             await notifyController.create(req.user.id, order.trader.id, description, order.id, 'ORDER', order.id);
             notifyController.pushNotification(order.trader.id, 'ORDER', order.id, description, config.notificationTitle);
@@ -567,7 +583,7 @@ export default {
 
             await notifyController.create(req.user.id, updatedOrder.user.id, description, updatedOrder.id, 'CHANGE_ORDER_STATUS', updatedOrder.id);
             notifyController.pushNotification(updatedOrder.user.id, 'CHANGE_ORDER_STATUS', updatedOrder.id, description, config.notificationTitle);
-            
+
             notificationNSP.to('room-' + updatedOrder.user.id).emit(socketEvents.ChangeOrderStatus, { order: updatedOrder });
 
             if (updatedOrder.user.language == "ar") {
@@ -632,12 +648,12 @@ export default {
             res.status(200).send(updatedOrder);
 
             let description = { ar: updatedOrder.orderNumber + ' : ' + ' تم تغير حالة الطلب الي تم الشحن ', en: updatedOrder.orderNumber + ' : ' + 'Order Status Changed To Order Shipped' };
-            
+
             await notifyController.create(req.user.id, updatedOrder.user.id, description, updatedOrder.id, 'CHANGE_ORDER_STATUS', updatedOrder.id);
             notifyController.pushNotification(updatedOrder.user.id, 'CHANGE_ORDER_STATUS', updatedOrder.id, description, config.notificationTitle);
-            
+
             notificationNSP.to('room-' + updatedOrder.user.id).emit(socketEvents.ChangeOrderStatus, { order: updatedOrder });
-            
+
             if (updatedOrder.user.language == "ar") {
                 await sendEmail(updatedOrder.user.email, description.ar)
             }
@@ -658,13 +674,13 @@ export default {
             res.status(200).send(updatedOrder);
 
             let description = { ar: updatedOrder.orderNumber + ' : ' + ' تم تغير حالة الطلب الي تم التسليم ', en: updatedOrder.orderNumber + ' : ' + 'Order Status Changed To Delivered' };
-            
+
             await notifyController.create(req.user.id, updatedOrder.user.id, description, updatedOrder.id, 'CHANGE_ORDER_STATUS', updatedOrder.id);
             notifyController.pushNotification(updatedOrder.user.id, 'CHANGE_ORDER_STATUS', updatedOrder.id, description, config.notificationTitle);
-            
+
             notificationNSP.to('room-' + updatedOrder.user.id).emit(socketEvents.ChangeOrderStatus, { order: updatedOrder });
             notificationNSP.to('room-' + updatedOrder.trader.id).emit(socketEvents.ChangeOrderStatus, { order: updatedOrder });
-            
+
             if (updatedOrder.user.language == "ar") {
                 await sendEmail(updatedOrder.user.email, description.ar)
             }
@@ -686,17 +702,17 @@ export default {
             let user = req.user;
             let { orderId } = req.params;
             let order = await checkExistThenGet(orderId, Order, { deleted: false, populate: populateQuery }, i18n.__('notAllowToCancel'));
-            if (user.type == 'CLIENT' && order.user.id != user.id){
+            if (user.type == 'CLIENT' && order.user.id != user.id) {
                 return next(new ApiError(403, i18n__('notAllowToCancel')));
             }
-            if (order.orderType == 'DELIVERY' && order.status == 'DRIVER_ACCEPTED'){
+            if (order.orderType == 'DELIVERY' && order.status == 'DRIVER_ACCEPTED') {
                 return next(new ApiError(403, i18n__('notAllowToCancel')));
             }
             order.status = 'CANCELED';
             await order.save();
             res.status(200).send(order);
             let description = { ar: order.orderNumber + ' : ' + 'تم الغاء هذا الطلب ', en: order.orderNumber + ' : ' + ' Order Canceled' };
-            
+
             await notifyController.create(req.user.id, order.user.id, description, order.id, 'CHANGE_ORDER_STATUS', order.id);
             notifyController.pushNotification(order.user.id, 'CHANGE_ORDER_STATUS', order.id, description, config.notificationTitle);
             notificationNSP.to('room-' + order.trader.id).emit(socketEvents.ChangeOrderStatus, { order: order });
@@ -713,7 +729,7 @@ export default {
                 .isIn(['BAD', 'GOOD', 'EXCELLENT']).withMessage(() => { return i18n.__('WrongType') }),
             body('traderRateComment').optional().not().isEmpty().withMessage(() => { return i18n.__('traderRateCommentRequired') }),
             body('order').not().isEmpty().withMessage(() => { return i18n.__('orderRequired') }).custom(async (val, { req }) => {
-                req.order = await checkExistThenGet(val, Order, { deleted: false,traderRateEmotion:null,status: "DELIVERED", user: req.user.id })
+                req.order = await checkExistThenGet(val, Order, { deleted: false, traderRateEmotion: null, status: "DELIVERED", user: req.user.id })
                 return true;
             }),
         ];
@@ -764,7 +780,7 @@ export default {
 
     validateResendOrderToTrader() {
         let validations = [
-           body('order').not().isEmpty().withMessage(() => { return i18n.__('orderRequired') })
+            body('order').not().isEmpty().withMessage(() => { return i18n.__('orderRequired') })
         ];
         return validations;
     },
@@ -774,12 +790,12 @@ export default {
                 return next(new ApiError(403, ('notAllowToChangeStatus')));
 
             let validatedBody = checkValidations(req);
-            await checkExist(validatedBody.order, Order, { deleted: false, status: 'WAITING',traderNotResponse: true});
-            let updatedOrder = await Order.findByIdAndUpdate(orderId, {traderNotResponse:false}, { new: true }).populate(populateQuery);
+            await checkExist(validatedBody.order, Order, { deleted: false, status: 'WAITING', traderNotResponse: true });
+            let updatedOrder = await Order.findByIdAndUpdate(orderId, { traderNotResponse: false }, { new: true }).populate(populateQuery);
             updatedOrder = Order.schema.methods.toJSONLocalizedOnly(updatedOrder, i18n.getLocale());
             res.status(200).send(updatedOrder);
             let description = { en: updatedOrder.orderNumber + ' : ' + 'The admin sent the order back to you. Please accept the order as soon as possible.', ar: updatedOrder.orderNumber + ' : ' + '  قام الادمن بإعادة ارسال الطلب اليك مرة اخري من فضلك وافق على الطلب في اسرع وقت ' };
-            
+
             await notifyController.create(req.user.id, updatedOrder.trader.id, description, updatedOrder.id, 'ORDER', updatedOrder.id);
             notifyController.pushNotification(updatedOrder.trader.id, 'ORDER', updatedOrder.id, description, config.notificationTitle);
             notificationNSP.to('room-' + updatedOrder.trader.id).emit(socketEvents.NewOrder, { order: updatedOrder });
