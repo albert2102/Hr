@@ -111,7 +111,19 @@ const orderSchema = new Schema({
     traderNotResponse:{
         type: Boolean,
         default: false
-    }
+    },
+    ajamTaxes:{
+        type: Number,
+    },
+    ajamDues:{
+        type: Number,
+    },
+    traderDues:{
+        type: Number,
+    },
+    driverDues:{
+        type: Number,
+    },
 }, { timestamps: true });
 orderSchema.set('toJSON', {
     transform: function (doc, ret, options) {
