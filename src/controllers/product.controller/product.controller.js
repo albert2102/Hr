@@ -274,7 +274,7 @@ export default {
         try {
             let user = req.user;
             let { productId } = req.params;
-            let product = await checkExistThenGet(productId, Product, { deleted: false, trader: user.id });
+            let product = await checkExistThenGet(productId, Product, { deleted: false/*, trader: user.id */});
             product.deleted = true;
             await product.save();
             res.status(200).send('Deleted Successfully');

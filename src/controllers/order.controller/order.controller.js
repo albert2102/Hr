@@ -295,11 +295,14 @@ export default {
         try {
             let page = +req.query.page || 1, limit = +req.query.limit || 20;
             let { user, status, paymentMethod, month, year, fromDate, toDate, type,
-                userName, price, orderDate, totalPrice, promoCode,
+                userName, price, orderDate, totalPrice, promoCode,orderType,driver,
                 orderNumber, numberOfProducts, waitingOrders, currentOrders, finishedOrders, traderNotResponse, trader
             } = req.query;
             let query = { deleted: false, $or: [{ paymentMethod: 'CREDIT', paymentStatus: 'SUCCESSED' }, { paymentMethod: { $in: ['CASH', 'WALLET'] } }] };
             if (trader) query.trader = trader;
+            if (orderType) query.orderType = orderType;
+            if (driver) query.driver = driver;
+
             if (req.user.type == 'CLIENT') {
                 query.user = req.user.id;
                 if (currentOrders) {
@@ -835,12 +838,11 @@ export default {
     async driverGetSales(req, res, next) {
         try {
 
-            let page = +req.query.page || 1, limit = +req.query.limit || 20;
             let user = req.user;
             let { fromDate, toDate } = req.query;
 
             let query = { deleted: false, driver: +user.id, status: 'DELIVERED', orderType: 'DELIVERY', paymentMethod: { $ne: 'CASH' } };
-
+            let realizedQuery = {deleted: false, driver: +user.id, status: 'DELIVERED', orderType: 'DELIVERY', paymentMethod: 'CASH'};
             if (fromDate && !toDate) query.createdAt = { $gte: new Date(moment(fromDate).startOf('day')) };
             if (toDate && !fromDate) query.createdAt = { $lt: new Date(moment(toDate).endOf('day')) };
             if (fromDate && toDate) query.createdAt = { $gte: new Date(moment(fromDate).startOf('day')), $lt: new Date(moment(toDate).endOf('day')) };
@@ -849,24 +851,24 @@ export default {
             let results = await Order.aggregate()
                 .match(query)
                 .group({
-                    _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+                    _id: null,
                     count: { $sum: 1 },
                     totalDues: { $sum: { $cond: [{ $eq: ["$driverPayoffDues", false] }, '$driverDues', 0] } },
                     orders: { $push: '$$ROOT' }
                 })
 
-            // let results = await Order.aggregate()
-            // .match(query)
-            // .group({ 
-            //     _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt"} }, 
-            //     count: { $sum: 1 } ,
-            //     totalDues: { $sum: {$cond: [{$eq: ["$driverPayoffDues", false]}, '$driverDues', 0] } } ,
-            //     orders:{$push:'$$ROOT'}
-            //  })
+            let results2 = await Order.aggregate()
+            .match(realizedQuery)
+            .group({ 
+                _id: null, 
+                count: { $sum: 1 } ,
+                totalDues: { $sum: '$totalPrice' } ,
+                orders:{$push:'$$ROOT'}
+             })
             // .limit(limit)
             // .skip((page - 1) * limit );
 
-            res.send({data: results});
+            res.send({data: results,data2: results2});
 
         } catch (err) {
             next(err);
