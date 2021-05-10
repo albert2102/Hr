@@ -57,7 +57,7 @@ router.post('/signin', userController.validateUserSignin(), userController.signI
 
 router.get('/allUsers', requireAuth, userController.findAll);
 
-router.get('/userInfo', requireAuth, userController.userInformation)
+router.get('/userInfo',userController.userInformation)
 
 router.route('/addToken').post(requireAuth, userController.validateAddToken(), userController.addToken);
 

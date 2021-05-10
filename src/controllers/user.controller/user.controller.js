@@ -603,8 +603,9 @@ export default {
 
     async userInformation(req, res, next) {
         try {
-            var userId = req.query.userId;
-            var user = await checkExistThenGet(userId, User, { deleted: false, populate: populateQuery });
+            let userId = req.query.userId;
+            let user = await checkExistThenGet(userId, User, { deleted: false, populate: populateQuery });
+            user = await User.schema.methods.toJSONLocalizedOnly(user, i18n.getLocale());
             res.status(200).send({ user: user });
         } catch (error) {
             next(error);

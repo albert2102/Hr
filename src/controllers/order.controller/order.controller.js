@@ -329,7 +329,11 @@ export default {
             }
             else if (req.user.type == 'DRIVER') {
                 query.driver = req.user.id;
-                if (currentOrders) {
+                query.orderType = 'DELIVERY';
+                if (waitingOrders) {
+                    query.status = { $in: ['ACCEPTED'] }
+                }
+                else if (currentOrders) {
                     query.status = { $in: ['ACCEPTED', 'DRIVER_ACCEPTED', 'SHIPPED'] }
 
                 } else if (finishedOrders) {
