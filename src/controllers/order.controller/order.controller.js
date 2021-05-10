@@ -807,31 +807,25 @@ export default {
     async traderGetSales(req, res, next) {
         try {
 
-            let page = +req.query.page || 1, limit = +req.query.limit || 20;
             let user = req.user;
-            let {fromDate, toDate} = req.query;
+            let { fromDate, toDate } = req.query;
 
-            let query = {deleted:false,trader: +user.id,status:'DELIVERED',orderType:'DELIVERY'};
-           
-            if (fromDate && !toDate) query.createdAt = { $gte: moment(fromDate).startOf('day') };
-            if (toDate && !fromDate) query.createdAt = { $lt: moment(toDate).endOf('day') };
-            if (fromDate && toDate) query.createdAt = { $gte: moment(fromDate).startOf('day'), $lt: moment(toDate).endOf('day') };
-            
-        
+            let query = { deleted: false, trader: +user.id, status: 'DELIVERED', orderType: 'DELIVERY' };
+
+            if (fromDate && !toDate) query.createdAt = { $gte: new Date(moment(fromDate).startOf('day')) };
+            if (toDate && !fromDate) query.createdAt = { $lt: new Date(moment(toDate).endOf('day')) };
+            if (fromDate && toDate) query.createdAt = { $gte: new Date(moment(fromDate).startOf('day')), $lt: new Date(moment(toDate).endOf('day')) };
+
+
             let results = await Order.aggregate()
-            .match(query)
-            .group({ 
-                _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt"} }, 
-                count: { $sum: 1 } ,
-                totalDues: { $sum: {$cond: [{$eq: ["$traderPayoffDues", false]}, '$traderDues', 0] } } ,
-                orders:{$push:'$$ROOT'}
-             })
-            .limit(limit)
-            .skip((page - 1) * limit );
-
-            let ordersCount = await Order.count(query);
-            const pageCount = Math.ceil(ordersCount / limit);
-            res.send(new ApiResponse(results, page, pageCount, limit, ordersCount, req));
+                .match(query)
+                .group({
+                    _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+                    count: { $sum: 1 },
+                    totalDues: { $sum: { $cond: [{ $eq: ["$traderPayoffDues", false] }, '$traderDues', 0] } },
+                    orders: { $push: '$$ROOT' }
+                })
+            res.send({ data: results });
 
         } catch (err) {
             next(err);
@@ -840,32 +834,39 @@ export default {
 
     async driverGetSales(req, res, next) {
         try {
-            
+
             let page = +req.query.page || 1, limit = +req.query.limit || 20;
             let user = req.user;
-            let {fromDate, toDate} = req.query;
+            let { fromDate, toDate } = req.query;
 
-            let query = {deleted:false,driver: +user.id,status:'DELIVERED',orderType:'DELIVERY',paymentMethod:{$ne:'CASH'}};
-           
-            if (fromDate && !toDate) query.createdAt = { $gte: moment(fromDate).startOf('day') };
-            if (toDate && !fromDate) query.createdAt = { $lt: moment(toDate).endOf('day') };
-            if (fromDate && toDate) query.createdAt = { $gte: moment(fromDate).startOf('day'), $lt: moment(toDate).endOf('day') };
-            
-        
+            let query = { deleted: false, driver: +user.id, status: 'DELIVERED', orderType: 'DELIVERY', paymentMethod: { $ne: 'CASH' } };
+
+            if (fromDate && !toDate) query.createdAt = { $gte: new Date(moment(fromDate).startOf('day')) };
+            if (toDate && !fromDate) query.createdAt = { $lt: new Date(moment(toDate).endOf('day')) };
+            if (fromDate && toDate) query.createdAt = { $gte: new Date(moment(fromDate).startOf('day')), $lt: new Date(moment(toDate).endOf('day')) };
+
+
             let results = await Order.aggregate()
-            .match(query)
-            .group({ 
-                _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt"} }, 
-                count: { $sum: 1 } ,
-                totalDues: { $sum: {$cond: [{$eq: ["$driverPayoffDues", false]}, '$driverDues', 0] } } ,
-                orders:{$push:'$$ROOT'}
-             })
-            .limit(limit)
-            .skip((page - 1) * limit );
+                .match(query)
+                .group({
+                    _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
+                    count: { $sum: 1 },
+                    totalDues: { $sum: { $cond: [{ $eq: ["$driverPayoffDues", false] }, '$driverDues', 0] } },
+                    orders: { $push: '$$ROOT' }
+                })
 
-            let ordersCount = await Order.count(query);
-            const pageCount = Math.ceil(ordersCount / limit);
-            res.send(new ApiResponse(results, page, pageCount, limit, ordersCount, req));
+            // let results = await Order.aggregate()
+            // .match(query)
+            // .group({ 
+            //     _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt"} }, 
+            //     count: { $sum: 1 } ,
+            //     totalDues: { $sum: {$cond: [{$eq: ["$driverPayoffDues", false]}, '$driverDues', 0] } } ,
+            //     orders:{$push:'$$ROOT'}
+            //  })
+            // .limit(limit)
+            // .skip((page - 1) * limit );
+
+            res.send({data: results});
 
         } catch (err) {
             next(err);

@@ -169,7 +169,7 @@ export default {
             body('price').not().isEmpty().withMessage(() => { return i18n.__('priceRequired') }),
             body('value').not().isEmpty().withMessage(() => { return i18n.__('valueRequired') }),
             body('count').not().isEmpty().withMessage(() => { return i18n.__('countRequired') }).isNumeric().withMessage('must be numeric'),
-            body('type').not().isEmpty().withMessage(() => { return i18n.__('typeRequired') }).isIn(['DELIVERY', 'FROM_STORE']).withMessage('Wrong type'),
+            body('type').not().isEmpty().withMessage(() => { return i18n.__('typeRequired') }).isIn(['ORANGE','BLUE']).withMessage('Wrong type'),
         ];
     },
 
