@@ -294,7 +294,7 @@ export default {
     async findAll(req, res, next) {
         try {
             let page = +req.query.page || 1, limit = +req.query.limit || 20;
-            let { user, status, paymentMethod, month, year, fromDate, toDate, type, formDate,
+            let { user, status, paymentMethod, month, year, fromDate, toDate, type,
                 userName, price, orderDate, totalPrice, promoCode,
                 orderNumber, numberOfProducts, waitingOrders, currentOrders, finishedOrders, traderNotResponse, trader
             } = req.query;
@@ -337,9 +337,6 @@ export default {
             if (traderNotResponse) query.traderNotResponse = traderNotResponse
             if (orderDate) query.createdAt = { $gte: new Date(moment(orderDate).startOf('day')), $lt: new Date(moment(orderDate).endOf('day')) };
 
-            if (formDate) {
-                fromDate = formDate;
-            }
             if (userName) {
                 let userIds = await User.find({ deleted: false, name: { '$regex': userName, '$options': 'i' } }).distinct('_id');
                 query.user = { $in: userIds };
@@ -800,6 +797,75 @@ export default {
             notifyController.pushNotification(updatedOrder.trader.id, 'ORDER', updatedOrder.id, description, config.notificationTitle);
             notificationNSP.to('room-' + updatedOrder.trader.id).emit(socketEvents.NewOrder, { order: updatedOrder });
             traderOrdersCount(updatedOrder.trader.id);
+
+        } catch (err) {
+            next(err);
+        }
+    },
+
+    ////////////////////////////////////Dues////////////////////////////////////////
+    async traderGetSales(req, res, next) {
+        try {
+
+            let page = +req.query.page || 1, limit = +req.query.limit || 20;
+            let user = req.user;
+            let {fromDate, toDate} = req.query;
+
+            let query = {deleted:false,trader: +user.id,status:'DELIVERED',orderType:'DELIVERY'};
+           
+            if (fromDate && !toDate) query.createdAt = { $gte: moment(fromDate).startOf('day') };
+            if (toDate && !fromDate) query.createdAt = { $lt: moment(toDate).endOf('day') };
+            if (fromDate && toDate) query.createdAt = { $gte: moment(fromDate).startOf('day'), $lt: moment(toDate).endOf('day') };
+            
+        
+            let results = await Order.aggregate()
+            .match(query)
+            .group({ 
+                _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt"} }, 
+                count: { $sum: 1 } ,
+                totalDues: { $sum: {$cond: [{$eq: ["$traderPayoffDues", false]}, '$traderDues', 0] } } ,
+                orders:{$push:'$$ROOT'}
+             })
+            .limit(limit)
+            .skip((page - 1) * limit );
+
+            let ordersCount = await Order.count(query);
+            const pageCount = Math.ceil(ordersCount / limit);
+            res.send(new ApiResponse(results, page, pageCount, limit, ordersCount, req));
+
+        } catch (err) {
+            next(err);
+        }
+    },
+
+    async driverGetSales(req, res, next) {
+        try {
+            
+            let page = +req.query.page || 1, limit = +req.query.limit || 20;
+            let user = req.user;
+            let {fromDate, toDate} = req.query;
+
+            let query = {deleted:false,driver: +user.id,status:'DELIVERED',orderType:'DELIVERY',paymentMethod:{$ne:'CASH'}};
+           
+            if (fromDate && !toDate) query.createdAt = { $gte: moment(fromDate).startOf('day') };
+            if (toDate && !fromDate) query.createdAt = { $lt: moment(toDate).endOf('day') };
+            if (fromDate && toDate) query.createdAt = { $gte: moment(fromDate).startOf('day'), $lt: moment(toDate).endOf('day') };
+            
+        
+            let results = await Order.aggregate()
+            .match(query)
+            .group({ 
+                _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt"} }, 
+                count: { $sum: 1 } ,
+                totalDues: { $sum: {$cond: [{$eq: ["$driverPayoffDues", false]}, '$driverDues', 0] } } ,
+                orders:{$push:'$$ROOT'}
+             })
+            .limit(limit)
+            .skip((page - 1) * limit );
+
+            let ordersCount = await Order.count(query);
+            const pageCount = Math.ceil(ordersCount / limit);
+            res.send(new ApiResponse(results, page, pageCount, limit, ordersCount, req));
 
         } catch (err) {
             next(err);

@@ -124,6 +124,20 @@ const orderSchema = new Schema({
     driverDues:{
         type: Number,
     },
+    traderPayoffDues:{
+        type: Boolean,
+        default: false
+    },
+    traderPayoffDuesDate:{
+        type: Date
+    },
+    driverPayoffDues:{
+        type: Boolean,
+        default: false
+    },
+    driverPayoffDuesDate:{
+        type: Date,
+    }
 }, { timestamps: true });
 orderSchema.set('toJSON', {
     transform: function (doc, ret, options) {
