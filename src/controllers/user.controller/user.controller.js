@@ -868,7 +868,7 @@ export default {
                 .isEmail().withMessage(() => { return i18n.__('EmailNotValid') })
                 .custom(async (value, { req }) => {
                     value = (value.trim()).toLowerCase();
-                    let userQuery = { email: value, deleted: false };
+                    let userQuery = { email: value, deleted: false,type:'DRIVER' };
                     if (await User.findOne(userQuery))
                         throw new Error(i18n.__('emailDuplicated'));
                     else
@@ -939,7 +939,7 @@ export default {
                 .isEmail().withMessage(() => { return i18n.__('EmailNotValid') })
                 .custom(async (value, { req }) => {
                     value = (value.trim()).toLowerCase();
-                    let userQuery = { email: value, deleted: false };
+                    let userQuery = { email: value, deleted: false,type:'INSTITUTION' };
                     if (await User.findOne(userQuery))
                         throw new Error(i18n.__('emailDuplicated'));
                     else

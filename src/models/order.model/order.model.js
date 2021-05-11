@@ -137,6 +137,9 @@ const orderSchema = new Schema({
     },
     driverPayoffDuesDate:{
         type: Date,
+    },
+    address:{
+        type: Number
     }
 }, { timestamps: true });
 orderSchema.set('toJSON', {
