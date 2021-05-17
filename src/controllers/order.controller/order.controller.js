@@ -125,10 +125,13 @@ let getFinalPrice = async (validateBody) => {
                 priceBeforeDiscount = Number(validateBody.transportPrice);
 
                 validateBody.discountValue = (priceBeforeDiscount * (promoCode.discount / 100))
+                console.log(validateBody.discountValue)
+                console.log(priceBeforeDiscount)
                 if (promoCode.maxAmount && (validateBody.discountValue > promoCode.maxAmount)) {
-                    validateBody.discountValue = promoCode.maxAmount;
+                    validateBody.discountValue = Number(promoCode.maxAmount);
                 }
-                validateBody.totalPrice = Number(validateBody.price + ((priceBeforeDiscount - Number(validateBody.discountValue)).toFixed(3)));
+                validateBody.totalPrice = Number(validateBody.price)+ Number((priceBeforeDiscount - Number(validateBody.discountValue)).toFixed(3));
+                console.log(validateBody.totalPrice)
             }
             else if (promoCode.promoCodeOn == 'PRODUCTS') {
                 priceBeforeDiscount = validateBody.price;
@@ -137,10 +140,10 @@ let getFinalPrice = async (validateBody) => {
                 if (promoCode.maxAmount && (validateBody.discountValue > promoCode.maxAmount)) {
                     validateBody.discountValue = promoCode.maxAmount;
                 }
-                validateBody.totalPrice = Number(+validateBody.transportPrice + ((priceBeforeDiscount - Number(validateBody.discountValue)).toFixed(3)));
+                validateBody.totalPrice = Number(validateBody.transportPrice) + Number((priceBeforeDiscount - Number(validateBody.discountValue)).toFixed(3));
             }
             else {
-                priceBeforeDiscount = validateBody.price + Number(validateBody.transportPrice);
+                priceBeforeDiscount = Number(validateBody.price)+ Number(validateBody.transportPrice);
 
                 validateBody.discountValue = (priceBeforeDiscount * (promoCode.discount / 100))
                 if (promoCode.maxAmount && (validateBody.discountValue > promoCode.maxAmount)) {
@@ -154,7 +157,7 @@ let getFinalPrice = async (validateBody) => {
                 priceBeforeDiscount = Number(validateBody.transportPrice);
 
                 validateBody.discountValue = (((priceBeforeDiscount - promoCode.discount) > 0) ? promoCode.discount : 0);
-                validateBody.totalPrice = Number(validateBody.price + (priceBeforeDiscount - Number(validateBody.discountValue)));
+                validateBody.totalPrice = Number(validateBody.price) + Number(priceBeforeDiscount)- Number(validateBody.discountValue);
             }
             else if (promoCode.promoCodeOn == 'PRODUCTS') {
                 priceBeforeDiscount = +validateBody.price;
@@ -474,8 +477,9 @@ export default {
                 // validatedBody.durationDelivery = duration;
 
                 let durationPrice = Number(validatedBody.durationDelivery) * Number(trader.deliveryPricePerSecond);
-                if (durationPrice < trader.minDeliveryPrice) {
-                    validatedBody.transportPrice = trader.minDeliveryPrice;
+                console.log(durationPrice)
+                if (durationPrice < Number(trader.minDeliveryPrice)) {
+                    validatedBody.transportPrice = Number(trader.minDeliveryPrice);
                 } else {
                     validatedBody.transportPrice = durationPrice;
                 }
