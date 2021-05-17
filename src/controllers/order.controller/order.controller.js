@@ -410,6 +410,9 @@ export default {
                     if (val == 'DELIVERY' && !req.body.address) {
                         throw new Error(i18n.__('addressRequired'));
                     }
+                    if (val == 'DELIVERY' && !req.body.durationDelivery) {
+                        throw new Error(i18n.__('durationDeliveryRequired'));
+                    }
                     return true;
                 }),
             body('paymentMethod').not().isEmpty().withMessage(() => { return i18n.__('paymentMethodRequired') }).isIn(['DIGITAL', 'WALLET', 'CASH']).withMessage('Wrong type')
@@ -441,6 +444,7 @@ export default {
                     }
                     return true;
                 }),
+            body('durationDelivery').optional().not().isEmpty().withMessage(() => { return i18n.__('durationDeliveryRequired') }).isNumeric().withMessage('must be a numeric'),
         ];
     },
 
@@ -464,10 +468,12 @@ export default {
             }
             //////////////////////////Treansportation Price////////////////////////////////
             if (validatedBody.orderType == 'DELIVERY') {
-                let duration = 0;
-                duration = await duration_time({ lat: req.user.geoLocation.coordinates[1], long: req.user.geoLocation.coordinates[0] }, { lat: trader.geoLocation.coordinates[1], long: trader.geoLocation.coordinates[0] });
-                let durationPrice = duration * Number(trader.deliveryPricePerSecond);
-                validatedBody.durationDelivery = duration;
+                // let duration = 0;
+                // duration = await duration_time({ lat: req.user.geoLocation.coordinates[1], long: req.user.geoLocation.coordinates[0] }, { lat: trader.geoLocation.coordinates[1], long: trader.geoLocation.coordinates[0] });
+                // let durationPrice = duration * Number(trader.deliveryPricePerSecond);
+                // validatedBody.durationDelivery = duration;
+
+                let durationPrice = Number(validatedBody.durationDelivery) * Number(trader.deliveryPricePerSecond);
                 if (durationPrice < trader.minDeliveryPrice) {
                     validatedBody.transportPrice = trader.minDeliveryPrice;
                 } else {
