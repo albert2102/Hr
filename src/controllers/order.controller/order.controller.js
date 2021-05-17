@@ -292,7 +292,7 @@ const traderService = async (order) => {
 export default {
 
     async findAll(req, res, next) {
-        try {
+        try {   
             let page = +req.query.page || 1, limit = +req.query.limit || 20;
             let { user, status, paymentMethod, month, year, fromDate, toDate, type,
                 userName, price, orderDate, totalPrice, promoCode,orderType,driver,
@@ -308,7 +308,7 @@ export default {
                 if (currentOrders) {
                     query.status = { $in: ['WAITING', 'ACCEPTED', 'DRIVER_ACCEPTED', 'SHIPPED', 'NOT_ASSIGN'] }
                 } else if (finishedOrders) {
-                    query.status = { $in: ['DELIVERED'] }
+                    query.status = { $in: ['DELIVERED','CANCELED','REJECTED'] }
 
                 }
             }
@@ -322,7 +322,7 @@ export default {
                     query.status = { $in: ['ACCEPTED', 'DRIVER_ACCEPTED', 'SHIPPED'] }
 
                 } else if (finishedOrders) {
-                    query.status = { $in: ['DELIVERED'] }
+                    query.status = { $in: ['DELIVERED','REJECTED'] }
 
                 }
 
