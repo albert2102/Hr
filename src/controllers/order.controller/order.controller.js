@@ -164,17 +164,17 @@ let getFinalPrice = async (validateBody) => {
 
             }
             else {
-                priceBeforeDiscount = +validateBody.price + Number(validateBody.transportPrice);
+                priceBeforeDiscount = Number(validateBody.price) + Number(validateBody.transportPrice);
 
                 validateBody.discountValue = (((priceBeforeDiscount - promoCode.discount) > 0) ? promoCode.discount : 0);
-                validateBody.totalPrice = +(priceBeforeDiscount - Number(validateBody.discountValue));
+                validateBody.totalPrice = Number(priceBeforeDiscount - Number(validateBody.discountValue));
 
             }
 
         }
 
     } else {
-        validateBody.totalPrice = validateBody.price + Number(validateBody.transportPrice);
+        validateBody.totalPrice = Number(validateBody.price) + Number(validateBody.transportPrice);
     }
     return validateBody;
 }
