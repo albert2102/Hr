@@ -130,7 +130,7 @@ let getFinalPrice = async (validateBody) => {
                 if (promoCode.maxAmount && (validateBody.discountValue > promoCode.maxAmount)) {
                     validateBody.discountValue = Number(promoCode.maxAmount);
                 }
-                validateBody.totalPrice = Number(validateBody.price)+ Number((priceBeforeDiscount - Number(validateBody.discountValue)).toFixed(3));
+                validateBody.totalPrice = Number(validateBody.price) + Number((priceBeforeDiscount - Number(validateBody.discountValue)).toFixed(3));
                 console.log(validateBody.totalPrice)
             }
             else if (promoCode.promoCodeOn == 'PRODUCTS') {
@@ -143,7 +143,7 @@ let getFinalPrice = async (validateBody) => {
                 validateBody.totalPrice = Number(validateBody.transportPrice) + Number((priceBeforeDiscount - Number(validateBody.discountValue)).toFixed(3));
             }
             else {
-                priceBeforeDiscount = Number(validateBody.price)+ Number(validateBody.transportPrice);
+                priceBeforeDiscount = Number(validateBody.price) + Number(validateBody.transportPrice);
 
                 validateBody.discountValue = (priceBeforeDiscount * (promoCode.discount / 100))
                 if (promoCode.maxAmount && (validateBody.discountValue > promoCode.maxAmount)) {
@@ -157,7 +157,7 @@ let getFinalPrice = async (validateBody) => {
                 priceBeforeDiscount = Number(validateBody.transportPrice);
 
                 validateBody.discountValue = (((priceBeforeDiscount - promoCode.discount) > 0) ? promoCode.discount : 0);
-                validateBody.totalPrice = Number(validateBody.price) + Number(priceBeforeDiscount)- Number(validateBody.discountValue);
+                validateBody.totalPrice = Number(validateBody.price) + Number(priceBeforeDiscount) - Number(validateBody.discountValue);
             }
             else if (promoCode.promoCodeOn == 'PRODUCTS') {
                 priceBeforeDiscount = +validateBody.price;
@@ -295,10 +295,10 @@ const traderService = async (order) => {
 export default {
 
     async findAll(req, res, next) {
-        try {   
+        try {
             let page = +req.query.page || 1, limit = +req.query.limit || 20;
             let { user, status, paymentMethod, month, year, fromDate, toDate, type,
-                userName, price, orderDate, totalPrice, promoCode,orderType,driver,
+                userName, price, orderDate, totalPrice, promoCode, orderType, driver,
                 orderNumber, numberOfProducts, waitingOrders, currentOrders, finishedOrders, traderNotResponse, trader
             } = req.query;
             let query = { deleted: false, $or: [{ paymentMethod: 'CREDIT', paymentStatus: 'SUCCESSED' }, { paymentMethod: { $in: ['CASH', 'WALLET'] } }] };
@@ -311,7 +311,7 @@ export default {
                 if (currentOrders) {
                     query.status = { $in: ['WAITING', 'ACCEPTED', 'DRIVER_ACCEPTED', 'SHIPPED', 'NOT_ASSIGN'] }
                 } else if (finishedOrders) {
-                    query.status = { $in: ['DELIVERED','CANCELED','REJECTED'] }
+                    query.status = { $in: ['DELIVERED', 'CANCELED', 'REJECTED'] }
 
                 }
             }
@@ -325,7 +325,7 @@ export default {
                     query.status = { $in: ['ACCEPTED', 'DRIVER_ACCEPTED', 'SHIPPED'] }
 
                 } else if (finishedOrders) {
-                    query.status = { $in: ['DELIVERED','REJECTED'] }
+                    query.status = { $in: ['DELIVERED', 'REJECTED'] }
 
                 }
 
@@ -448,6 +448,7 @@ export default {
                     return true;
                 }),
             body('durationDelivery').optional().not().isEmpty().withMessage(() => { return i18n.__('durationDeliveryRequired') }).isNumeric().withMessage('must be a numeric'),
+            body('order').optional().not().isEmpty().withMessage(() => { return i18n.__('orderRequired') }),
         ];
     },
 
@@ -827,7 +828,7 @@ export default {
             let user = req.user;
             let { fromDate, toDate } = req.query;
 
-            let query = { deleted: false, trader: +user.id, status: 'DELIVERED', orderType: 'DELIVERY' };
+            let query = { deleted: false, trader: +user.id, status: 'DELIVERED' };
 
             if (fromDate && !toDate) query.createdAt = { $gte: new Date(moment(fromDate).startOf('day')) };
             if (toDate && !fromDate) query.createdAt = { $lt: new Date(moment(toDate).endOf('day')) };
@@ -839,7 +840,7 @@ export default {
                 .group({
                     _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
                     count: { $sum: 1 },
-                    totalDues: { $sum: { $cond: [{ $eq: ["$traderPayoffDues", false] }, '$traderDues', 0] } },
+                    totalDues: { $sum: { $cond: [ { $and: [{ $eq: ["$traderPayoffDues", false] }, { $eq: ["$orderType", 'DELIVERY'] }] }, '$traderDues', 0] } },
                     orders: { $push: '$$ROOT' }
                 })
             res.send({ data: results });
@@ -856,7 +857,7 @@ export default {
             let { fromDate, toDate } = req.query;
 
             let query = { deleted: false, driver: +user.id, status: 'DELIVERED', orderType: 'DELIVERY', paymentMethod: { $ne: 'CASH' } };
-            let realizedQuery = {deleted: false, driver: +user.id, status: 'DELIVERED', orderType: 'DELIVERY', paymentMethod: 'CASH'};
+            let realizedQuery = { deleted: false, driver: +user.id, status: 'DELIVERED', orderType: 'DELIVERY', paymentMethod: 'CASH' };
             if (fromDate && !toDate) query.createdAt = { $gte: new Date(moment(fromDate).startOf('day')) };
             if (toDate && !fromDate) query.createdAt = { $lt: new Date(moment(toDate).endOf('day')) };
             if (fromDate && toDate) query.createdAt = { $gte: new Date(moment(fromDate).startOf('day')), $lt: new Date(moment(toDate).endOf('day')) };
@@ -872,17 +873,17 @@ export default {
                 })
 
             let results2 = await Order.aggregate()
-            .match(realizedQuery)
-            .group({ 
-                _id: null, 
-                count: { $sum: 1 } ,
-                totalDues: { $sum: '$totalPrice' } ,
-                orders:{$push:'$$ROOT'}
-             })
+                .match(realizedQuery)
+                .group({
+                    _id: null,
+                    count: { $sum: 1 },
+                    totalDues: { $sum: '$totalPrice' },
+                    orders: { $push: '$$ROOT' }
+                })
             // .limit(limit)
             // .skip((page - 1) * limit );
 
-            res.send({data: results,data2: results2});
+            res.send({ data: results, data2: results2 });
 
         } catch (err) {
             next(err);

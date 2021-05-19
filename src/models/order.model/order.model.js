@@ -140,6 +140,9 @@ const orderSchema = new Schema({
     },
     address:{
         type: Number
+    },
+    order:{
+        type: Number
     }
 }, { timestamps: true });
 orderSchema.set('toJSON', {
