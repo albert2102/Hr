@@ -212,5 +212,11 @@
 	"duplicatedPromoCode": "duplicatedPromoCode",
 	"unauthrized": "unauthrized",
 	"AdvertismentsNotFound": "AdvertismentsNotFound",
-	"traderBusy":"المتجر غير متاح الان"
+	"traderBusy": "المتجر غير متاح الان",
+	"targetRequired": "targetRequired",
+	"deliveryPricePerSecondRequired": "deliveryPricePerSecondRequired",
+	"minDeliveryPriceRequired": "minDeliveryPriceRequired",
+	"reciverRequired": "reciverRequired",
+	"idsRequired": "idsRequired",
+	"walletInvalid": "walletInvalid"
 }
