@@ -212,5 +212,6 @@
 	"duplicatedPromoCode": "duplicatedPromoCode",
 	"unauthrized": "unauthrized",
 	"AdvertismentsNotFound": "AdvertismentsNotFound",
-	"traderBusy":"المتجر غير متاح الان"
+	"traderBusy": "المتجر غير متاح الان",
+	"targetRequired": "targetRequired"
 }
