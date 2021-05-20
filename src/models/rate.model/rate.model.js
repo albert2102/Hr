@@ -16,6 +16,9 @@ const rateSchema = new Schema({
         required: true,
         ref: 'product'
     },
+    order:{
+        type:Number
+    },
     rate: {
         type: Number,
         required: true

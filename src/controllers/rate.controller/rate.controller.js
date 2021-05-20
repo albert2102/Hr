@@ -2,6 +2,7 @@ import ApiResponse from "../../helpers/ApiResponse";
 import ApiError from "../../helpers/ApiError";
 import Rate from "../../models/rate.model/rate.model";
 import User from "../../models/user.model/user.model";
+import Order from "../../models/order.model/order.model";
 import { checkExist, checkExistThenGet } from "../../helpers/CheckMethods";
 import { checkValidations } from "../shared.controller/shared.controller";
 import { body } from "express-validator/check";
@@ -49,7 +50,7 @@ export default {
         let validations = [
             body('rate').not().isEmpty().withMessage(() => { return i18n.__('rateRequired') })
                 .isInt({ min: 1, max: 5 }).withMessage(() => { return i18n.__('rateRange') }),
-            body('trader').optional().not().isEmpty().withMessage(() => { return i18n.__('traderRequired') }),
+            body('order').optional().not().isEmpty().withMessage(() => { return i18n.__('orderRequired') }),
             body('comment').optional().not().isEmpty().withMessage(() => { return i18n.__('commentRequired') })
 
         ];
@@ -59,13 +60,14 @@ export default {
     async create(req, res, next) {
         try {
             const validatedBody = checkValidations(req);
-            let trader = await checkExistThenGet(validatedBody.trader, User, { deleted: false });
+            let order = await checkExistThenGet(validatedBody.order, Order, { deleted: false ,populate:[ { path: 'trader', model: 'user' },]});
+            let trader = order.trader
             validatedBody.user = req.user.id
             let createdrate;
             let oldRate = await Rate.findOne({
                 deleted: false,
                 user: validatedBody.user,
-                trader: validatedBody.trader
+                order: validatedBody.order
             })
             if (oldRate) {
                 oldRate.rate = validatedBody.rate;

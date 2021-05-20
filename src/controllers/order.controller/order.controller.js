@@ -779,7 +779,7 @@ export default {
             let user = req.user;
             let query = { deleted: false, trader: user.id, traderRateValue: { $ne: null } };
 
-            let orders = await Order.find(query).select(['user', 'traderRateValue', 'traderRateEmotion', 'traderRateComment']).sort({ createdAt: -1 }).limit(limit).skip((page - 1) * limit).populate(populateQuery);
+            let orders = await Order.find(query).select([ '_id', 'user', 'traderRateValue', 'traderRateEmotion', 'traderRateComment']).sort({ createdAt: -1 }).limit(limit).skip((page - 1) * limit).populate(populateQuery);
             let ordersCount = await Order.count(query);
             const pageCount = Math.ceil(ordersCount / limit);
             res.send(new ApiResponse(orders, page, pageCount, limit, ordersCount, req));
