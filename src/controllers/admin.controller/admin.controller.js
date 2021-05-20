@@ -10,6 +10,7 @@ import socketEvents from '../../socketEvents';
 import ConfirmationCode from '../../models/confirmationsCodes.model/confirmationscodes.model'
 import notificationController from '../notif.controller/notif.controller';
 import Category from '../../models/category.model/category.model';
+import config from '../../config'
 let populateQuery = [
     { path: 'rules', model: 'assignRule' },
     { path: 'category', model: 'category' },
@@ -684,6 +685,27 @@ export default {
             verifyUser = await User.findByIdAndUpdate(validatedBody.userId , validatedBody,{new: true});
             res.status(200).send(verifyUser)
             await count(verifyUser.type);
+
+            let description ;
+
+            if (verifyUser.type == 'DRIVER') {
+                if (validatedBody.status == 'ACCEPTED') {
+                    description = {en:"You are now a captain in the Agam team",ar:"انت الان كابتن لدي فريق أجم"}
+                }else{
+                    description = {en:"You request to join Ajam has been rejected",ar:"تم رفض طلبك لمشاركة أجم ككابتن"}
+                }
+                
+            }else{
+                if (validatedBody.status == 'ACCEPTED') {
+                    description = {en:"You are now an instituation in the Agam team",ar:"انت الان متجر لدي فريق أجم"}
+                }else{
+                    description = {en:"You request to join Ajam has been rejected",ar:"تم رفض طلبك لمشاركة أجم كمتجر"}
+                }
+            }
+            await notificationController.create(req.user.id, verifyUser.id, description, verifyUser.id, 'JOIN_STATUS');
+            notificationController.pushNotification(verifyUser.id, 'JOIN_STATUS', verifyUser.id, description, config.notificationTitle);
+
+
 
         } catch (error) {
             next(error);
