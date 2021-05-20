@@ -8,6 +8,7 @@ import advertismentController from '../src/controllers/advertisments.controller/
 import issueController from "../src/controllers/issue.controller/issue.controller";
 import adminController from "../src/controllers/admin.controller/admin.controller";
 import orderController from '../src/controllers/order.controller/order.controller';
+import orderModel from '../src/models/order.model/order.model';
 
 module.exports = {
 
@@ -89,4 +90,33 @@ module.exports = {
         })
     },
 
+    startTracking: function(io) {
+
+        global.trackingNSP = io.of('/track');
+        trackingNSP.on('connection', async function(socket) {
+            var id = socket.handshake.query.id;
+            let user = await User.findById(id)
+            if (user) {
+                var roomName = 'room-' + id;
+                socket.join(roomName);
+                console.log('clientttttttt ' + id + ' connected on tracking.');
+                socket.on(socketEvents.NewLocation, async function(data) {
+                    if (data && data.long && data.lat) {
+                        let newLoc = { type: 'Point', coordinates: [data.long, data.lat ] };
+                        await User.findByIdAndUpdate(id,{$set:{ geoLocation : newLoc } });
+                        if (data.order) {
+                            let order = await orderModel.findById(data.order).populate([{ path: 'driver', model: 'user' }]);
+                            if (order) {
+                                 if (order.driver) {
+                                    trackingNSP.to('room-' + order.user).emit(socketEvents.NewLocation, { order: order });
+                                    trackingNSP.to('room-' + order.trader).emit(socketEvents.NewLocation, { order: order });
+                               
+                                }
+                            }
+                        }
+                    }
+                })
+            }
+        })
+    }
 }

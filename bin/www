@@ -53,6 +53,7 @@ var cluster = require('cluster');
   var io = socketIO(server);
   var socketService = require('../socketService/socketIoService');
   socketService.startNotification(io);
+  socketService.startTracking(io);
   socketService.chat(io);
   socketService.admin(io);
   /**
