@@ -32,7 +32,7 @@ const advertismentsSchema = new Schema({
     },
     status:{
         type: String,
-        enum:['WAITING','ACCEPTED','REJECTED','DELETED','ENDED','UPDATED'],
+        enum:['WAITING','ACCEPTED','REJECTED','DELETED','ENDED','UPDATED','STOPED'],
         default: 'WAITING'
     },
     commetion:{
