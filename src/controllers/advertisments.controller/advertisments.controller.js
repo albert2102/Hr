@@ -247,7 +247,7 @@ export default {
 
     validateRepublish(){
         return[
-            body('advertisment').not().isEmpty().withMessage(() => { return i18n.__('productRequired') })
+            body('advertisment').not().isEmpty().withMessage(() => { return i18n.__('advertismentRequired') })
                 .custom(async (val, { req }) => {
                     req.advertisment = await checkExistThenGet(val, Advertisments, { deleted: false,status:'ENDED' });
                     return true;
@@ -285,6 +285,35 @@ export default {
         }
     },
 
-    advertismentJob
+    advertismentJob,
+
+    validateStopAdvertisment(){
+        return[
+            body('advertisment').not().isEmpty().withMessage(() => { return i18n.__('advertismentRequired') })
+                .custom(async (val, { req }) => {
+                    req.advertisment = await checkExistThenGet(val, Advertisments, { deleted: false });
+                    return true;
+                }),
+        ]
+    },
+
+    async stopAdvertisment(req, res, next){
+        try {
+            let user = req.user;
+            if (user.type != 'ADMIN' && user.type != 'SUB_ADMIN') {
+                return next(new ApiError(401, 'غير مسموح'))
+            }
+            let validatedBody = checkValidations(req);
+            let addvertis = req.advertisment;
+            addvertis = await Advertisments.findByIdAndUpdate(addvertis.id,{status:'STOPED'},{new:true});
+
+            let description = {en:"Admin stop your advertisment.",ar:"قام الادمن بوقف اعلانك"};
+            await notifyController.create(req.user.id, addvertis.user, description,  addvertis.user, 'ADDVERTISMENT_STOPED');
+            notifyController.pushNotification( addvertis.user, 'ADDVERTISMENT_STOPED',  addvertis.user, description, config.notificationTitle);
+            res.status(200).send({advertisment:addvertis});
+        } catch (error) {
+            next(error);
+        }
+    }
 }
 

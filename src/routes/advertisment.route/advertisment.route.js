@@ -16,6 +16,7 @@ router.route('/')
         advertismentController.create)
     .get(advertismentController.find);
 
+router.route('/stop').put(requireAuth,advertismentController.validateStopAdvertisment(),advertismentController.stopAdvertisment)
 router.route('/:AdvertismentsId/changeStatus').put(requireAuth,advertismentController.validateAdminChangeStatus(),advertismentController.changeStatus)
 router.route('/:AdvertismentsId/increaseViews').put(advertismentController.updateNumberOfViews)
 
