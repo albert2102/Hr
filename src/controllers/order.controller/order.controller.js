@@ -779,8 +779,10 @@ export default {
         try {
 
             let page = +req.query.page || 1, limit = +req.query.limit || 20;
-            let user = req.user;
-            let query = { deleted: false, trader: user.id, traderRateValue: { $ne: null } };
+            let {trader} = req.query;
+                
+            if(!trader) return next(new ApiError('trader is required in query'));
+            let query = { deleted: false, trader:trader, traderRateValue: { $ne: null } };
 
             let orders = await Order.find(query).select([ '_id', 'user', 'traderRateValue', 'traderRateEmotion', 'traderRateComment']).sort({ createdAt: -1 }).limit(limit).skip((page - 1) * limit).populate(populateQuery);
             let ordersCount = await Order.count(query);
@@ -846,12 +848,11 @@ export default {
                     totalDues: { $sum: { $cond: [ { $and: [{ $eq: ["$traderPayoffDues", false] }, { $eq: ["$orderType", 'DELIVERY'] }] }, '$traderDues', 0] } },
                     orders: { $push: '$$ROOT' }
                 })
-
+                let total = 0;
                 for (let index = 0; index < results.length; index++) {
-                    const element = array[index];
-                    
+                    total += results[index].totalDues;                    
                 }
-            res.send({ data: results });
+            res.send({ data: results,total:total });
 
         } catch (err) {
             next(err);
