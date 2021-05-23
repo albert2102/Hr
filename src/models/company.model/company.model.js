@@ -104,6 +104,10 @@ const CompanySchema = new Schema({
     fixedCategoryIcon:{
         type: String
     },
+    allowFixedCategory:{
+        type: Boolean,
+        default: true
+    },
     transportPrice:{
         type: Number,
         default: 0

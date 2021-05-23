@@ -20,6 +20,7 @@ import config from '../../config';
 import { sendEmail } from '../../services/emailMessage.service';
 import { duration_time } from '../../calculateDistance'
 import schedule from 'node-schedule';
+import { sendHtmlEmail } from '../../services/emailMessage.service'
 
 let populateQuery = [
     { path: 'user', model: 'user' },
@@ -530,6 +531,8 @@ export default {
             notificationNSP.to('room-' + order.trader.id).emit(socketEvents.NewOrder, { order: order });
             traderOrdersCount(order.trader.id);
             traderService(order);
+            await sendHtmlEmail(req.user.email,order.orderNumber,order.products.length,order.totalPrice,order.transportPrice,order.taxes,order.address.address,order.address.addressName,order.address.buildingNumber,order.address.flatNumber,order.totalPrice);
+
         } catch (err) {
             next(err);
         }
@@ -843,6 +846,11 @@ export default {
                     totalDues: { $sum: { $cond: [ { $and: [{ $eq: ["$traderPayoffDues", false] }, { $eq: ["$orderType", 'DELIVERY'] }] }, '$traderDues', 0] } },
                     orders: { $push: '$$ROOT' }
                 })
+
+                for (let index = 0; index < results.length; index++) {
+                    const element = array[index];
+                    
+                }
             res.send({ data: results });
 
         } catch (err) {
