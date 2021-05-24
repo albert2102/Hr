@@ -245,7 +245,7 @@ export default {
             }
 
             if (req.files && req.files['fixedCategoryIcon'] && req.files['fixedCategoryIcon'].length > 0) {
-                let fixedCategoryIcon = fieldhandleImg(req, { attributeName: 'fixedCategoryIcon' });
+                let fixedCategoryIcon = fieldhandleImg(req, { attributeName: 'fixedCategoryIcon' })[0]
                 validatedBody.fixedCategoryIcon = fixedCategoryIcon;
             }
             validatedBody = dotObject.dot(validatedBody);
