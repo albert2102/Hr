@@ -235,10 +235,10 @@ export default {
                 data.commissionAgreement = validatedBody.commissionAgreement;
                 delete validatedBody.commissionAgreement;
             }
-            if (validatedBody.fixedCategoryName) {
-                data.fixedCategoryName = validatedBody.fixedCategoryName;
-                delete validatedBody.fixedCategoryName;
-            }
+            // if (validatedBody.fixedCategoryName) {
+            //     data.fixedCategoryName = validatedBody.fixedCategoryName;
+            //     delete validatedBody.fixedCategoryName;
+            // }
 
             if (req.files && req.files['logo'] && req.files['logo'].length > 0) {
                 validatedBody.logo = (fieldhandleImg(req, { attributeName: 'logo' }))[0]
