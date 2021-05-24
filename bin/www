@@ -7,7 +7,7 @@ import app from '../src/app';
 var socketIO = require('socket.io');
 var fs = require('fs')
 var debug = require('debug')('ather:server');
-var http = require('https');
+var http = require('http');
 var os = require('os');
 var cluster = require('cluster');
 
@@ -25,10 +25,10 @@ var cluster = require('cluster');
   });
 
 } else {*/
-  var server = http.createServer({
+  var server = http.createServer(/*{
   key: fs.readFileSync('ajamadmin.com.key'),
   cert: fs.readFileSync('server.cert')
-  },
+  },*/
   app);
 
   /**
