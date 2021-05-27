@@ -112,10 +112,16 @@ const orderSchema = new Schema({
         type: Boolean,
         default: false
     },
-    ajamTaxes:{
+    ajamTaxes:{ //نسبة عمولة التطبيق بالنسبة للمتجر
         type: Number,
     },
-    ajamDues:{
+    ajamDues:{ //مستحقات التطبيق بالنسبة للمتجر
+        type: Number,
+    },
+    ajamTaxesFromDriver:{ //نسبة عمولة التطبيق بالنسبة للمندوب
+        type: Number,
+    },
+    ajamDuesFromDriver:{//مستحقات التطبيق بالنسبة للمندوب
         type: Number,
     },
     traderDues:{

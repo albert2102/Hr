@@ -304,6 +304,9 @@ export default {
                         user = await User.schema.methods.toJSONLocalizedOnly(user, i18n.getLocale());
 
                         res.status(200).send(user);
+                        if (user.type == 'INSTITUTION' && validatedBody.institutionStatus) {
+                            notificationNSP.emit(socketEvents.UpdatedTrader, { user: user });
+                        }
                     } else {
                         return next(new ApiError(403, i18n.__('currentPasswordInvalid')))
                     }
@@ -321,6 +324,9 @@ export default {
                 user = await User.schema.methods.toJSONLocalizedOnly(user, i18n.getLocale());
 
                 res.status(200).send(user);
+                if (user.type == 'INSTITUTION' && validatedBody.institutionStatus) {
+                    notificationNSP.emit(socketEvents.UpdatedTrader, { user: user });
+                }
             }
 
         } catch (error) {
@@ -709,15 +715,15 @@ export default {
         try {
             let page = +req.query.page || 1,
                 limit = +req.query.limit || 20;
-            var { text, hasOffer, open, long, lat, category,highestRated} = req.query;
+            var { text, hasOffer, open, long, lat, category, highestRated } = req.query;
 
             let query = { deleted: false, type: 'INSTITUTION' };
-            let sortQuery = {createdAt:-1};
+            let sortQuery = { createdAt: -1 };
             if (open) query.online = true; // مفتوح
-            if (highestRated) sortQuery = {totalRate:-1}; //الاعلي تقييما
+            if (highestRated) sortQuery = { totalRate: -1 }; //الاعلي تقييما
             if (category) {
                 if (Array.isArray(category)) {
-                    category = category.map((c)=> {return +c})
+                    category = category.map((c) => { return +c })
                     query.category = { $in: category };
                 } else if (!isNaN(category)) {
                     query.category = +category;
@@ -868,7 +874,7 @@ export default {
                 .isEmail().withMessage(() => { return i18n.__('EmailNotValid') })
                 .custom(async (value, { req }) => {
                     value = (value.trim()).toLowerCase();
-                    let userQuery = { email: value, deleted: false,type:'DRIVER' };
+                    let userQuery = { email: value, deleted: false, type: 'DRIVER' };
                     if (await User.findOne(userQuery))
                         throw new Error(i18n.__('emailDuplicated'));
                     else
@@ -939,7 +945,7 @@ export default {
                 .isEmail().withMessage(() => { return i18n.__('EmailNotValid') })
                 .custom(async (value, { req }) => {
                     value = (value.trim()).toLowerCase();
-                    let userQuery = { email: value, deleted: false,type:'INSTITUTION' };
+                    let userQuery = { email: value, deleted: false, type: 'INSTITUTION' };
                     if (await User.findOne(userQuery))
                         throw new Error(i18n.__('emailDuplicated'));
                     else
