@@ -401,6 +401,9 @@ export default {
                     if (product.trader.institutionStatus != 'OPEN') {
                         throw new Error(i18n.__('traderBusy'));
                     }
+                    if (!product.trader.ajamTaxes) {
+                        throw new Error(i18n.__('notAllowToMakeOrder'));
+                    }
                     return true;
                 }),
             body('products.*.quantity').not().isEmpty().withMessage(() => { return i18n.__('quantityRequired') }),
@@ -686,8 +689,14 @@ export default {
     async delivered(req, res, next) {
         try {
             let { orderId } = req.params;
-            await checkExist(orderId, Order, { deleted: false, $or: [{ status: "ACCEPTED", orderType: "FROM_STORE" }, { status: "SHIPPED", orderType: "DELIVERY" }] });
-            let updatedOrder = await Order.findByIdAndUpdate(orderId, { status: 'DELIVERED', deliveredDate: new Date() }, { new: true }).populate(populateQuery);
+            let order = await checkExistThenGet(orderId, Order, { deleted: false, $or: [{ status: "ACCEPTED", orderType: "FROM_STORE" }, { status: "SHIPPED", orderType: "DELIVERY" }] });
+            let updatedQuery = { status: 'DELIVERED', deliveredDate: new Date() };
+            if(order.orderType == 'DELIVERY' && order.driver){
+                let driver = await User.findById(order.driver);
+                updatedQuery.ajamTaxesFromDriver = driver.ajamTaxes;
+                updatedQuery.ajamDuesFromDriver = (Number(order.transportPrice) * (Number(updatedQuery.ajamTaxesFromDriver) / 100)).toFixed(2);
+            }
+            let updatedOrder = await Order.findByIdAndUpdate(orderId, updatedQuery, { new: true }).populate(populateQuery);
             updatedOrder = Order.schema.methods.toJSONLocalizedOnly(updatedOrder, i18n.getLocale());
             res.status(200).send(updatedOrder);
 
@@ -708,7 +717,9 @@ export default {
 
             ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             traderOrdersCount(updatedOrder.trader.id);
-            driverOrdersCount(updatedOrder.driver.id);
+            if(updatedOrder.orderType == 'DELIVERY'){
+                driverOrdersCount(updatedOrder.driver.id);
+            }
 
         } catch (err) {
             next(err);
