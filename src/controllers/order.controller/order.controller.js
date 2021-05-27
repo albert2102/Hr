@@ -505,7 +505,7 @@ export default {
             }
 
             /////////////////////////////////////////////////////////////////////////////////////////////
-            validatedBody.ajamTaxes = Number(trader.ajamTaxes);
+            validatedBody.ajamTaxes = Number(trader.ajamTaxes) || 5;
 
             if (validatedBody.orderType == 'FROM_STORE') {
                 let ajamprice = (validatedBody.totalPrice - validatedBody.transportPrice);
