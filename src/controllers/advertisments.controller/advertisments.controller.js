@@ -47,7 +47,7 @@ export default {
         try {
             let page = +req.query.page || 1, limit = +req.query.limit || 20;
 
-            let { status, address, description, phone, whatsappNumber, contactBy, price, lat, long, user,archive} = req.query
+            let { includeIssuesCount , status, address, description, phone, whatsappNumber, contactBy, price, lat, long, user,archive} = req.query
 
             let query = { deleted: false,status:{$ne:'DELETED'} };
             if (archive) query.deleted = true;
@@ -66,10 +66,22 @@ export default {
                 { $limit: limit },
                 { $skip: (page - 1) * limit }];
 
+            if (includeIssuesCount) {
+                aggregateQuery.push({
+                    $lookup:
+                      {
+                        from: 'issues',
+                        localField: '_id',
+                        foreignField: 'advertisment',
+                        as: 'issues'
+                      }
+                 });
+            }
+
             if (lat && long) {
                 aggregateQuery.unshift({ $geoNear: { near: { type: "Point", coordinates: [+long, +lat] }, distanceField: "dist.calculated" } })
             }
-            console.log(aggregateQuery)
+            //console.log(aggregateQuery)
             let advertisment = await Advertisments.aggregate(aggregateQuery)
             advertisment = await Advertisments.populate(advertisment,populateQuery)
             const advertismentCount = await Advertisments.count(query);
