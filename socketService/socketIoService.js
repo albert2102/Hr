@@ -10,6 +10,14 @@ import adminController from "../src/controllers/admin.controller/admin.controlle
 import orderController from '../src/controllers/order.controller/order.controller';
 import orderModel from '../src/models/order.model/order.model';
 
+let orderPopulateQuery = [
+    { path: 'user', model: 'user' },
+    { path: 'driver', model: 'user' },
+    { path: 'trader', model: 'user' },
+    { path: 'products.product', model: 'product', populate: [{ path: 'trader', model: 'user' }, { path: 'productCategory', model: 'productCategory' }] },
+    { path: 'address', model: 'address', populate: [{ path: 'city', model: 'city', populate: [{ path: 'country', model: 'country' }] }] },
+    { path: 'promoCode', model: 'promocode' },
+];
 module.exports = {
 
     startNotification: function(io) {
@@ -28,7 +36,7 @@ module.exports = {
                 if(user.type == 'INSTITUTION') await orderController.traderOrdersCount(id);
                 if(user.type == 'DRIVER') {
                     await orderController.driverOrdersCount(id);
-                    let waitingOrder = await orderModel.findOne({deleted: false,driver:id,status:'ACCEPTED'})
+                    let waitingOrder = await orderModel.findOne({deleted: false,driver:id,status:'ACCEPTED'}).populate(orderPopulateQuery)
                     notificationNSP.to('room-' + id).emit(socketEvents.NewOrder, { order: waitingOrder });
                 }
             } else {
