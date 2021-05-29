@@ -26,7 +26,7 @@ module.exports = {
             var id = socket.handshake.query.id;
             let user = await User.findById(id);
             let company = await Company.findOne({ deleted: false });
-            console.log(Order.findOne({deleted: false}))
+            console.log(await Order.findOne({deleted: false}))
             if (user) {
                 var roomName = 'room-' + id;
                 socket.join(roomName);
