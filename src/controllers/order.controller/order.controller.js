@@ -61,7 +61,7 @@ let traderOrdersCount = async (userId) => {
 }
 let driverOrdersCount = async (userId) => {
     try {
-        let currentOrdersQuery = { deleted: false, driver: userId, status: { $in: ['ACCEPTED', 'DRIVER_ACCEPTED', 'SHIPPED'] } };
+        let currentOrdersQuery = { deleted: false, driver: userId, status: { $in: ['DRIVER_ACCEPTED', 'SHIPPED'] } };
         let finishedOrdersQuery = { deleted: false, driver: userId, status: { $in: ['DELIVERED'] } };
 
         let promiseData = [
