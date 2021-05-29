@@ -36,7 +36,7 @@ module.exports = {
                 if(user.type == 'INSTITUTION') await orderController.traderOrdersCount(id);
                 if(user.type == 'DRIVER') {
                     await orderController.driverOrdersCount(id);
-                    let waitingOrder = await Order.findOneAndUpdate({deleted: false,driver:id,status:'ACCEPTED'});
+                    let waitingOrder = await Order.find({deleted: false,driver:id,status:'ACCEPTED'})[0]
                     console.log(waitingOrder)
                     if(waitingOrder){
                         waitingOrder = await Order.populate(waitingOrder,orderPopulateQuery)
