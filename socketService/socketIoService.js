@@ -8,7 +8,7 @@ import advertismentController from '../src/controllers/advertisments.controller/
 import issueController from "../src/controllers/issue.controller/issue.controller";
 import adminController from "../src/controllers/admin.controller/admin.controller";
 import orderController from '../src/controllers/order.controller/order.controller';
-import Order from '../src/models/order.model/order.model';
+import Order from "../src/models/order.model/order.model";
 
 let orderPopulateQuery = [
     { path: 'user', model: 'user' },
