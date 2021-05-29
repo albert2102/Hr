@@ -8,7 +8,7 @@ import advertismentController from '../src/controllers/advertisments.controller/
 import issueController from "../src/controllers/issue.controller/issue.controller";
 import adminController from "../src/controllers/admin.controller/admin.controller";
 import orderController from '../src/controllers/order.controller/order.controller';
-import orderModel from '../src/models/order.model/order.model';
+import Order from '../src/models/order.model/order.model';
 
 let orderPopulateQuery = [
     { path: 'user', model: 'user' },
@@ -36,7 +36,7 @@ module.exports = {
                 if(user.type == 'INSTITUTION') await orderController.traderOrdersCount(id);
                 if(user.type == 'DRIVER') {
                     await orderController.driverOrdersCount(id);
-                    let waitingOrder = await orderModel.findOne({deleted: false,driver:id,status:'ACCEPTED'}).populate(orderPopulateQuery)
+                    let waitingOrder = await Order.findOne({deleted: false,driver:id,status:'ACCEPTED'}).populate(orderPopulateQuery)
                     console.log(waitingOrder)
                     if(waitingOrder){
                     notificationNSP.to('room-' + id).emit(socketEvents.NewOrder, { order: waitingOrder });
