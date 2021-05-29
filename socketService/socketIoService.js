@@ -36,10 +36,11 @@ module.exports = {
                 if(user.type == 'INSTITUTION') await orderController.traderOrdersCount(id);
                 if(user.type == 'DRIVER') {
                     await orderController.driverOrdersCount(id);
-                    let waitingOrder = await Order.findOne({deleted: false,driver:id,status:'ACCEPTED'}).populate(orderPopulateQuery)
+                    let waitingOrder = await Order.findOne({deleted: false,driver:id,status:'ACCEPTED'});
                     console.log(waitingOrder)
                     if(waitingOrder){
-                    notificationNSP.to('room-' + id).emit(socketEvents.NewOrder, { order: waitingOrder });
+                        waitingOrder = await Order.populate(waitingOrder,orderPopulateQuery)
+                        notificationNSP.to('room-' + id).emit(socketEvents.NewOrder, { order: waitingOrder });
                     }
                 }
             } else {
