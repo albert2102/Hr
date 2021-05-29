@@ -26,7 +26,11 @@ module.exports = {
                 notificationNSP.to(roomName).emit(socketEvents.Company, { company: company });
                 await NotificationController.getCountNotification(id);
                 if(user.type == 'INSTITUTION') await orderController.traderOrdersCount(id);
-                if(user.type == 'DRIVER') await orderController.driverOrdersCount(id);
+                if(user.type == 'DRIVER') {
+                    await orderController.driverOrdersCount(id);
+                    let waitingOrder = await orderModel.findOne({deleted: false,driver:id,status:'ACCEPTED'})
+                    notificationNSP.to('room-' + id).emit(socketEvents.NewOrder, { order: waitingOrder });
+                }
             } else {
                 notificationNSP.emit(socketEvents.Company, { company: company });
             }

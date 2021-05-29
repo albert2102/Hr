@@ -339,7 +339,7 @@ export default {
                     query.status = { $in: ['ACCEPTED'] }
                 }
                 else if (currentOrders) {
-                    query.status = { $in: ['ACCEPTED', 'DRIVER_ACCEPTED', 'SHIPPED'] }
+                    query.status = { $in: ['DRIVER_ACCEPTED', 'SHIPPED'] }
 
                 } else if (finishedOrders) {
                     query.status = { $in: ['DELIVERED'] }
@@ -535,7 +535,7 @@ export default {
             notificationNSP.to('room-' + order.trader.id).emit(socketEvents.NewOrder, { order: order });
             traderOrdersCount(order.trader.id);
             traderService(order);
-            await sendHtmlEmail(req.user.email,order.orderNumber,order.products.length,order.totalPrice,order.transportPrice,order.taxes,order.address.address,order.address.addressName,order.address.buildingNumber,order.address.flatNumber,order.totalPrice);
+            await sendHtmlEmail(req.user.email,order.orderNumber,order.products.length,order.price,order.transportPrice,order.taxes,order.address.address,order.address.addressName,order.address.buildingNumber,order.address.flatNumber,order.totalPrice);
 
         } catch (err) {
             next(err);
