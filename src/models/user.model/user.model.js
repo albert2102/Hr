@@ -217,23 +217,23 @@ const userSchema = new Schema({
     },
     ordersCount:{
         type: Number,
-        deleted:0
+        default:0
     },
     waitingOrderCount:{
         type: Number,
-        deleted:0
+        default:0
     },
     currentOrderCount:{
         type: Number,
-        deleted:0
+        default:0
     },
     finishedOrderCount:{
         type: Number,
-        deleted:0
+        default:0
     },
     AdvertismentCount:{
         type: Number,
-        deleted:0
+        default:0
     },
 }, { timestamps: true });
 
