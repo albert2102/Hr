@@ -596,8 +596,7 @@ export default {
 
             if (validatedBody.status == 'ACCEPTED') {
                 ////////////// find drivers /////////////////////////
-                if(updatedOrder.orderType == 'DELIVERY')
-                await findDriver(updatedOrder);
+                if(updatedOrder.orderType == 'DELIVERY') await findDriver(updatedOrder);
                 ////////////////////////////////////////////////////
                 description = { en: updatedOrder.orderNumber + ' : ' + 'Your Order Has Been Approved', ar: updatedOrder.orderNumber + ' : ' + '  جاري تجهيز طلبك' };
             } else {
