@@ -876,34 +876,53 @@ export default {
             let user = req.user;
             let { fromDate, toDate } = req.query;
 
-            let query = { deleted: false, driver: +user.id, status: 'DELIVERED', orderType: 'DELIVERY', paymentMethod: { $ne: 'CASH' } };
-            let realizedQuery = { deleted: false, driver: +user.id, status: 'DELIVERED', orderType: 'DELIVERY', paymentMethod: 'CASH' };
+            let query = { deleted: false, driver: +user.id, status: 'DELIVERED', orderType: 'DELIVERY'};
+            let notCashQuery = { deleted: false, driver: +user.id, status: 'DELIVERED', orderType: 'DELIVERY', paymentMethod: { $ne: 'CASH' } };
+            let cashQuery = { deleted: false, driver: +user.id, status: 'DELIVERED', orderType: 'DELIVERY', paymentMethod: 'CASH' };
             if (fromDate && !toDate) query.createdAt = { $gte: new Date(moment(fromDate).startOf('day')) };
             if (toDate && !fromDate) query.createdAt = { $lt: new Date(moment(toDate).endOf('day')) };
             if (fromDate && toDate) query.createdAt = { $gte: new Date(moment(fromDate).startOf('day')), $lt: new Date(moment(toDate).endOf('day')) };
 
 
-            let results = await Order.aggregate()
-                .match(query)
+            let cashResult = await Order.aggregate()
+                .match(cashQuery)
+                .group({
+                    _id: null,
+                    count: { $sum: 1 },
+                    totalDues: { $sum: { $cond: [{ $eq: ["$driverPayoffDues", false] }, '$totalPrice', 0] } },
+                    driverDues: { $sum: { $cond: [{ $eq: ["$driverPayoffDues", false] }, '$driverDues', 0] } },
+                    // orders: { $push: '$$ROOT' }
+                })
+
+            let notCashResult = await Order.aggregate()
+                .match(notCashQuery)
                 .group({
                     _id: null,
                     count: { $sum: 1 },
                     totalDues: { $sum: { $cond: [{ $eq: ["$driverPayoffDues", false] }, '$driverDues', 0] } },
-                    orders: { $push: '$$ROOT' }
+                    // orders: { $push: '$$ROOT' }
                 })
 
-            let results2 = await Order.aggregate()
-                .match(realizedQuery)
+                let results = await Order.aggregate()
+                .match(query)
                 .group({
-                    _id: null,
+                    _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
                     count: { $sum: 1 },
-                    totalDues: { $sum: '$totalPrice' },
                     orders: { $push: '$$ROOT' }
                 })
-            // .limit(limit)
-            // .skip((page - 1) * limit );
 
-            res.send({ data: results, data2: results2 });
+                let totalCash = 0;
+                let totalNotCash = 0;
+                let total = 0;
+                for (let index = 0; index < cashResult.length; index++) {
+                    totalCash += (cashResult[index].totalDues - cashResult[index].driverDues);                    
+                }
+                for (let index = 0; index < notCashResult.length; index++) {
+                    totalNotCash += notCashResult[index].totalDues;                    
+                }
+                total  = totalNotCash - totalCash;
+
+            res.send({ data: results, total:total });
 
         } catch (err) {
             next(err);
