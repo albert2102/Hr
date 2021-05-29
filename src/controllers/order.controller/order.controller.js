@@ -217,6 +217,7 @@ const findDriver = async (order) => {
         let userQuery = {
             deleted: false,
             online: true,
+            activated: true,
             status: 'ACCEPTED',
             type: 'DRIVER',
             _id: { $nin: busyDrivers },
@@ -595,7 +596,7 @@ export default {
 
             if (validatedBody.status == 'ACCEPTED') {
                 ////////////// find drivers /////////////////////////
-                await findDriver(updatedOrder);
+                if(updatedOrder.orderType == 'DELIVERY') await findDriver(updatedOrder);
                 ////////////////////////////////////////////////////
                 description = { en: updatedOrder.orderNumber + ' : ' + 'Your Order Has Been Approved', ar: updatedOrder.orderNumber + ' : ' + '  جاري تجهيز طلبك' };
             } else {
