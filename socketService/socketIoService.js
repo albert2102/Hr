@@ -41,6 +41,7 @@ module.exports = {
                     console.log(waitingOrder)
                     if (waitingOrder) {
                         waitingOrder = await Order.populate(waitingOrder, orderPopulateQuery)
+                        waitingOrder.toJSON();
                         notificationNSP.to('room-' + id).emit(socketEvents.NewOrder, { order: waitingOrder });
                     }
                 }
