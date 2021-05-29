@@ -142,6 +142,9 @@ export default {
             let advertisment = await Advertisments.create(validatedBody);
             res.status(200).send(advertisment);
             await countNew();
+            ////////////////////////////////////////////////////////////////////////////////////////////
+            await User.findByIdAndUpdate(req.user.id,{AdvertismentCount:req.user.AdvertismentCount + 1});
+
         } catch (error) {
             next(error)
         }
@@ -182,7 +185,7 @@ export default {
         try {
             let user = req.user
             let { AdvertismentsId } = req.params;
-            let advertisment = await checkExistThenGet(AdvertismentsId, Advertisments, { deleted: false });
+            let advertisment = await checkExistThenGet(AdvertismentsId, Advertisments, { deleted: false,populate:populateQuery });
             if(user.type == 'ADMIN' && user.type == 'SUB_ADMIN'){
                 advertisment.deleted = true;
             }else{
@@ -190,6 +193,8 @@ export default {
             }
             await advertisment.save();
             res.status(200).send("Deleted Successfully");
+            await User.findByIdAndUpdate(req.user.id,{AdvertismentCount:advertisment.user.AdvertismentCount + 1});
+
         }
         catch (err) {
             next(err);

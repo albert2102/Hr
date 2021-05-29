@@ -26,7 +26,6 @@ module.exports = {
             var id = socket.handshake.query.id;
             let user = await User.findById(id);
             let company = await Company.findOne({ deleted: false });
-            console.log(await Order.find({deleted: false}))
             if (user) {
                 var roomName = 'room-' + id;
                 socket.join(roomName);
@@ -38,10 +37,8 @@ module.exports = {
                 if (user.type == 'DRIVER') {
                     await orderController.driverOrdersCount(id);
                     let waitingOrder = await Order.findOne({ deleted: false, driver: id, status: 'ACCEPTED' });
-                    console.log(waitingOrder)
                     if (waitingOrder) {
                         waitingOrder = await Order.populate(waitingOrder, orderPopulateQuery)
-                        waitingOrder.toJSON();
                         notificationNSP.to('room-' + id).emit(socketEvents.NewOrder, { order: waitingOrder });
                     }
                 }

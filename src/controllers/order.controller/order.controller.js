@@ -55,6 +55,8 @@ let traderOrdersCount = async (userId) => {
         notificationNSP.to('room-' + userId).emit(socketEvents.CurrentOrdersCount, { count: result[1] });
         notificationNSP.to('room-' + userId).emit(socketEvents.FinishedOrdersCount, { count: result[2] });
 
+        await User.findByIdAndUpdate(userId,{waitingOrderCount:result[0],currentOrderCount:result[1],finishedOrderCount:result[2]})
+
     } catch (error) {
         throw error;
     }
@@ -70,6 +72,18 @@ let driverOrdersCount = async (userId) => {
         let result = await Promise.all(promiseData);
         notificationNSP.to('room-' + userId).emit(socketEvents.CurrentOrdersCount, { count: result[0] });
         notificationNSP.to('room-' + userId).emit(socketEvents.FinishedOrdersCount, { count: result[1] });
+
+        await User.findByIdAndUpdate(userId,{currentOrderCount:result[1],finishedOrderCount:result[2]})
+
+    } catch (error) {
+        throw error;
+    }
+}
+let clientOrdersCount = async (userId) => {
+    try {
+        let count = await Order.count(currentOrdersQuery)
+
+        await User.findByIdAndUpdate(userId,{ordersCount:count})
 
     } catch (error) {
         throw error;
@@ -535,8 +549,11 @@ export default {
             notificationNSP.to('room-' + order.trader.id).emit(socketEvents.NewOrder, { order: order });
             traderOrdersCount(order.trader.id);
             traderService(order);
+            ////////////////////////////////////////////////////////////////////////////////////////////
+            clientOrdersCount(order.user.id);
+            ////////////////////////////////////////////////////////////////////////////////////////////
             await sendHtmlEmail(req.user.email,order.orderNumber,order.products.length,order.price,order.transportPrice,order.taxes,order.address.address,order.address.addressName,order.address.buildingNumber,order.address.flatNumber,order.totalPrice);
-
+            
         } catch (err) {
             next(err);
         }
@@ -561,6 +578,8 @@ export default {
             order.deleted = true;
             await order.save();
             res.status(200).send("Deleted Successfully");
+            clientOrdersCount(order.user);
+
         }
         catch (err) {
             next(err);
