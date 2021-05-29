@@ -37,7 +37,10 @@ module.exports = {
                 if(user.type == 'DRIVER') {
                     await orderController.driverOrdersCount(id);
                     let waitingOrder = await orderModel.findOne({deleted: false,driver:id,status:'ACCEPTED'}).populate(orderPopulateQuery)
+                    console.log(waitingOrder)
+                    if(waitingOrder){
                     notificationNSP.to('room-' + id).emit(socketEvents.NewOrder, { order: waitingOrder });
+                    }
                 }
             } else {
                 notificationNSP.emit(socketEvents.Company, { company: company });
