@@ -7,6 +7,7 @@ import { parseObject } from '../../controllers/shared.controller/shared.controll
 const parseArray = ['location','internallyCarImage','paymentMethod']
 
 const router = express.Router();
+router.get('/traderReport', adminController.reportsByCategory);
 
 router.route('/signup')
     .post(multerSaveTo('users').single('image'),

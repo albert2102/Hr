@@ -711,4 +711,27 @@ export default {
             next(error);
         }
     },
+    /////////////////////////////reports//////////////////////////////////////////////
+    async reportsByCategory(req, res, next) {
+        try {
+            let { fromDate, toDate } = req.query;
+            let query = { deleted: false,type:'INSTITUTION'};
+            
+            if (fromDate && !toDate) query.createdAt = { $gte: new Date(moment(fromDate).startOf('day')) };
+            if (toDate && !fromDate) query.createdAt = { $lt: new Date(moment(toDate).endOf('day')) };
+            if (fromDate && toDate) query.createdAt = { $gte: new Date(moment(fromDate).startOf('day')), $lt: new Date(moment(toDate).endOf('day')) };
+
+            let results = await User.aggregate()
+                .match(query)
+                .group({
+                    _id: '$category',
+                    count: { $sum: 1 },
+                    traders: { $push: '$$ROOT' },
+                })
+            results = await User.populate(results,{path:'_id',model:'category'})
+            res.send({ data: results });
+        } catch (err) {
+            next(err);
+        }
+    },
 };

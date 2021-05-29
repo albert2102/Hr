@@ -214,7 +214,27 @@ const userSchema = new Schema({
     },
     bank:{
         type: String
-    }
+    },
+    ordersCount:{
+        type: Number,
+        deleted:0
+    },
+    waitingOrderCount:{
+        type: Number,
+        deleted:0
+    },
+    currentOrderCount:{
+        type: Number,
+        deleted:0
+    },
+    finishedOrderCount:{
+        type: Number,
+        deleted:0
+    },
+    AdvertismentCount:{
+        type: Number,
+        deleted:0
+    },
 }, { timestamps: true });
 
 
