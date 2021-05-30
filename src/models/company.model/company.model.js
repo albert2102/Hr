@@ -132,7 +132,10 @@ const CompanySchema = new Schema({
     store_iosUrl:{
         type: String,
     },
-
+    driverDuesToStop:{
+        type: Number,
+        default: -500
+    }
 }, { timestamps: true });
 
 CompanySchema.set('toJSON', {

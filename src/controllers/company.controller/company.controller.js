@@ -161,7 +161,9 @@ export default {
 
                 body('store_androidUrl').optional().not().isEmpty().withMessage(() => { return i18n.__('store_androidUrlRequired') }),
                 body('store_iosUrl').optional().not().isEmpty().withMessage(() => { return i18n.__('store_iosUrlRequired') }),
-                body('allowFixedCategory').optional().not().isEmpty().withMessage(() => { return i18n.__('allowFixedCategoryRequired') }).isBoolean().withMessage('must be boolean')
+                body('allowFixedCategory').optional().not().isEmpty().withMessage(() => { return i18n.__('allowFixedCategoryRequired') }).isBoolean().withMessage('must be boolean'),
+                body('driverDuesToStop').optional().not().isEmpty().withMessage(() => { return i18n.__('driverDuesToStopRequired') }),
+
 
             ];
         }
