@@ -1,22 +1,23 @@
 import ApiResponse from "../../helpers/ApiResponse";
 import ApiError from "../../helpers/ApiError";
-import {  checkExistThenGet } from "../../helpers/CheckMethods";
+import { checkExistThenGet } from "../../helpers/CheckMethods";
 import { checkValidations, handleImg } from "../shared.controller/shared.controller";
 import { body } from "express-validator/check";
 import ProductCategory from "../../models/product-category.model/product-category.model";
+import User from '../../models/user.model/user.model';
 import i18n from 'i18n'
 import dotObject from 'dot-object';
 import moment from 'moment';
 
 const populateQuery = [
-    {path:'user',model:'user'}
+    { path: 'user', model: 'user' }
 ]
 export default {
 
     async findAll(req, res, next) {
         try {
             let page = +req.query.page || 1, limit = +req.query.limit || 20;
-            let { name, month, year, all,type , removeLanguage ,user} = req.query
+            let { name, month, year, all, type, removeLanguage, user } = req.query
             let query = { deleted: false };
             if (name) {
                 query.$or = [{ 'name.en': { '$regex': name, '$options': 'i' } }, { 'name.ar': { '$regex': name, '$options': 'i' } }]
@@ -41,8 +42,8 @@ export default {
                 let endOfDate = moment(date).endOf('year');
                 query.createdAt = { $gte: new Date(startOfDate), $lte: new Date(endOfDate) }
             }
-            
-            let categories,categoriesCount;
+
+            let categories, categoriesCount;
             let pageCount = categoriesCount;
             if (all) {
                 limit = pageCount;
@@ -70,7 +71,7 @@ export default {
             validations = [
                 body('name.en').optional().not().isEmpty().withMessage(() => { return i18n.__('englishName') })
                     .custom(async (val, { req }) => {
-                        let query = { 'name.en': val, deleted: false , user:req.user.id};
+                        let query = { 'name.en': val, deleted: false, user: req.user.id };
                         let productCategory = await ProductCategory.findOne(query).lean();
                         if (productCategory)
                             throw new Error(i18n.__('englishNameDublicated'));
@@ -78,20 +79,25 @@ export default {
                     }),
                 body('name.ar').not().isEmpty().withMessage(() => { return i18n.__('arabicName') })
                     .custom(async (val, { req }) => {
-                        let query = { 'name.ar': val, deleted: false , user:req.user.id};
+                        let query = { 'name.ar': val, deleted: false, user: req.user.id };
                         let productCategory = await ProductCategory.findOne(query).lean();
                         if (productCategory)
                             throw new Error(i18n.__('arabicNameDublicated'));
                         return true;
-                    })
+                    }),
+                body('trader').optional().not().isEmpty().withMessage(() => { return i18n.__('traderRequired') })
+                    .custom(async (value) => {
+                        await checkExist(value, User, { deleted: false, type: 'INSTITUTION' });
+                        return true;
+                    }),
             ];
         }
         else {
             validations = [
                 body('name.en').optional().not().isEmpty().withMessage(() => { return i18n.__('englishName') })
                     .custom(async (val, { req }) => {
-                        let query = { 'name.en': val, deleted: false , user:req.user.id};
-                        
+                        let query = { 'name.en': val, deleted: false, user: req.user.id };
+
                         query._id = { $ne: req.params.productCategoryId };
                         let productCategory = await ProductCategory.findOne(query).lean();
                         if (productCategory)
@@ -100,8 +106,8 @@ export default {
                     }),
                 body('name.ar').optional().not().isEmpty().withMessage(() => { return i18n.__('arabicName') })
                     .custom(async (val, { req }) => {
-                        let query = { 'name.ar': val, deleted: false, user:req.user.id };
-                       
+                        let query = { 'name.ar': val, deleted: false, user: req.user.id };
+
                         query._id = { $ne: req.params.productCategoryId };
                         let productCategory = await ProductCategory.findOne(query).lean();
                         if (productCategory)
@@ -117,7 +123,12 @@ export default {
         try {
             let user = req.user;
             let validatedBody = checkValidations(req);
-            validatedBody.user = user.id;
+            if (user.type != 'ADMIN' && user.type != 'SUB_ADMIN' && validatedBody.trader) {
+                validatedBody.createdBy = user.id;
+                validatedBody.user = validatedBody.trader;
+            } else {
+                validatedBody.user = user.id;
+            }
             // if (req.file) {
             //     let icon = await handleImg(req, { attributeName: 'icon', isUpdate: false }, i18n.__('iconRequired'));
             //     validatedBody.icon = icon;
@@ -126,7 +137,7 @@ export default {
             // }
             let createdproductCategory = await ProductCategory.create(validatedBody);
             createdproductCategory = ProductCategory.schema.methods.toJSONLocalizedOnly(createdproductCategory, i18n.getLocale());
-            res.status(200).send({category : createdproductCategory});
+            res.status(200).send({ category: createdproductCategory });
         } catch (err) {
             next(err);
         }
@@ -136,11 +147,11 @@ export default {
         try {
             let { productCategoryId } = req.params;
             let { removeLanguage } = req.query;
-            var productCategory = await checkExistThenGet(productCategoryId, ProductCategory, { deleted: false,populate:populateQuery });
+            var productCategory = await checkExistThenGet(productCategoryId, ProductCategory, { deleted: false, populate: populateQuery });
             if (!removeLanguage) {
                 productCategory = ProductCategory.schema.methods.toJSONLocalizedOnly(productCategory, i18n.getLocale());
             }
-            res.status(200).send({category : productCategory});
+            res.status(200).send({ category: productCategory });
         } catch (err) {
             next(err);
         }
@@ -151,11 +162,11 @@ export default {
             let user = req.user;
             let { productCategoryId } = req.params;
             let { removeLanguage } = req.query;
-            let productCategory = await checkExistThenGet(productCategoryId, ProductCategory, { deleted: false , user:user.id});
+            let productCategory = await checkExistThenGet(productCategoryId, ProductCategory, { deleted: false, user: user.id });
             let validatedBody = checkValidations(req);
-            
+
             validatedBody = dotObject.dot(validatedBody);
-           
+
             // if (req.file) {
             //     let icon = await handleImg(req, { attributeName: 'icon', isUpdate: false });
             //     validatedBody.icon = icon;
@@ -176,7 +187,7 @@ export default {
         try {
             let user = req.user;
             let { productCategoryId } = req.params;
-            let productCategory = await checkExistThenGet(productCategoryId, ProductCategory, { deleted: false, user:user.id });
+            let productCategory = await checkExistThenGet(productCategoryId, ProductCategory, { deleted: false, user: user.id });
             productCategory.deleted = true;
             await productCategory.save();
             res.status(200).send('Deleted Successfully');

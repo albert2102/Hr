@@ -34,6 +34,10 @@ const productSchema = new Schema({
         type:Number,
         ref:'user'
     },
+    createdBy:{
+        type:Number,
+        ref:'user'
+    },
     favorite: {
         type: Boolean,
         default: false

@@ -105,6 +105,7 @@ export default {
                 body('long').not().isEmpty().withMessage(() => { return i18n.__('longRequired') }),
                 body('lat').not().isEmpty().withMessage(() => { return i18n.__('latRequired') }),
                 body('price').not().isEmpty().withMessage(() => { return i18n.__('priceRequired') }),
+                body('user').optional().not().isEmpty().withMessage(() => { return i18n.__('userRequired') }),
 
             ];
         } else {
@@ -127,7 +128,7 @@ export default {
     async create(req, res, next) {
         try {
             let validatedBody = checkValidations(req);
-            validatedBody.user = req.user.id;
+            if(! validatedBody.user) validatedBody.user = req.user.id;
             if (req.files && req.files.length > 0) {
                 validatedBody.images = await handleImgs(req, { attributeName: 'images' });
             } else {
