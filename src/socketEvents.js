@@ -22,7 +22,7 @@ socketEvents.IssueCount = 'IssueCount';
 socketEvents.WaitingAdvCount = 'WaitingAdvCount';
 socketEvents.ChangeAdvertismentStatus = 'ChangeAdvertismentStatus';
 socketEvents.OrderExpired = 'OrderExpired';
-
+socketEvents.ComplaintCount = 'ComplaintCount';
 socketEvents.WaitingDriverCount = 'WaitingDriverCount';
 socketEvents.WaitingInstitutionCount = 'WaitingInstitutionCount';
 
