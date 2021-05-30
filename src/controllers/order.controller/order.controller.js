@@ -872,7 +872,7 @@ export default {
             } else {
                 user = req.user;
             }
-            
+
             let query = { deleted: false, trader: +user.id, status: 'DELIVERED' };
 
             if (fromDate && !toDate) query.createdAt = { $gte: new Date(moment(fromDate).startOf('day')) };
@@ -910,6 +910,7 @@ export default {
                     return next(new ApiError(403, ('specifiuserinquery')));
                 }else{
                     user = req.query.user;
+                    user = await checkExistThenGet(user,User,{deleted:false})
                 }
             } else {
                 user = req.user;
