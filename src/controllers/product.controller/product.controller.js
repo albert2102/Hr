@@ -6,6 +6,7 @@ import { body } from "express-validator/check";
 import Product from "../../models/product.model/product.model";
 import Category from "../../models/product-category.model/product-category.model";
 import Favorites from '../../models/favorites.model/favorites.model';
+import User from '../../models/user.model/user.model';
 import i18n from 'i18n'
 import moment from 'moment'
 import dotObject from 'dot-object';
@@ -62,8 +63,8 @@ export default {
         try {
             let page = +req.query.page || 1, limit = +req.query.limit || 20;
             let { name, description, price, offer, hasOffer,
-                month, year,sortByPrice, userId, removeLanguage,
-                fromPrice, toPrice, all, productCategory,trader
+                month, year, sortByPrice, userId, removeLanguage,
+                fromPrice, toPrice, all, productCategory, trader
             } = req.query;
             let query = { deleted: false };
             let sortQuery = { _id: -1 };
@@ -89,8 +90,8 @@ export default {
             if (sortByPrice) {
                 sortQuery = { priceAfterOffer: sortByPrice }
             }
-            if(productCategory) query.productCategory = productCategory;
-            if(trader) query.trader = trader;
+            if (productCategory) query.productCategory = productCategory;
+            if (trader) query.trader = trader;
 
             let date = new Date();
             if (month && year) {
@@ -156,6 +157,12 @@ export default {
 
                 body('slider').not().isEmpty().withMessage(() => { return i18n.__('sliderRequired') }).isArray()
                     .withMessage(() => { return i18n.__('mustBeArray') }),
+
+                body('trader').optional().not().isEmpty().withMessage(() => { return i18n.__('traderRequired') })
+                    .custom(async (value) => {
+                        await checkExist(value, User, { deleted: false, type: 'INSTITUTION' });
+                        return true;
+                    }),
             ];
         }
         else {
@@ -192,8 +199,12 @@ export default {
         try {
             let user = req.user;
 
-            const validatedBody = checkValidations(req);
-            validatedBody.trader = user.id;
+            let validatedBody = checkValidations(req);
+            if (user.type != 'ADMIN' && user.type != 'SUB_ADMIN' && validatedBody.trader) {
+                validatedBody.createdBy = user.id;
+            } else {
+                validatedBody.trader = user.id;
+            }
 
             if (req.files && req.files['image'] && (req.files['image'].length > 0)) {
                 validatedBody.image = fieldhandleImg(req, { attributeName: 'image', isUpdate: false });
@@ -246,7 +257,7 @@ export default {
             }
 
             let data = {};
-            if(validatedBody.slider){
+            if (validatedBody.slider) {
                 data.slider = validatedBody.slider;
                 delete validatedBody.slider;
             }
@@ -274,7 +285,7 @@ export default {
         try {
             let user = req.user;
             let { productId } = req.params;
-            let product = await checkExistThenGet(productId, Product, { deleted: false/*, trader: user.id */});
+            let product = await checkExistThenGet(productId, Product, { deleted: false/*, trader: user.id */ });
             product.deleted = true;
             await product.save();
             res.status(200).send('Deleted Successfully');

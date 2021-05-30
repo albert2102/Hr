@@ -55,7 +55,7 @@ let traderOrdersCount = async (userId) => {
         notificationNSP.to('room-' + userId).emit(socketEvents.CurrentOrdersCount, { count: result[1] });
         notificationNSP.to('room-' + userId).emit(socketEvents.FinishedOrdersCount, { count: result[2] });
 
-        await User.findByIdAndUpdate(userId,{waitingOrderCount:result[0],currentOrderCount:result[1],finishedOrderCount:result[2]})
+        await User.findByIdAndUpdate(userId, { waitingOrderCount: result[0], currentOrderCount: result[1], finishedOrderCount: result[2] })
 
     } catch (error) {
         throw error;
@@ -73,7 +73,7 @@ let driverOrdersCount = async (userId) => {
         notificationNSP.to('room-' + userId).emit(socketEvents.CurrentOrdersCount, { count: result[0] });
         notificationNSP.to('room-' + userId).emit(socketEvents.FinishedOrdersCount, { count: result[1] });
 
-        await User.findByIdAndUpdate(userId,{currentOrderCount:result[1],finishedOrderCount:result[2]})
+        await User.findByIdAndUpdate(userId, { currentOrderCount: result[1], finishedOrderCount: result[2] })
 
     } catch (error) {
         throw error;
@@ -83,7 +83,7 @@ let clientOrdersCount = async (userId) => {
     try {
         let count = await Order.count(currentOrdersQuery)
 
-        await User.findByIdAndUpdate(userId,{ordersCount:count})
+        await User.findByIdAndUpdate(userId, { ordersCount: count })
 
     } catch (error) {
         throw error;
@@ -552,8 +552,8 @@ export default {
             ////////////////////////////////////////////////////////////////////////////////////////////
             clientOrdersCount(req.user.id);
             ////////////////////////////////////////////////////////////////////////////////////////////
-            await sendHtmlEmail(req.user.email,order.orderNumber,order.products.length,order.price,order.transportPrice,order.taxes,order.address.address,order.address.addressName,order.address.buildingNumber,order.address.flatNumber,order.totalPrice);
-            
+            await sendHtmlEmail(req.user.email, order.orderNumber, order.products.length, order.price, order.transportPrice, order.taxes, order.address.address, order.address.addressName, order.address.buildingNumber, order.address.flatNumber, order.totalPrice);
+
         } catch (err) {
             next(err);
         }
@@ -615,7 +615,7 @@ export default {
 
             if (validatedBody.status == 'ACCEPTED') {
                 ////////////// find drivers /////////////////////////
-                if(updatedOrder.orderType == 'DELIVERY') await findDriver(updatedOrder);
+                if (updatedOrder.orderType == 'DELIVERY') await findDriver(updatedOrder);
                 ////////////////////////////////////////////////////
                 description = { en: updatedOrder.orderNumber + ' : ' + 'Your Order Has Been Approved', ar: updatedOrder.orderNumber + ' : ' + '  جاري تجهيز طلبك' };
             } else {
@@ -711,7 +711,7 @@ export default {
             let { orderId } = req.params;
             let order = await checkExistThenGet(orderId, Order, { deleted: false, $or: [{ status: "ACCEPTED", orderType: "FROM_STORE" }, { status: "SHIPPED", orderType: "DELIVERY" }] });
             let updatedQuery = { status: 'DELIVERED', deliveredDate: new Date() };
-            if(order.orderType == 'DELIVERY' && order.driver){
+            if (order.orderType == 'DELIVERY' && order.driver) {
                 let driver = await User.findById(order.driver);
                 updatedQuery.ajamTaxesFromDriver = driver.ajamTaxes;
                 updatedQuery.ajamDuesFromDriver = (Number(order.transportPrice) * (Number(updatedQuery.ajamTaxesFromDriver) / 100)).toFixed(2);
@@ -737,7 +737,7 @@ export default {
 
             ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
             traderOrdersCount(updatedOrder.trader.id);
-            if(updatedOrder.orderType == 'DELIVERY'){
+            if (updatedOrder.orderType == 'DELIVERY') {
                 driverOrdersCount(updatedOrder.driver.id);
             }
 
@@ -810,12 +810,12 @@ export default {
         try {
 
             let page = +req.query.page || 1, limit = +req.query.limit || 20;
-            let {trader} = req.query;
-                
-            if(!trader) return next(new ApiError('trader is required in query'));
-            let query = { deleted: false, trader:trader, traderRateValue: { $ne: null } };
+            let { trader } = req.query;
 
-            let orders = await Order.find(query).select([ '_id', 'user', 'traderRateValue', 'traderRateEmotion', 'traderRateComment']).sort({ createdAt: -1 }).limit(limit).skip((page - 1) * limit).populate(populateQuery);
+            if (!trader) return next(new ApiError('trader is required in query'));
+            let query = { deleted: false, trader: trader, traderRateValue: { $ne: null } };
+
+            let orders = await Order.find(query).select(['_id', 'user', 'traderRateValue', 'traderRateEmotion', 'traderRateComment']).sort({ createdAt: -1 }).limit(limit).skip((page - 1) * limit).populate(populateQuery);
             let ordersCount = await Order.count(query);
             const pageCount = Math.ceil(ordersCount / limit);
             res.send(new ApiResponse(orders, page, pageCount, limit, ordersCount, req));
@@ -860,10 +860,19 @@ export default {
     ////////////////////////////////////Dues////////////////////////////////////////
     async traderGetSales(req, res, next) {
         try {
-
-            let user = req.user;
+            let user;
             let { fromDate, toDate } = req.query;
 
+            if (req.user.type == 'ADMIN' || req.user.type == 'SUB_ADMIN') {
+                if(!req.query.user){
+                    return next(new ApiError(403, ('specifiuserinquery')));
+                }else{
+                    user = req.query.user;
+                }
+            } else {
+                user = req.user;
+            }
+            
             let query = { deleted: false, trader: +user.id, status: 'DELIVERED' };
 
             if (fromDate && !toDate) query.createdAt = { $gte: new Date(moment(fromDate).startOf('day')) };
@@ -876,14 +885,14 @@ export default {
                 .group({
                     _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
                     count: { $sum: 1 },
-                    totalDues: { $sum: { $cond: [ { $and: [{ $eq: ["$traderPayoffDues", false] }, { $eq: ["$orderType", 'DELIVERY'] }] }, '$traderDues', 0] } },
+                    totalDues: { $sum: { $cond: [{ $and: [{ $eq: ["$traderPayoffDues", false] }, { $eq: ["$orderType", 'DELIVERY'] }] }, '$traderDues', 0] } },
                     orders: { $push: '$$ROOT' }
                 })
-                let total = 0;
-                for (let index = 0; index < results.length; index++) {
-                    total += results[index].totalDues;                    
-                }
-            res.send({ data: results,total:total });
+            let total = 0;
+            for (let index = 0; index < results.length; index++) {
+                total += results[index].totalDues;
+            }
+            res.send({ data: results, total: total });
 
         } catch (err) {
             next(err);
@@ -893,10 +902,20 @@ export default {
     async driverGetSales(req, res, next) {
         try {
 
-            let user = req.user;
+            let user;
             let { fromDate, toDate } = req.query;
 
-            let query = { deleted: false, driver: +user.id, status: 'DELIVERED', orderType: 'DELIVERY'};
+            if (req.user.type == 'ADMIN' || req.user.type == 'SUB_ADMIN') {
+                if(!req.query.user){
+                    return next(new ApiError(403, ('specifiuserinquery')));
+                }else{
+                    user = req.query.user;
+                }
+            } else {
+                user = req.user;
+            }
+
+            let query = { deleted: false, driver: +user.id, status: 'DELIVERED', orderType: 'DELIVERY' };
             let notCashQuery = { deleted: false, driver: +user.id, status: 'DELIVERED', orderType: 'DELIVERY', paymentMethod: { $ne: 'CASH' } };
             let cashQuery = { deleted: false, driver: +user.id, status: 'DELIVERED', orderType: 'DELIVERY', paymentMethod: 'CASH' };
             if (fromDate && !toDate) query.createdAt = { $gte: new Date(moment(fromDate).startOf('day')) };
@@ -923,7 +942,7 @@ export default {
                     // orders: { $push: '$$ROOT' }
                 })
 
-                let results = await Order.aggregate()
+            let results = await Order.aggregate()
                 .match(query)
                 .group({
                     _id: { $dateToString: { format: "%Y-%m-%d", date: "$createdAt" } },
@@ -931,18 +950,19 @@ export default {
                     orders: { $push: '$$ROOT' }
                 })
 
-                let totalCash = 0;
-                let totalNotCash = 0;
-                let total = 0;
-                for (let index = 0; index < cashResult.length; index++) {
-                    totalCash += (cashResult[index].totalDues - cashResult[index].driverDues);                    
-                }
-                for (let index = 0; index < notCashResult.length; index++) {
-                    totalNotCash += notCashResult[index].totalDues;                    
-                }
-                total  = totalNotCash - totalCash;
+            let totalCash = 0;
+            let totalNotCash = 0;
+            let total = 0;
+            for (let index = 0; index < cashResult.length; index++) {
+                totalCash += (cashResult[index].totalDues - cashResult[index].driverDues);
+            }
+            for (let index = 0; index < notCashResult.length; index++) {
+                totalNotCash += notCashResult[index].totalDues;
+            }
+            total = totalNotCash - totalCash;
+            total = total + Number(user.wallet);
 
-            res.send({ data: results, total:total });
+            res.send({ data: results, total: total });
 
         } catch (err) {
             next(err);
