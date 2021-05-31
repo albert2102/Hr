@@ -930,7 +930,7 @@ export default {
             validatedBody.status = 'WAITING';
             let createdUser = await User.create(validatedBody);
             res.status(200).send({ user: createdUser, token: generateToken(createdUser.id) });
-            await AdminController.count();
+            await AdminController.count(validatedBody.type);
 
         } catch (err) {
             next(err);
@@ -1003,7 +1003,7 @@ export default {
                 validatedBody.password = '12345678';
             let createdUser = await User.create(validatedBody);
             res.status(200).send({ user: createdUser });
-            await AdminController.count();
+            await AdminController.count(validatedBody.type);
 
         } catch (err) {
             next(err);

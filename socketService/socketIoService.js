@@ -101,7 +101,8 @@ module.exports = {
             await contactUsController.countNotReplied();
             await advertismentController.countNew();
             await issueController.countNew();
-            await adminController.count();
+            await adminController.count('INSTITUTION');
+            await adminController.count('DRIVER');
         })
     },
 
