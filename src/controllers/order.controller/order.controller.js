@@ -228,7 +228,6 @@ const orderService = async (order) => {
 const findDriver = async (order) => {
     try {
         let busyDrivers = await Order.find({ deleted: false, status: { $in: ['ACCEPTED', 'DRIVER_ACCEPTED', 'SHIPPED'], } }).distinct('driver');
-        busyDrivers = busyDrivers.map((value)=>{ return +value });
         let userQuery = {
             deleted: false,
             online: true,

@@ -57,7 +57,6 @@ export default {
     async findAll(req, res, next) {
         try {
             let page = +req.query.page || 1, limit = +req.query.limit || 20;
-            await ShippingCard.updateMany({ _id: { $gte: 1 } }, { $unset: { user: 1 } })
             var { number, price, value, month, year, user,type } = req.query;
             let query = { deleted: false };
 

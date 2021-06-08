@@ -23,7 +23,7 @@ import promocodeRoute from './promocode.route/promocode.route';
 import chatRouter from './message.route/message.route';
 import complaintRouter from './complaint.route/complaint.route';
 import dashBoardRouter from './dashboard.route/dashboard.route';
-
+import requestMoneyRouter from './requestMoneyHistory.route/requestMoneyHistory.route';
 
 router.use('/',userRoute);
 router.use('/admin',adminRoute);
@@ -47,5 +47,6 @@ router.use('/order', orderRouter);
 router.use('/chat', chatRouter);
 router.use('/complaint', complaintRouter)
 router.use('/dashboard',dashBoardRouter);
+router.use('/requestMoney',requestMoneyRouter);
 
 export default router;
