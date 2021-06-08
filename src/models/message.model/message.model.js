@@ -32,6 +32,11 @@ var message = {
         type:Boolean,
         default:true
     },
+    messageType:{
+        type:String,
+        enum:['NORMAL','SUPPORT'],
+        default:'NORMAL'
+    },
     //////////////////////////////////////////////////////////////
     activeChatHead: {
         type: Number,
