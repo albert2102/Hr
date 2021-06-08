@@ -184,6 +184,88 @@ export default {
             next(error)
         }
     },
+    /////////////////////////////////////////////////////////////
+
+    validateCreateSupport() {
+        let validation = [
+            body('text').optional().not().isEmpty().withMessage(() => i18n.__('messageRequired')),
+            body('reciver').optional().not().isEmpty().withMessage(() => i18n.__('reciverRequired')),
+
+        ]
+        return validation;
+    },
+
+    async createSupport(req, res, next) {
+        try {
+            let user = req.user;
+            let data = checkValidations(req);
+            let message = { sender: user.id, message: {}, reciver: {} };
+            if (!(data.text || req.file)) {
+                return next(new ApiError(404, i18n.__('messageRequired')))
+            }
+
+            if ((req.user.type == 'ADMIN') || (req.user.type == 'SUB_ADMIN') ) {
+                if (!data.reciver) {
+                    return next(new ApiError(404,i18n.__('reciverRequired')));
+                }
+            }
+
+            if (data.reciver) {
+                friend = await checkExistThenGet(data.reciver, User, { deleted: false });
+                message = {reciver : { user: friend.id }, sender: user.id, message: {} };
+            }
+
+            message.messageType = 'SUPPORT'
+
+            if (data.text) {
+                message.message.text = data.text;
+            }
+            if (req.file) {
+                let file = handleImg(req, { attributeName: 'file' });
+                if (req.file.mimetype.includes('image/')) {
+                    message.message.image = file;
+                } else if (req.file.mimetype.includes('video/')) {
+                    message.message.video = file;
+                } else if (req.file.mimetype.includes('application/')) {
+                    message.message.document = file;
+                } else {
+                    return next(new ApiError(404, i18n.__('fileTypeError')));
+                }
+            }
+
+            
+
+            let createdMessage = await Message.create(message);
+            createdMessage = await Message.populate(createdMessage, popQuery);
+            res.status(200).send(createdMessage);
+            if ((req.user.type == 'ADMIN') || (req.user.type == 'SUB_ADMIN') ) {
+                chatNSP.to('room-admin').emit(SocketEvents.NewMessage, { createdMessage });
+            }else{
+                handelNewMessageSocket(createdMessage);
+            }
+        } catch (error) {
+            next(error)
+        }
+    },
+
+    async getSupportChat(req, res, next){
+        try {
+            let user = req.user.id;
+            let page = +req.query.page || 1, limit = +req.query.limit || 20;
+
+            let query = {messageType:'SUPPORT', deleted: false , $or:[{sender:user},{'reciver.user': user}]  };
+
+            let messages = await Message.find(query).populate(popQuery).sort({ _id: -1 }).limit(limit).skip((page - 1) * limit);
+            let messagesCount = await Message.count(query);
+            const pageCount = Math.ceil(messagesCount / limit);
+            res.send(new ApiResponse(messages, page, pageCount, limit, messagesCount, req));
+            await Message.updateMany({ deleted: false,messageType:'SUPPORT' , 'reciver.user': user ,'reciver.read':false}, { $set: { 'reciver.read': true, 'reciver.readDate': new Date() } })
+            
+        } catch (error) {
+            next(error);
+        }
+    },
+    //////////////////////////////////////////////////////
 
     async getById(req, res, next) {
         try {
@@ -410,6 +492,8 @@ export default {
             next(error);
         }
     },
+
+    
 
     countUnseen,
     updateSeen,

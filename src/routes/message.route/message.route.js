@@ -6,6 +6,14 @@ import { multerSaveTo } from '../../services/multer-service'
 
 const router = express.Router();
 
+
+router.route('/support').post(requireAuth,
+    multerSaveTo('chat').single('file'),
+    messageController.validateCreateSupport(),
+    messageController.createSupport
+)
+.get(requireAuth,messageController.getSupportChat)
+
 router.route('/').post(requireAuth,
     multerSaveTo('chat').single('file'),
     messageController.validateCreateDefault(),
