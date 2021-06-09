@@ -19,7 +19,14 @@ let populateQuery = [
     { path: 'orders', model: 'order' },
 ];
 
-
+let countNew = async () => {
+    try {
+        let count = await RequestMoney.count({ deleted: false, payed: false });
+        adminNSP.emit(socketEvents.RequestMoneyCount, { count: count });
+    } catch (error) {
+        throw error;
+    }
+}
 export default {
 
     validateBody(isUpdate = false) {
@@ -98,6 +105,7 @@ export default {
             requestMoney = await RequestMoney.populate(requestMoney, populateQuery);
             requestMoney = RequestMoney.schema.methods.toJSONLocalizedOnly(requestMoney, i18n.getLocale());
             res.status(200).send(requestMoney);
+            await countNew();
         } catch (err) {
             next(err);
         }
@@ -146,16 +154,24 @@ export default {
             requestMoney.payedBy = user.id
             requestMoney.payedDate = new Date();
             await requestMoney.save();
+            let description = { ar: ' تم تحول فلوسك المطلوبة , لو في اى استفسار تواصل مع الدعم ' , en: 'Your requested money has been transferred, if you have any questions, contact support'};
+            
             if (requestMoney.driver) {
                 await Order.updateMany({ _id: { $in: requestMoney.orders } }, {driverPayoffDues:true,driverPayoffDuesDate:new Date()})
-
+                
+                await notifyController.create(req.user.id, requestMoney.driver, description, requestMoney.id, 'TRANSFER_MONEY');
+                notifyController.pushNotification(requestMoney.driver, 'TRANSFER_MONEY', requestMoney.id, description);
             }else {
                 await Order.updateMany({ _id: { $in: requestMoney.orders } }, {traderPayoffDues:true,traderPayoffDuesDate:new Date()})
+                
+                await notifyController.create(req.user.id, requestMoney.trader, description, requestMoney.id, 'TRANSFER_MONEY');
+                notifyController.pushNotification(requestMoney.trader, 'TRANSFER_MONEY', requestMoney.id, description);
             }
             res.status(200).send("Done");
-
+            await countNew();
         } catch (err) {
             next(err);
         }
     },
+    countNew,
 }

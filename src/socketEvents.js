@@ -33,5 +33,6 @@ socketEvents.NewOrdersCount = 'NewOrdersCount';
 socketEvents.CurrentOrdersCount = 'CurrentOrdersCount';
 socketEvents.FinishedOrdersCount = 'FinishedOrdersCount';
 socketEvents.TraderNotResponseCount = 'TraderNotResponseCount';
-socketEvents.UpdatedTrader = 'UpdatedTrader'
+socketEvents.UpdatedTrader = 'UpdatedTrader';
+socketEvents.RequestMoneyCount = 'RequestMoneyCount'
 export default socketEvents;

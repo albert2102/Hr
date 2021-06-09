@@ -13,7 +13,7 @@ import dotObject from 'dot-object';
 
 
 let populateQuery = [
-    { path: 'trader', model: 'user' },
+    { path: 'trader', model: 'user',populate:[{ path: 'category', model: 'category' }] },
     { path: 'productCategory', model: 'productCategory' }
 ];
 
@@ -200,7 +200,7 @@ export default {
             let user = req.user;
 
             let validatedBody = checkValidations(req);
-            if (user.type != 'ADMIN' && user.type != 'SUB_ADMIN' && validatedBody.trader) {
+            if ( (user.type == 'ADMIN' || user.type == 'SUB_ADMIN' )&& validatedBody.trader) {
                 validatedBody.createdBy = user.id;
             } else {
                 validatedBody.trader = user.id;
