@@ -9,6 +9,7 @@ import issueController from "../src/controllers/issue.controller/issue.controlle
 import adminController from "../src/controllers/admin.controller/admin.controller";
 import orderController from '../src/controllers/order.controller/order.controller';
 import Order from "../src/models/order.model/order.model";
+import requestMoneyHistoryController from "../src/controllers/requestMoneyHistory.controller/requestMoneyHistory.controller"
 
 let orderPopulateQuery = [
     { path: 'user', model: 'user' },
@@ -103,6 +104,7 @@ module.exports = {
             await issueController.countNew();
             await adminController.count('INSTITUTION');
             await adminController.count('DRIVER');
+            await requestMoneyHistoryController.countNew();
         })
     },
 
