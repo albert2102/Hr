@@ -11,6 +11,9 @@ var message = {
         type: Number,
         ref: 'user'
     },
+    firebaseToken:{
+        type:String
+    },
     reciver: { 
         user: { type: Number, ref: 'user' },
         delivered: { type: Boolean, default: false },

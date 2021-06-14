@@ -245,7 +245,13 @@ export default {
             let user = req.user;
             let { productId } = req.params;
             let { removeLanguage } = req.query;
-            let product = await checkExistThenGet(productId, Product, { deleted: false, trader: user.id });
+            let product
+            if ((user.type != 'ADMIN') && (user.type != 'SUB_ADMIN') ) {
+                // validatedBody.trader = user.id;
+                 product = await checkExistThenGet(productId, Product, { deleted: false, trader: user.id });
+            }else{
+                 product = await checkExistThenGet(productId, Product, { deleted: false });
+            }
             var validatedBody = checkValidations(req);
 
             if (validatedBody.name && !(validatedBody.name.en || validatedBody.name.ar)) {
@@ -302,6 +308,26 @@ export default {
             res.status(200).send({ link: productImage });
         } catch (error) {
             next(error);
+        }
+    },
+
+    validateDeleteMulti() {
+        return [
+            body('ids').not().isEmpty().withMessage(() => { return i18n.__('idsRequired') }).isArray().withMessage('must be array'),
+        ];
+    },
+    async deleteMuti(req, res, next) {
+        try {
+            let user = req.user;
+            if (user.type != 'ADMIN' && user.type != 'SUB_ADMIN')
+                return next(new ApiError(403, i18n.__('unauthrized')));
+
+            let validatedBody = checkValidations(req);
+            await Product.updateMany({ _id: { $in: validatedBody.ids }, deleted: false }, { deleted: true, deletedDate: new Date() })
+            res.status(200).send("Deleted Successfully");
+        }
+        catch (err) {
+            next(err);
         }
     },
 };

@@ -12,6 +12,7 @@ router.route('/')
     .get(productController.findAll)
     .post(requireAuth, multerSaveTo('product').fields([{ name: 'image', maxCount: 1 }, { name: 'slider', maxCount: 5 }]), parseObject(parseArray), productController.validateBody(), productController.create)
 
+router.route('/deleteMutliple').delete(requireAuth,productController.validateDeleteMulti(),productController.deleteMuti)
 
 router.post('/uploadImage', requireAuth, multerSaveTo('product').single('image'), productController.uploadImage)
 

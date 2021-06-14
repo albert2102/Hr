@@ -30,8 +30,11 @@ export default {
         try {
             let page = +req.query.page || 1, limit = +req.query.limit || 20;
             let query = { deleted: false };
-            let { status, user, name, title, number, month, year, archive} = req.query;
+            let { status, user, name, title, number, month, year, archive,firebaseToken} = req.query;
 
+            if (firebaseToken) {
+                query.firebaseToken=firebaseToken
+            }
             if (archive) query.deleted = true;
             if (status) query.status = status;
             if (user) query.user = user;
@@ -171,5 +174,53 @@ export default {
             next(error);
         }
     },
-    countUnInformed
+    countUnInformed,
+
+
+    validateDeleteMulti() {
+        return [
+            body('ids').not().isEmpty().withMessage(() => { return i18n.__('idsRequired') }).isArray().withMessage('must be array'),
+        ];
+    },
+    async deleteMuti(req, res, next) {
+        try {
+            let user = req.user;
+            if (user.type != 'ADMIN' && user.type != 'SUB_ADMIN')
+                return next(new ApiError(403, i18n.__('unauthrized')));
+
+            let validatedBody = checkValidations(req);
+            await Complaint.updateMany({ _id: { $in: validatedBody.ids }, deleted: false }, { deleted: true, deletedDate: new Date() })
+            res.status(200).send("Deleted Successfully");
+        }
+        catch (err) {
+            next(err);
+        }
+    },
+
+    validateVisitor() {
+        let  validations = [
+                body('name').not().isEmpty().withMessage(() => { return i18n.__('nameRequired') }),
+                body('title').not().isEmpty().withMessage(() => { return i18n.__('titleRequired') }),
+                body('notes').optional().not().isEmpty().withMessage(() => { return i18n.__('notesRequired') }),
+                body('firebaseToken').not().isEmpty().withMessage(() => { return i18n.__('firebaseTokenRequired') }),
+            ];
+        
+        return validations;
+    },
+
+    async createVisitorComplain(req, res, next) {
+        try {
+            let validatedBody = checkValidations(req);
+            
+            let createdComplaint = await Complaint.create(validatedBody);
+            if (!validatedBody.number) {
+                createdComplaint.number = '100' + createdComplaint.id;
+                await createdComplaint.save();
+            }
+            res.status(200).send(createdComplaint);
+            await countUnInformed();
+        } catch (error) {
+            next(error)
+        }
+    }, 
 }

@@ -12,6 +12,7 @@ router.route('/')
         // parseObject(['name']),
         productCategoryController.validateBody(), productCategoryController.create)
 
+router.route('/deleteMutliple').delete(requireAuth,productCategoryController.validateDeleteMulti(),productCategoryController.deleteMuti)
 
 router.route('/:productCategoryId')
     .get(productCategoryController.findById)

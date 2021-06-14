@@ -12,8 +12,11 @@ const complaintSchema = new Schema({
     },
     user:{
         type: Number,
-        required: true,
+        // required: true,
         ref:'user'
+    },
+    firebaseToken:{
+        type:String
     },
     title:{
         type: String,

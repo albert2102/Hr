@@ -81,6 +81,7 @@ let driverOrdersCount = async (userId) => {
 }
 let clientOrdersCount = async (userId) => {
     try {
+        let currentOrdersQuery = {deleted:false,user:userId}
         let count = await Order.count(currentOrdersQuery)
 
         await User.findByIdAndUpdate(userId, { ordersCount: count })
@@ -495,7 +496,7 @@ export default {
                 // duration = await duration_time({ lat: req.user.geoLocation.coordinates[1], long: req.user.geoLocation.coordinates[0] }, { lat: trader.geoLocation.coordinates[1], long: trader.geoLocation.coordinates[0] });
                 // let durationPrice = duration * Number(trader.deliveryPricePerSecond);
                 // validatedBody.durationDelivery = duration;
-
+                validatedBody.durationDelivery = Math.round(validatedBody.durationDelivery / 60 ) // client update to be by minutes
                 let durationPrice = Number(validatedBody.durationDelivery) * Number(trader.deliveryPricePerSecond);
                 console.log(durationPrice)
                 if (durationPrice < Number(trader.minDeliveryPrice)) {
@@ -511,7 +512,10 @@ export default {
             validatedBody.price = await calculatePrice(validatedBody.products)
             validatedBody = await getFinalPrice(validatedBody)
 
-            validatedBody.totalPrice = validatedBody.totalPrice + Number(validatedBody.taxes)
+            //console.log('validatedBody.totalPrice ',validatedBody.totalPrice);
+            validatedBody.totalPrice = validatedBody.totalPrice +(  ( validatedBody.totalPrice / 100)   *  Number(validatedBody.taxes));
+            validatedBody.totalPrice  = validatedBody.totalPrice.toFixed(2);
+            validatedBody.totalPrice = parseInt(validatedBody.totalPrice);
             if (validatedBody.paymentMethod == 'WALLET' && req.user.wallet < validatedBody.totalPrice) {
                 return next(new ApiError(400, i18n.__('walletInvalid')));
             }
@@ -967,6 +971,27 @@ export default {
             res.send({ data: results, total: total });
 
         } catch (err) {
+            next(err);
+        }
+    },
+
+
+    validateDeleteMulti() {
+        return [
+            body('ids').not().isEmpty().withMessage(() => { return i18n.__('idsRequired') }).isArray().withMessage('must be array'),
+        ];
+    },
+    async deleteMuti(req, res, next) {
+        try {
+            let user = req.user;
+            if (user.type != 'ADMIN' && user.type != 'SUB_ADMIN')
+                return next(new ApiError(403, i18n.__('unauthrized')));
+
+            let validatedBody = checkValidations(req);
+            await Order.updateMany({ _id: { $in: validatedBody.ids }, deleted: false }, { deleted: true, deletedDate: new Date() })
+            res.status(200).send("Deleted Successfully");
+        }
+        catch (err) {
             next(err);
         }
     },

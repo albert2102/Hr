@@ -10,6 +10,10 @@ router.route('/driverSales').get(requireAuth, orderController.driverGetSales)
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 
+
+router.route('/deleteMutliple').delete(requireAuth,orderController.validateDeleteMulti(),orderController.deleteMuti)
+
+
 router.route('/resendOrder')
     .post(requireAuth, orderController.validateResendOrderToTrader(), orderController.resendOrderToTrader)
     

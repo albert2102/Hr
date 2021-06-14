@@ -165,7 +165,7 @@ export default {
             else if (data.reciver) {
                 message.reciver.user = data.reciver;
             }
-            console.log(message)
+            //console.log(message)
             message.lastMessage = true;
             let createdMessage = await Message.create(message);
             createdMessage = await Message.populate(createdMessage, popQuery);
@@ -184,7 +184,96 @@ export default {
             next(error)
         }
     },
-    /////////////////////////////////////////////////////////////
+    ///////////////////////////////////////////////////////////// visitor
+    validateVisitorComplaint() {
+        let validation = [
+            body('firebaseToken').not().isEmpty().withMessage(() => i18n.__('firebaseTokenRequired')),
+            body('text').optional().not().isEmpty().withMessage(() => i18n.__('messageRequired')),
+            body('complaint').not().isEmpty().withMessage(() => i18n.__('complaintRequired'))
+                .custom(async (value, { req }) => {
+                    req.complaint = await checkExistThenGet(value, Complaint, { deleted: false });
+                }),
+
+        ]
+        return validation;
+    },
+
+    async createVisitorMessage(req, res, next) {
+        try {
+            let user = req.user;
+            let data = checkValidations(req);
+            let complaint = req.complaint;
+            
+            let message = {  message: {}, reciver: {} };
+
+            message.complaint = complaint.id;
+            
+
+            if (!(data.text || req.file)) {
+                return next(new ApiError(404, i18n.__('messageRequired')))
+            }
+
+            if (data.text) {
+                message.message.text = data.text;
+            }
+            if (req.file) {
+                let file = handleImg(req, { attributeName: 'file' });
+                if (req.file.mimetype.includes('image/')) {
+                    message.message.image = file;
+                } else if (req.file.mimetype.includes('video/')) {
+                    message.message.video = file;
+                } else if (req.file.mimetype.includes('application/')) {
+                    message.message.document = file;
+                } else {
+                    return next(new ApiError(404, i18n.__('fileTypeError')));
+                }
+            }
+
+            message.lastMessage = true;
+            let createdMessage = await Message.create(message);
+            createdMessage = await Message.populate(createdMessage, popQuery);
+            res.status(200).send(createdMessage);
+
+           
+            await Message.updateMany({ deleted: false, _id: { $ne: createdMessage.id }, complaint: complaint.id}, { $set: { lastMessage: false } });
+
+            
+            handelNewMessageSocket(createdMessage);
+
+        } catch (error) {
+            next(error)
+        }
+    },
+
+
+    async getVisitorChatHistory(req, res, next) {
+        try {
+           
+            let { complaint } = req.query;
+            let page = +req.query.page || 1,
+                limit = +req.query.limit || 20;
+            let query = { deleted: false };
+
+            if (complaint) {
+                query.order = null;
+                query.complaint = complaint;
+            } 
+            else {
+                return next(new ApiError(404, i18n.__('targetRequired')));
+            }
+
+            let chats = await Message.find(query).populate(popQuery).sort({ _id: -1 }).limit(limit).skip((page - 1) * limit);
+            const chatCount = await Message.count(query);
+            const pageCount = Math.ceil(chatCount / limit);
+            res.send(new ApiResponse(chats, page, pageCount, limit, chatCount, req));
+            await Message.updateMany({ deleted: false,firebaseToken: null, 'reciver.read': false, complaint: complaint }, { $set: { 'reciver.read': true, 'reciver.readDate': new Date() } })
+            
+        } catch (error) {
+            next(error);
+        }
+    },
+
+    ////////////////////////////////////////////////////////////
 
     validateCreateSupport() {
         let validation = [
@@ -291,7 +380,7 @@ export default {
 
     async getChatHistory(req, res, next) {
         try {
-            let user = req.user.id;
+            let user = req.user ?  req.user.id : null;
             let { friend, complaint, order } = req.query;
             console.log(req.query)
             let page = +req.query.page || 1,

@@ -158,5 +158,6 @@
 	"taxesRequired": "taxesRequired",
 	"workingTimeTextRequired": "workingTimeTextRequired",
 	"complaintRequired": "complaintRequired",
-	"traderBusy":"The store is not available now."
+	"traderBusy": "The store is not available now.",
+	"firebaseTokenRequired": "firebaseTokenRequired"
 }
