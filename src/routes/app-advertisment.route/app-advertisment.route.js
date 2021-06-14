@@ -8,6 +8,9 @@ router.route('/')
     .post(requireAuth,multerSaveTo('app-advertisment').single('image'),advertismentController.create)
     .get(advertismentController.find);
 
+    
+router.route('/deleteMutliple').delete(requireAuth,advertismentController.validateDeleteMulti(),advertismentController.deleteMuti)
+
 router.route('/:AdvertismentsId')
     .put(requireAuth,multerSaveTo('app-advertisment').single('image'),advertismentController.update)
     .delete(requireAuth,advertismentController.delete)

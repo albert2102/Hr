@@ -1018,4 +1018,24 @@ export default {
         }
     },
 
+    validateDeleteMulti() {
+        return [
+            body('ids').not().isEmpty().withMessage(() => { return i18n.__('idsRequired') }).isArray().withMessage('must be array'),
+        ];
+    },
+    async deleteMuti(req, res, next) {
+        try {
+            let user = req.user;
+            if (user.type != 'ADMIN' && user.type != 'SUB_ADMIN')
+                return next(new ApiError(403, i18n.__('unauthrized')));
+
+            let validatedBody = checkValidations(req);
+            await User.updateMany({ _id: { $in: validatedBody.ids }, deleted: false }, { deleted: true, deletedDate: new Date() })
+            res.status(200).send("Deleted Successfully");
+        }
+        catch (err) {
+            next(err);
+        }
+    },
+
 };

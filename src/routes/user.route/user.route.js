@@ -19,6 +19,8 @@ router.route('/institution/updateInfo')
         userController.validateUpdateInstitution(),
         userController.updateInfo);
 
+router.route('/deleteMutliple').delete(requireAuth,userController.validateDeleteMulti(),userController.deleteMuti)
+
 router.route('/institution/signup')
     .post(
         multerSaveTo('users').single('image'), 

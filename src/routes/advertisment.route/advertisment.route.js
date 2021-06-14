@@ -16,6 +16,8 @@ router.route('/')
         advertismentController.create)
     .get(advertismentController.find);
 
+router.route('/deleteMutliple').delete(requireAuth,advertismentController.validateDeleteMulti(),advertismentController.deleteMuti)
+
 router.route('/stop').put(requireAuth,advertismentController.validateStopAdvertisment(),advertismentController.stopAdvertisment)
 router.route('/:AdvertismentsId/changeStatus').put(requireAuth,advertismentController.validateAdminChangeStatus(),advertismentController.changeStatus)
 router.route('/:AdvertismentsId/increaseViews').put(advertismentController.updateNumberOfViews)

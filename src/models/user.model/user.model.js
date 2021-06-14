@@ -196,7 +196,7 @@ const userSchema = new Schema({
         type: Boolean,
         default: true
     },
-    deliveryPricePerSecond:{// سعر التوصيل بالثانية الواحدة
+    deliveryPricePerSecond:{// سعر التوصيل بالثانية الواحدة // تم التعديل من العميل لتكون بالدقيقة بدل الثانية
         type: Number,
         default : 0.2
     },

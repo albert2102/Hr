@@ -24,6 +24,14 @@ router.route('/compalint').post(requireAuth,
     messageController.validateComplaint(),
     messageController.create
 )
+
+router.route('/compalint/visitor').post(
+    multerSaveTo('chat').single('file'),
+    messageController.validateVisitorComplaint(),
+    messageController.createVisitorMessage
+).get(messageController.getVisitorChatHistory)
+
+
 router.route('/order').post(requireAuth,
     multerSaveTo('chat').single('file'),
     messageController.validateOrder(),
