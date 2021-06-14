@@ -245,7 +245,13 @@ export default {
             let user = req.user;
             let { productId } = req.params;
             let { removeLanguage } = req.query;
-            let product = await checkExistThenGet(productId, Product, { deleted: false, trader: user.id });
+            let product
+            if ((user.type != 'ADMIN') && (user.type != 'SUB_ADMIN') ) {
+                // validatedBody.trader = user.id;
+                 product = await checkExistThenGet(productId, Product, { deleted: false, trader: user.id });
+            }else{
+                 product = await checkExistThenGet(productId, Product, { deleted: false });
+            }
             var validatedBody = checkValidations(req);
 
             if (validatedBody.name && !(validatedBody.name.en || validatedBody.name.ar)) {

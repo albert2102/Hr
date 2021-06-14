@@ -81,6 +81,7 @@ let driverOrdersCount = async (userId) => {
 }
 let clientOrdersCount = async (userId) => {
     try {
+        let currentOrdersQuery = {deleted:false,user:userId}
         let count = await Order.count(currentOrdersQuery)
 
         await User.findByIdAndUpdate(userId, { ordersCount: count })
@@ -511,7 +512,10 @@ export default {
             validatedBody.price = await calculatePrice(validatedBody.products)
             validatedBody = await getFinalPrice(validatedBody)
 
-            validatedBody.totalPrice = validatedBody.totalPrice + Number(validatedBody.taxes)
+            //console.log('validatedBody.totalPrice ',validatedBody.totalPrice);
+            validatedBody.totalPrice = validatedBody.totalPrice +(  ( validatedBody.totalPrice / 100)   *  Number(validatedBody.taxes));
+            validatedBody.totalPrice  = validatedBody.totalPrice.toFixed(2);
+            validatedBody.totalPrice = parseInt(validatedBody.totalPrice);
             if (validatedBody.paymentMethod == 'WALLET' && req.user.wallet < validatedBody.totalPrice) {
                 return next(new ApiError(400, i18n.__('walletInvalid')));
             }
