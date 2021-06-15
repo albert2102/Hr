@@ -61,9 +61,6 @@ const orderSchema = new Schema({
     totalPrice: {
         type: Number
     },
-    deliveredDate: {
-        type: Date
-    },
     orderNumber: {
         type: String,
         required: true
@@ -149,7 +146,27 @@ const orderSchema = new Schema({
     },
     order:{
         type: Number
-    }
+    },
+    /////////////////////////////////////
+    acceptedDate:{
+        type: Date
+    },
+    rejectedDate:{
+        type: Date
+    },
+    driverAcceptedDate:{
+        type: Date
+    },
+    cancelledDate:{
+        type: Date
+    },
+    shippedDate:{
+        type: Date
+    },
+    deliveredDate: {
+        type: Date
+    },
+    /////////////////////////////////////
 }, { timestamps: true });
 orderSchema.set('toJSON', {
     transform: function (doc, ret, options) {
