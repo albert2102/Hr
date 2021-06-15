@@ -612,6 +612,11 @@ export default {
             let { orderId } = req.params;
             await checkExist(orderId, Order, { deleted: false, status: 'WAITING' });
             let validatedBody = checkValidations(req);
+            if (validatedBody.status == 'ACCEPTED') {
+                validatedBody.acceptedDate = new Date();
+            }else{
+                validatedBody.rejectedDate = new Date();
+            }
             let updatedOrder = await Order.findByIdAndUpdate(orderId, validatedBody, { new: true }).populate(populateQuery);
             updatedOrder = Order.schema.methods.toJSONLocalizedOnly(updatedOrder, i18n.getLocale());
             res.status(200).send(updatedOrder);
@@ -663,6 +668,7 @@ export default {
             let validatedBody = checkValidations(req);
             if (validatedBody.status == 'ACCEPTED') {
                 validatedBody.status = 'DRIVER_ACCEPTED';
+                validatedBody.driverAcceptedDate = new Date();
                 updatedOrder = await Order.findByIdAndUpdate(orderId, validatedBody, { new: true }).populate(populateQuery);
                 notificationNSP.to('room-' + updatedOrder.user.id).emit(socketEvents.ChangeOrderStatus, { order: updatedOrder });
                 notificationNSP.to('room-' + updatedOrder.trader.id).emit(socketEvents.ChangeOrderStatus, { order: updatedOrder });
@@ -688,7 +694,7 @@ export default {
 
             let { orderId } = req.params;
             await checkExist(orderId, Order, { deleted: false, $or: [{ status: "ACCEPTED", orderType: "FROM_STORE" }, { status: "DRIVER_ACCEPTED", orderType: "DELIVERY" }] });
-            let updatedOrder = await Order.findByIdAndUpdate(orderId, { status: 'SHIPPED' }, { new: true }).populate(populateQuery);
+            let updatedOrder = await Order.findByIdAndUpdate(orderId, { status: 'SHIPPED',shippedDate:new Date() }, { new: true }).populate(populateQuery);
             updatedOrder = Order.schema.methods.toJSONLocalizedOnly(updatedOrder, i18n.getLocale());
             res.status(200).send(updatedOrder);
 
@@ -762,6 +768,7 @@ export default {
                 return next(new ApiError(403, i18n__('notAllowToCancel')));
             }
             order.status = 'CANCELED';
+            order.cancelledDate = new Date();
             await order.save();
             res.status(200).send(order);
             let description = { ar: order.orderNumber + ' : ' + 'تم الغاء هذا الطلب ', en: order.orderNumber + ' : ' + ' Order Canceled' };
