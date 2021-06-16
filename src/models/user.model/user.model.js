@@ -190,7 +190,8 @@ const userSchema = new Schema({
     },
     institutionStatus:{
         type: String,
-        enum:['OPEN','BUSY','CLOSED']
+        enum:['OPEN','BUSY','CLOSED'],
+        default:'OPEN'
     },
     openChat:{ //for institution
         type: Boolean,
