@@ -719,7 +719,7 @@ export default {
 
             let query = { deleted: false, type: 'INSTITUTION' };
             let sortQuery = { createdAt: -1 };
-            if (open) query.online = true; // مفتوح
+            if (open) query.institutionStatus = 'OPEN'; // مفتوح
             if (highestRated) sortQuery = { totalRate: -1 }; //الاعلي تقييما
             if (category) {
                 if (Array.isArray(category)) {
