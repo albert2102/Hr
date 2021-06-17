@@ -231,8 +231,8 @@ export default {
             let description  = {en:``,ar:``};
 
             if (validatedBody.status == 'ACCEPTED') {
-                description  = {en:`You advertisment has been accepted in ajam and the commetion for this is ${validatedBody.commetion}`,
-                ar:` تم قبول اعلانك في أجَمْ و يجب دفع عمولة بقيمة ${validatedBody.commetion}`};
+                description  = {en:`You advertisment has been accepted in ajam and the commetion for this is ${validatedBody.commetion} %`,
+                ar:` تم قبول اعلانك في أجَمْ و يرجي دفع عموله بقيمة ${validatedBody.commetion} %`};
             } else {
                 description  = {en:`Your advertisment has been rejected in Ajam as ${validatedBody.rejectedReason}`,ar:` تم رفضا اعلانك في أجَمْ بسبب ${validatedBody.rejectedReason}`};
             }
