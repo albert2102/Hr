@@ -272,7 +272,7 @@ const findDriver = async (order) => {
                 en: order.orderNumber + ' : ' + 'You have a new Order'
             }
             await notifyController.create(order.user.id, order.trader.id, description, order.id, 'ORDER', order.id);
-            notifyController.pushNotification(order.trader.id, 'ORDER', order.id, description, config.notificationTitle);
+            notifyController.pushNotification(order.trader.id, 'ORDER', order.id, description);
             driverOrdersCount(driver._id);
         } else {
             console.log("in elseeeeeeeeeeeeeeeeeeeeeeee")
@@ -549,7 +549,7 @@ export default {
                 en: order.orderNumber + ' : ' + 'You have a new Order'
             }
             await notifyController.create(req.user.id, order.trader.id, description, order.id, 'ORDER', order.id);
-            notifyController.pushNotification(order.trader.id, 'ORDER', order.id, description, config.notificationTitle);
+            notifyController.pushNotification(order.trader.id, 'ORDER', order.id, description);
             notificationNSP.to('room-' + order.trader.id).emit(socketEvents.NewOrder, { order: order });
             traderOrdersCount(order.trader.id);
             traderService(order);
@@ -632,7 +632,7 @@ export default {
             }
 
             await notifyController.create(req.user.id, updatedOrder.user.id, description, updatedOrder.id, 'CHANGE_ORDER_STATUS', updatedOrder.id);
-            notifyController.pushNotification(updatedOrder.user.id, 'CHANGE_ORDER_STATUS', updatedOrder.id, description, config.notificationTitle);
+            notifyController.pushNotification(updatedOrder.user.id, 'CHANGE_ORDER_STATUS', updatedOrder.id, description);
 
             notificationNSP.to('room-' + updatedOrder.user.id).emit(socketEvents.ChangeOrderStatus, { order: updatedOrder });
 
@@ -701,7 +701,7 @@ export default {
             let description = { ar: updatedOrder.orderNumber + ' : ' + ' تم تغير حالة الطلب الي تم الشحن ', en: updatedOrder.orderNumber + ' : ' + 'Order Status Changed To Order Shipped' };
 
             await notifyController.create(req.user.id, updatedOrder.user.id, description, updatedOrder.id, 'CHANGE_ORDER_STATUS', updatedOrder.id);
-            notifyController.pushNotification(updatedOrder.user.id, 'CHANGE_ORDER_STATUS', updatedOrder.id, description, config.notificationTitle);
+            notifyController.pushNotification(updatedOrder.user.id, 'CHANGE_ORDER_STATUS', updatedOrder.id, description);
 
             notificationNSP.to('room-' + updatedOrder.user.id).emit(socketEvents.ChangeOrderStatus, { order: updatedOrder });
 
@@ -733,7 +733,7 @@ export default {
             let description = { ar: updatedOrder.orderNumber + ' : ' + ' تم تغير حالة الطلب الي تم التسليم ', en: updatedOrder.orderNumber + ' : ' + 'Order Status Changed To Delivered' };
 
             await notifyController.create(req.user.id, updatedOrder.user.id, description, updatedOrder.id, 'CHANGE_ORDER_STATUS', updatedOrder.id);
-            notifyController.pushNotification(updatedOrder.user.id, 'CHANGE_ORDER_STATUS', updatedOrder.id, description, config.notificationTitle);
+            notifyController.pushNotification(updatedOrder.user.id, 'CHANGE_ORDER_STATUS', updatedOrder.id, description);
 
             notificationNSP.to('room-' + updatedOrder.user.id).emit(socketEvents.ChangeOrderStatus, { order: updatedOrder });
             notificationNSP.to('room-' + updatedOrder.trader.id).emit(socketEvents.ChangeOrderStatus, { order: updatedOrder });
@@ -774,7 +774,7 @@ export default {
             let description = { ar: order.orderNumber + ' : ' + 'تم الغاء هذا الطلب ', en: order.orderNumber + ' : ' + ' Order Canceled' };
 
             await notifyController.create(req.user.id, order.user.id, description, order.id, 'CHANGE_ORDER_STATUS', order.id);
-            notifyController.pushNotification(order.user.id, 'CHANGE_ORDER_STATUS', order.id, description, config.notificationTitle);
+            notifyController.pushNotification(order.user.id, 'CHANGE_ORDER_STATUS', order.id, description);
             notificationNSP.to('room-' + order.trader.id).emit(socketEvents.ChangeOrderStatus, { order: order });
 
         } catch (err) {
@@ -859,7 +859,7 @@ export default {
             let description = { en: updatedOrder.orderNumber + ' : ' + 'The admin sent the order back to you. Please accept the order as soon as possible.', ar: updatedOrder.orderNumber + ' : ' + '  قام الادمن بإعادة ارسال الطلب اليك مرة اخري من فضلك وافق على الطلب في اسرع وقت ' };
 
             await notifyController.create(req.user.id, updatedOrder.trader.id, description, updatedOrder.id, 'ORDER', updatedOrder.id);
-            notifyController.pushNotification(updatedOrder.trader.id, 'ORDER', updatedOrder.id, description, config.notificationTitle);
+            notifyController.pushNotification(updatedOrder.trader.id, 'ORDER', updatedOrder.id, description);
             notificationNSP.to('room-' + updatedOrder.trader.id).emit(socketEvents.NewOrder, { order: updatedOrder });
             traderOrdersCount(updatedOrder.trader.id);
 

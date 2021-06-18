@@ -251,7 +251,7 @@ export default {
             await user.save();
             res.status(200).send({ user: user });
 
-            let description = { ar: ' تم  اضافة هذا المبلغ لمحفظتك' + ' : ' + validatedBody.value, en: 'This amount has been added to your wallet : ' + validatedBody.value };
+            let description = { ar: ' تم  إضافة  مبلغ بمحفظتك بقيمة' + ' : ' + validatedBody.value, en: 'This amount has been added to your wallet : ' + validatedBody.value };
             await notifyController.create(req.user.id, user.id, description, user.id, 'ADDED_TO_WALLET');
             notifyController.pushNotification(user.id, 'ADDED_TO_WALLET', user.id, description);
             notificationNSP.to('room-' + user.id).emit(socketEvents.NewUser, { user: user });
