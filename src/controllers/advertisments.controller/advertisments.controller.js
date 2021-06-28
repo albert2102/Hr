@@ -49,7 +49,7 @@ export default {
 
             let { includeIssuesCount , status, address, description, phone, whatsappNumber, contactBy, price, lat, long, user,archive} = req.query
 
-            let query = { deleted: false,status:{$ne:'DELETED'} };
+            let query = { deleted: false,status:{$nin:['DELETED','STOPED']} };
             if (archive) query.deleted = true;
             if (user) query.user = +user;
             if (status) query.status = status;
