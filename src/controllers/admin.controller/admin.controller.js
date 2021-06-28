@@ -690,16 +690,16 @@ export default {
 
             if (verifyUser.type == 'DRIVER') {
                 if (validatedBody.status == 'ACCEPTED') {
-                    description = {en:"You are now a captain in the Agam team",ar:"انت الان كابتن لدي فريق أجم"}
+                    description = {en:"You are now a captain in the Agam team",ar:"انت الآن  كابتن لدي فريق أجَمْ"}
                 }else{
-                    description = {en:"You request to join Ajam has been rejected",ar:"تم رفض طلبك لمشاركة أجم ككابتن"}
+                    description = {en:"You request to join Ajam has been rejected",ar:"تم رفض طلبك لمشاركة أجَمْ ككابتن"}
                 }
                 
             }else{
                 if (validatedBody.status == 'ACCEPTED') {
-                    description = {en:"You are now an instituation in the Agam team",ar:"انت الان متجر لدي فريق أجم"}
+                    description = {en:"You are now an instituation in the Agam team",ar:"انت الآن  متجر لدي فريق أجَمْ"}
                 }else{
-                    description = {en:"You request to join Ajam has been rejected",ar:"تم رفض طلبك لمشاركة أجم كمتجر"}
+                    description = {en:"You request to join Ajam has been rejected",ar:"تم رفض طلبك لمشاركة أجَمْ كمتجر"}
                 }
             }
             await notificationController.create(req.user.id, verifyUser.id, description, verifyUser.id, 'JOIN_STATUS');

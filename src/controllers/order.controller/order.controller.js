@@ -558,7 +558,12 @@ export default {
             clientOrdersCount(req.user.id);
             ////////////////////////////////////////////////////////////////////////////////////////////
             await sendHtmlEmail(req.user.email, order.orderNumber, order.products.length, order.price, order.transportPrice, order.taxes, order.address.address, order.address.addressName, order.address.buildingNumber, order.address.flatNumber, order.totalPrice);
+            ///////////////////////////////////////////
 
+            if(validatedBody.paymentMethod == 'WALLET'){
+                user.wallet = user.wallet - order.totalPrice ;
+                await user.save();
+            }
         } catch (err) {
             next(err);
         }
@@ -775,7 +780,7 @@ export default {
             let description = { ar: order.orderNumber + ' : ' + 'تم الغاء هذا الطلب ', en: order.orderNumber + ' : ' + ' Order Canceled' };
 
             await notifyController.create(req.user.id, order.user.id, description, order.id, 'CHANGE_ORDER_STATUS', order.id);
-            notifyController.pushNotification(order.user.id, 'CHANGE_ORDER_STATUS', order.id, description);
+            notifyController.pushNotification(order.trader.id, 'CHANGE_ORDER_STATUS', order.id, description);
             notificationNSP.to('room-' + order.trader.id).emit(socketEvents.ChangeOrderStatus, { order: order });
 
         } catch (err) {
