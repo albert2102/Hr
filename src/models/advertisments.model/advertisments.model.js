@@ -64,6 +64,10 @@ const advertismentsSchema = new Schema({
     },
     rejectedReason:{
         type: String
+    },
+    issuesCount:{
+        type: Number,
+        default: 0
     }
 }, { timestamps: true });
 
