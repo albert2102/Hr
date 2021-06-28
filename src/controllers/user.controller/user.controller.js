@@ -167,7 +167,7 @@ export default {
                 .isEmail().withMessage(() => { return i18n.__('EmailNotValid') })
                 .custom(async (value, { req }) => {
                     value = (value.trim()).toLowerCase();
-                    let userQuery = { email: value, deleted: false };
+                    let userQuery = { email: value, deleted: false,type:'CLIENT' };
                     if (await User.findOne(userQuery))
                         throw new Error(i18n.__('emailDuplicated'));
                     return true;
@@ -175,7 +175,7 @@ export default {
             body('password').not().isEmpty().withMessage(() => { return i18n.__('passwordRequired') }),
             body('phone').not().isEmpty().withMessage(() => { return i18n.__('PhoneIsRequired') }).custom(async (value, { req }) => {
                 value = (value.trim()).toLowerCase();
-                let userQuery = { phone: value, deleted: false };
+                let userQuery = { phone: value, deleted: false,type:'CLIENT' };
                 if (await User.findOne(userQuery))
                     throw new Error(i18n.__('phoneDuplicated'));
                 return true;
@@ -244,7 +244,7 @@ export default {
                 .isEmail().withMessage(() => { return i18n.__('Email Not Valid') })
                 .custom(async (value, { req }) => {
                     value = (value.trim()).toLowerCase();
-                    let userQuery = { _id: { $ne: req.user.id }, email: value, deleted: false };
+                    let userQuery = { _id: { $ne: req.user.id }, email: value, deleted: false,type:'CLIENT' };
                     if (await User.findOne(userQuery))
                         throw new Error(i18n.__('emailDuplicated'));
                     else
@@ -253,7 +253,7 @@ export default {
             body('phone').optional().not().isEmpty().withMessage(() => { return i18n.__('PhoneIsRequired') })
                 .custom(async (value, { req }) => {
                     value = (value.trim()).toLowerCase();
-                    let userQuery = { _id: { $ne: req.user.id }, phone: value, deleted: false };
+                    let userQuery = { _id: { $ne: req.user.id }, phone: value, deleted: false,type:'CLIENT' };
                     if (await User.findOne(userQuery))
                         throw new Error(i18n.__('phoneDuplicated'));
                     else
@@ -820,7 +820,7 @@ export default {
                 .isEmail().withMessage(() => { return i18n.__('EmailNotValid') })
                 .custom(async (value, { req }) => {
                     value = (value.trim()).toLowerCase();
-                    let userQuery = { email: value, deleted: false, _id: { $ne: req.body.userId } };
+                    let userQuery = { email: value, deleted: false, _id: { $ne: req.body.userId },type:'INSTITUTION' };
                     if (await User.findOne(userQuery))
                         throw new Error(i18n.__('emailDuplicated'));
                     else
@@ -830,7 +830,7 @@ export default {
             body('phone').optional().not().isEmpty().withMessage(() => { return i18n.__('PhoneIsRequired') })
                 .custom(async (value, { req }) => {
                     value = (value.trim()).toLowerCase();
-                    let userQuery = { phone: value, deleted: false, _id: { $ne: req.body.userId } };
+                    let userQuery = { phone: value, deleted: false, _id: { $ne: req.body.userId },type:'INSTITUTION'  };
 
                     if (await User.findOne(userQuery))
                         throw new Error(i18n.__('phoneIsDuplicated'));
@@ -884,7 +884,7 @@ export default {
             body('phone').not().isEmpty().withMessage(() => { return i18n.__('PhoneIsRequired') })
                 .custom(async (value, { req }) => {
                     value = (value.trim()).toLowerCase();
-                    let userQuery = { phone: value, deleted: false };
+                    let userQuery = { phone: value, deleted: false, type: 'DRIVER' };
                     if (await User.findOne(userQuery))
                         throw new Error(i18n.__('phoneIsDuplicated'));
                     else
@@ -955,7 +955,7 @@ export default {
             body('phone').not().isEmpty().withMessage(() => { return i18n.__('PhoneIsRequired') })
                 .custom(async (value, { req }) => {
                     value = (value.trim()).toLowerCase();
-                    let userQuery = { phone: value, deleted: false };
+                    let userQuery = { phone: value, deleted: false, type: 'INSTITUTION'  };
                     if (await User.findOne(userQuery))
                         throw new Error(i18n.__('phoneIsDuplicated'));
                     else
