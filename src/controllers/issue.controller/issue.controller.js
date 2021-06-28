@@ -100,6 +100,7 @@ export default {
             createdissue = Issue.schema.methods.toJSONLocalizedOnly(createdissue, i18n.getLocale());
             res.status(200).send(createdissue);
             await countNew();
+            await Advertisments.findByIdAndUpdate(validatedBody.advertisment,{issuesCount:req.advertisment.issuesCount + 1})
 
         } catch (err) {
             console.log(err);
@@ -146,6 +147,9 @@ export default {
             issue.deleted = true;
             await issue.save();
             res.status(200).send('Deleted Successfully');
+            let adv = await Advertisments.findById(issue.advertisment);
+            await Advertisments.findByIdAndUpdate(adv.id,{issuesCount: adv.issuesCount - 1})
+
         }
         catch (err) {
             next(err);
