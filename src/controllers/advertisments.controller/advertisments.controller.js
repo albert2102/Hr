@@ -35,7 +35,7 @@ const advertismentJob = async () => {
         };
         for (let index = 0; index < advertisments.length; index++) {
             await notifyController.create(advertisments[index].user, advertisments[index].user,desc, 1, 'ADVERTISMENT');
-            notifyController.pushNotification(advertisments[index].user, 'ADVERTISMENT', advertisments[index].id, desc, config.notificationTitle);
+            notifyController.pushNotification(advertisments[index].user, 'ADVERTISMENT', advertisments[index].id, desc);
             notificationNSP.to('room-' + advertisments[index].user).emit(socketEvents.ChangeAdvertismentStatus, { advertisment: advertisments[index] });
         }
         await Advertisments.updateMany({_id:{$in:advertisments}} , {status:'ENDED'} );
@@ -240,7 +240,7 @@ export default {
 
             await notifyController.create(req.user.id, advertisment.user, description, advertisment.id, 'ADVERTISMENT', null, advertisment.id);
             notificationNSP.to('room-' + advertisment.user).emit(socketEvents.ChangeAdvertismentStatus, { advertisment: advertisment });
-            notifyController.pushNotification(advertisment.user, 'ADVERTISMENT', advertisment.id, description, config.notificationTitle);
+            notifyController.pushNotification(advertisment.user, 'ADVERTISMENT', advertisment.id, description);
 
             await countNew();
 
@@ -327,7 +327,7 @@ export default {
 
             let description = {en:"Admin stop your advertisment.",ar:"قام الادمن بوقف اعلانك"};
             await notifyController.create(req.user.id, addvertis.user, description,  addvertis.user, 'ADDVERTISMENT_STOPED');
-            notifyController.pushNotification( addvertis.user, 'ADDVERTISMENT_STOPED',  addvertis.user, description, config.notificationTitle);
+            notifyController.pushNotification( addvertis.user, 'ADDVERTISMENT_STOPED',  addvertis.user, description);
             res.status(200).send({advertisment:addvertis});
         } catch (error) {
             next(error);
