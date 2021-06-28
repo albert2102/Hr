@@ -234,7 +234,7 @@ export default {
                 description  = {en:`You advertisment has been accepted in ajam and the commetion for this is ${validatedBody.commetion} %`,
                 ar:` تم قبول اعلانك في أجَمْ و يرجي دفع عموله بقيمة ${validatedBody.commetion} %`};
             } else {
-                description  = {en:`Your advertisment has been rejected in Ajam as ${validatedBody.rejectedReason}`,ar:` تم رفضا اعلانك في أجَمْ بسبب ${validatedBody.rejectedReason}`};
+                description  = {en:`Your advertisment has been rejected in Ajam as ${validatedBody.rejectedReason}`,ar:` تم رفض اعلانك في أجَمْ بسبب ${validatedBody.rejectedReason}`};
             }
 
 
