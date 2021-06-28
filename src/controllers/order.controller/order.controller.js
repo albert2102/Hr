@@ -288,8 +288,9 @@ const traderService = async (order) => {
         let date = (new Date()).getTime();
         let company = await Company.findOne({ deleted: false });
         date = date + company.traderWaitingTime;
+        console.log(new Date())
         date = new Date(date);
-        let jobName = 'order-' + order.id;
+        let jobName = 'trader-order-' + order.id;
         let currentOrder = await checkExistThenGet(order.id, Order, { populate: populateQuery });
         console.log(date)
         var j = schedule.scheduleJob(jobName, date, async (fireDate) => {

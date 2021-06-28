@@ -49,6 +49,10 @@ const NotifSchema = new Schema({
         type:String,
         enum:['USER','USERS','ALL','MAIL','SMS']
     },
+    userType:{
+        type:String,
+        enum:['CLIENT', 'INSTITUTION', 'DRIVER']
+    },
     users:{
         type: [Number],
         ref: 'user'

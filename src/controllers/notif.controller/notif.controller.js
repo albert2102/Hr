@@ -147,6 +147,8 @@ export default {
             body('titleOfNotification.en').not().isEmpty().withMessage(()=>i18n.__('englishTitleRequired')),
             body('text.ar').not().isEmpty().withMessage(()=>i18n.__('arabicTextRequired')),
             body('text.en').not().isEmpty().withMessage(()=>i18n.__('englishTextRequired')),
+            body('userType').optional().not().isEmpty().withMessage(()=>i18n.__('userTypeRequired'))
+            .isIn(['CLIENT', 'INSTITUTION', 'DRIVER']).withMessage(()=>i18n.__('invalidUserType')),
         ];
         return validations;
     },
@@ -164,10 +166,17 @@ export default {
                 validatedBody.image = image;
             }
             let notifiObj = {titleOfNotification :validatedBody.titleOfNotification, resource: req.user.id, type: "ALL", subjectType: "ADMIN", description: validatedBody.text };
-            if(validatedBody.image) notifiObj.image = validatedBody.image
-            await Notif.create(notifiObj)
-            var allUsers = await User.find({ deleted: false, type: {$nin : ['ADMIN','SUB_ADMIN']} });
+            let userQuery = { deleted: false, type: {$nin : ['ADMIN','SUB_ADMIN']} };
+            
+            if(validatedBody.image) notifiObj.image = validatedBody.image;
+            if(validatedBody.userType) {
+                notifiObj.userType = validatedBody.userType; 
+                userQuery.type =  validatedBody.userType;
+            }
 
+            await Notif.create(notifiObj)
+
+            var allUsers = await User.find(userQuery);
             allUsers.forEach(async (user) => {
                 if (user.notification) {
                     sendPushNotification(
