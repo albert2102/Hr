@@ -775,7 +775,7 @@ export default {
             let description = { ar: order.orderNumber + ' : ' + 'تم الغاء هذا الطلب ', en: order.orderNumber + ' : ' + ' Order Canceled' };
 
             await notifyController.create(req.user.id, order.user.id, description, order.id, 'CHANGE_ORDER_STATUS', order.id);
-            notifyController.pushNotification(order.user.id, 'CHANGE_ORDER_STATUS', order.id, description);
+            notifyController.pushNotification(order.trader.id, 'CHANGE_ORDER_STATUS', order.id, description);
             notificationNSP.to('room-' + order.trader.id).emit(socketEvents.ChangeOrderStatus, { order: order });
 
         } catch (err) {
