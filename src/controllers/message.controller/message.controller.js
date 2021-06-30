@@ -177,7 +177,7 @@ export default {
             }else if (order) {
                 await Message.updateMany({ deleted: false, _id: { $ne: createdMessage.id }, order: order.id}, { $set: { lastMessage: false } });
             }else if (data.reciver){
-                await Message.updateMany({ lastMessage: true, complaint: null, order: null, $or: [{ sender: +user.id,'reciver.user':data.reciver }, { sender:data.reciver,'reciver.user': +user.id }] }, { $set: { lastMessage: false }  });
+                await Message.updateMany({ deleted: false, _id: { $ne: createdMessage.id },lastMessage: true, complaint: null, order: null, $or: [{ sender: +user.id,'reciver.user':data.reciver }, { sender:data.reciver,'reciver.user': +user.id }] }, { $set: { lastMessage: false }  });
                 
             }
             handelNewMessageSocket(createdMessage);
