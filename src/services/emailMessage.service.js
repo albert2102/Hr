@@ -33,7 +33,7 @@ let transporter = nodemailer.createTransport({
 export function sendEmail(targetMail, text) {
 
     let mailOptions = {
-        from: `${config.App.Name}`,
+        from: 'ajam@ajaminfo.com',
         to: targetMail,
         subject: `${config.App.Name}`,
         text: text,
@@ -67,7 +67,7 @@ export function sendHtmlEmail(targetMail,orderNumber,productSize,price,transport
         })
        
         let mailOptions = {
-            from: `${config.App.Name}`,
+            from: 'ajam@ajaminfo.com',
             to: targetMail,
             subject: `${config.App.Name}`,
             html: template,
