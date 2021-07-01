@@ -319,7 +319,7 @@ export default {
                 userName, price, orderDate, totalPrice, promoCode, orderType, driver,
                 orderNumber, numberOfProducts, waitingOrders, currentOrders, finishedOrders, traderNotResponse, trader
             } = req.query;
-            let query = { deleted: false, $or: [{ paymentMethod: 'CREDIT', paymentStatus: 'SUCCESSED' }, { paymentMethod: { $in: ['CASH', 'WALLET'] } }] };
+            let query = { traderNotResponse:false,deleted: false, $or: [{ paymentMethod: 'CREDIT', paymentStatus: 'SUCCESSED' }, { paymentMethod: { $in: ['CASH', 'WALLET'] } }] };
             if (trader) query.trader = trader;
             if (orderType) query.orderType = orderType;
             if (driver) query.driver = driver;
