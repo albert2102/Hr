@@ -362,7 +362,10 @@ export default {
                 }
             }
             let date = new Date();
-            if (traderNotResponse) query.traderNotResponse = traderNotResponse
+            if (traderNotResponse){ 
+                query.traderNotResponse = traderNotResponse;
+                query.status = 'WAITING';
+            }
             if (orderDate) query.createdAt = { $gte: new Date(moment(orderDate).startOf('day')), $lt: new Date(moment(orderDate).endOf('day')) };
 
             if (userName) {
