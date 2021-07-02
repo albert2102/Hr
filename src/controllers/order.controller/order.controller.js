@@ -233,6 +233,7 @@ const findDriver = async (order) => {
             deleted: false,
             online: true,
             activated: true,
+            ajamTaxes: {$ne: null},
             status: 'ACCEPTED',
             type: 'DRIVER',
             _id: { $nin: busyDrivers },
@@ -268,8 +269,8 @@ const findDriver = async (order) => {
             orderService(order);
             notificationNSP.to('room-' + driver._id).emit(socketEvents.NewOrder, { order: order });
             let description = {
-                ar: order.orderNumber + ' : ' + 'لديك طلب جديد ',
-                en: order.orderNumber + ' : ' + 'You have a new Order'
+                ar: 'لديك طلب جديد ',
+                en: 'You have a new Order'
             }
             await notifyController.create(order.user.id, order.trader.id, description, order.id, 'ORDER', order.id);
             notifyController.pushNotification(order.trader.id, 'ORDER', order.id, description);
@@ -551,8 +552,8 @@ export default {
             res.status(200).send(order);
             order = await Order.populate(order, populateQuery)
             let description = {
-                ar: order.orderNumber + ' : ' + 'لديك طلب جديد ',
-                en: order.orderNumber + ' : ' + 'You have a new Order'
+                ar: 'لديك طلب جديد ',
+                en: 'You have a new Order'
             }
             await notifyController.create(req.user.id, order.trader.id, description, order.id, 'ORDER', order.id);
             notifyController.pushNotification(order.trader.id, 'ORDER', order.id, description);
