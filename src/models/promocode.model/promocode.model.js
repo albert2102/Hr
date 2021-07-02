@@ -52,7 +52,10 @@ const promocodeSchema = new Schema({
     },
     maxAmount:{
         type: Number
-    }
+    },
+    deletedDate:{
+        type: Date
+    },
 }, { timestamps: true });
 
 promocodeSchema.set('toJSON', {

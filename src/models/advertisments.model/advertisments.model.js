@@ -55,6 +55,9 @@ const advertismentsSchema = new Schema({
         type: Boolean,
         default: false
     },
+    deletedDate:{
+        type: Date
+    },
     advertisment:{
         type: Number,
         ref:'advertisment'

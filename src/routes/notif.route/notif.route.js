@@ -9,6 +9,7 @@ router.route('/')
     .get(requireAuth, NotifController.findMyNotification);
 
 router.route('/FindAll').get(requireAuth,NotifController.findAll);
+router.route('/deleteMutliple').delete(requireAuth,NotifController.validateDeleteMulti(),NotifController.deleteMuti)
 
 router.post('/sendToAll',
     multerSaveTo('notification').single('image'), 
