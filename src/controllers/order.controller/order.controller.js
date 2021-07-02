@@ -783,7 +783,7 @@ export default {
             order.cancelledDate = new Date();
             await order.save();
             res.status(200).send(order);
-            let description = { ar: order.orderNumber + ' : ' + 'تم الغاء هذا الطلب ', en: order.orderNumber + ' : ' + ' Order Canceled' };
+            let description = { ar:  'تم الغاء هذا الطلب ', en: ' Order Canceled' };
 
             await notifyController.create(req.user.id, order.user.id, description, order.id, 'CHANGE_ORDER_STATUS', order.id);
             notifyController.pushNotification(order.trader.id, 'CHANGE_ORDER_STATUS', order.id, description);
