@@ -141,9 +141,9 @@ export default {
                 let users = await User.find({ type: 'CLIENT', deleted: false })
                 for (let index = 0; index < users.length; index++) {
                     if (users[index].language == 'ar') {
-                        notifiController.pushNotification(users[index]._id, 'PROMOCODE', promocode._id, desc.ar, config.notificationTitle.ar);
+                        notifiController.pushNotification(users[index]._id, 'PROMOCODE', promocode._id, desc.ar);
                     } else {
-                        notifiController.pushNotification(users[index]._id, 'PROMOCODE', promocode._id, desc.en, config.notificationTitle.ar);
+                        notifiController.pushNotification(users[index]._id, 'PROMOCODE', promocode._id, desc.en);
                     }
                     notifiController.create(req.user.id, users[index]._id, desc, promocode._id, "PROMOCODE")
                     notificationNSP.to('room-' + users[index].id).emit(socketEvents.NewUser, { user: users[index] });
@@ -153,9 +153,9 @@ export default {
                 for (let index = 0; index < users.length; index++) {
                     let user = users[index]
                     if (user && user.language == 'ar') {
-                        notifiController.pushNotification(user.id, 'PROMOCODE', promocode._id, desc.ar, config.notificationTitle.ar);
+                        notifiController.pushNotification(user.id, 'PROMOCODE', promocode._id, desc.ar);
                     } else {
-                        notifiController.pushNotification(user.id, 'PROMOCODE', promocode._id, desc.en, config.notificationTitle.ar);
+                        notifiController.pushNotification(user.id, 'PROMOCODE', promocode._id, desc.en);
                     }
                     notifiController.create(req.user.id, user.id, desc, promocode._id, "PROMOCODE")
                     notificationNSP.to('room-' + users[index].id).emit(socketEvents.NewUser, { user: users[index] });
