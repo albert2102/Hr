@@ -864,7 +864,7 @@ export default {
 
             let validatedBody = checkValidations(req);
             await checkExist(validatedBody.order, Order, { deleted: false, status: 'WAITING', traderNotResponse: true });
-            let updatedOrder = await Order.findByIdAndUpdate(orderId, { traderNotResponse: false }, { new: true }).populate(populateQuery);
+            let updatedOrder = await Order.findByIdAndUpdate(validatedBody.order, { traderNotResponse: false }, { new: true }).populate(populateQuery);
             updatedOrder = Order.schema.methods.toJSONLocalizedOnly(updatedOrder, i18n.getLocale());
             res.status(200).send(updatedOrder);
             let description = { en: updatedOrder.orderNumber + ' : ' + 'The admin sent the order back to you. Please accept the order as soon as possible.', ar: updatedOrder.orderNumber + ' : ' + '  قام الادمن بإعادة ارسال الطلب اليك مرة اخري من فضلك وافق على الطلب في اسرع وقت ' };

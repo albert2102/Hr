@@ -8,6 +8,7 @@ router.route('/')
       .get(promocodeController.findAll)
 
 router.post('/confirmPromoCode',requireAuth,promocodeController.validateConfirm(),promocodeController.confirmCode)
+router.route('/deleteMutliple').delete(requireAuth,promocodeController.validateDeleteMulti(),promocodeController.deleteMuti)
 
 router.route('/:id')
       .get(promocodeController.findById)

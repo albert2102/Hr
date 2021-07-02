@@ -67,7 +67,10 @@ const NotifSchema = new Schema({
     },
     image:{
         type: String
-    }
+    },
+    deletedDate:{
+        type: Date
+    },
 }, { timestamps: true });
 
 NotifSchema.set('toJSON', {
