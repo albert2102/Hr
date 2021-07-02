@@ -47,13 +47,13 @@ export default {
             let pageCount = categoriesCount;
             if (all) {
                 limit = pageCount;
-                categories = await ProductCategory.find(query).sort({ createdAt: -1 }).populate(populateQuery)
+                categories = await ProductCategory.find(query).sort({ createdAt: 1 }).populate(populateQuery)
                 categoriesCount = categories.length;
             }
             else {
                 categoriesCount = await ProductCategory.count(query);
                 pageCount = Math.ceil(categoriesCount / limit);
-                categories = await ProductCategory.find(query).sort({ createdAt: -1 }).limit(limit).skip((page - 1) * limit).populate(populateQuery)
+                categories = await ProductCategory.find(query).sort({ createdAt: 1 }).limit(limit).skip((page - 1) * limit).populate(populateQuery)
             }
             if (!removeLanguage) {
                 categories = ProductCategory.schema.methods.toJSONLocalizedOnly(categories, i18n.getLocale());
