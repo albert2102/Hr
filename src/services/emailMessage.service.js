@@ -16,29 +16,29 @@ var readHTMLFile = function (path, callback) {
 };
 
 let transporter = nodemailer.createTransport({
-    // pool: true,
-    // host: 'smtp.gmail.com',
-    // port: 465,
-    // secure: true, 
-    // auth: {
-    //     user: 'ajamapp2021@gmail.com',
-    //     pass: 'Tech4life'
-    // },
-    // tls: {
-    //     rejectUnauthorized: false
-    // }
-    /////////////////////////////////////////////
+    pool: true,
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true, 
+    auth: {
+        user: 'ajamapp2021@gmail.com',
+        pass: 'Tech4life'
+    },
     tls: {
         rejectUnauthorized: false
-    },
-
-    host: 'smtp.office365.com',
-    port: 587,
-    secure: false, // true for 465, false for other ports
-    auth: {
-      user: 'ajam@ajaminfo.com', // your domain email address
-      pass: 'Ajam20201.ajam' // your password
     }
+    /////////////////////////////////////////////
+    // tls: {
+    //     rejectUnauthorized: false
+    // },
+
+    // host: 'smtp.office365.com',
+    // port: 587,
+    // secure: false, // true for 465, false for other ports
+    // auth: {
+    //   user: 'ajam@ajaminfo.com', // your domain email address
+    //   pass: 'Ajam20201.ajam' // your password
+    // }
 
 
 });
@@ -89,6 +89,32 @@ export function sendHtmlEmail(targetMail,orderNumber,productSize,price,transport
             //     path:  "../../1.png",
             //     cid: 'unique@kreata.ee'
             //   }],
+        };
+
+        transporter.sendMail(mailOptions, (error, info) => {
+            if (error) {
+                console.log(error);
+            }
+        });
+    })
+    return true;
+}
+
+
+
+
+export function sendChangeOrderEmail(targetMail,text) {
+    readHTMLFile(__dirname + '/orderStatus.html', function (err, html) {
+        var template = handlebars.compile(html);
+        template = template({
+            text:text
+        })
+       
+        let mailOptions = {
+            from: 'ajam@ajaminfo.com',
+            to: targetMail,
+            subject: `${config.App.Name}`,
+            html: template
         };
 
         transporter.sendMail(mailOptions, (error, info) => {

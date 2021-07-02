@@ -17,10 +17,9 @@ import socketEvents from '../../socketEvents';
 import { generateVerifyCode } from '../../services/generator-code-service'
 import Company from '../../models/company.model/company.model';
 import config from '../../config';
-import { sendEmail } from '../../services/emailMessage.service';
+import { sendEmail,sendHtmlEmail,sendChangeOrderEmail } from '../../services/emailMessage.service';
 import { duration_time } from '../../calculateDistance'
 import schedule from 'node-schedule';
-import { sendHtmlEmail } from '../../services/emailMessage.service'
 
 let populateQuery = [
     { path: 'user', model: 'user' },
@@ -649,10 +648,10 @@ export default {
             notificationNSP.to('room-' + updatedOrder.user.id).emit(socketEvents.ChangeOrderStatus, { order: updatedOrder });
 
             if (updatedOrder.user.language == "ar") {
-                await sendEmail(updatedOrder.user.email, description.ar)
+                await sendChangeOrderEmail(updatedOrder.user.email, description.ar)
             }
             else {
-                await sendEmail(updatedOrder.user.email, description.en)
+                await sendChangeOrderEmail(updatedOrder.user.email, description.en)
             }
 
         } catch (err) {
@@ -718,10 +717,10 @@ export default {
             notificationNSP.to('room-' + updatedOrder.user.id).emit(socketEvents.ChangeOrderStatus, { order: updatedOrder });
 
             if (updatedOrder.user.language == "ar") {
-                await sendEmail(updatedOrder.user.email, description.ar)
+                await sendChangeOrderEmail(updatedOrder.user.email, description.ar)
             }
             else {
-                await sendEmail(updatedOrder.user.email, description.en)
+                await sendChangeOrderEmail(updatedOrder.user.email, description.en)
             }
         } catch (err) {
             next(err);
@@ -751,10 +750,10 @@ export default {
             notificationNSP.to('room-' + updatedOrder.trader.id).emit(socketEvents.ChangeOrderStatus, { order: updatedOrder });
 
             if (updatedOrder.user.language == "ar") {
-                await sendEmail(updatedOrder.user.email, description.ar)
+                await sendChangeOrderEmail(updatedOrder.user.email, description.ar)
             }
             else {
-                await sendEmail(updatedOrder.user.email, description.en)
+                await sendChangeOrderEmail(updatedOrder.user.email, description.en)
             }
 
             ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
