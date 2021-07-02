@@ -67,7 +67,7 @@ export default {
                 fromPrice, toPrice, all, productCategory, trader
             } = req.query;
             let query = { deleted: false };
-            let sortQuery = { _id: -1 };
+            let sortQuery = { _id: 1 };
 
             if (fromPrice && toPrice) {
                 query.price = { $gte: fromPrice, $lte: toPrice }
