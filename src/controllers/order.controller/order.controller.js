@@ -211,10 +211,10 @@ const orderService = async (order) => {
             try {
                 console.log(jobName, ' fire date ', fireDate);
                 currentOrder = await checkExistThenGet(order.id, Order);
-                if (order.status == 'DRIVER_ACCEPTED') {
-                    let validatedBody = { $addToSet: { rejectedDrivers: currentOrder.driver.id }, $unset: { driver: 1 } };
+                if (currentOrder.status == 'DRIVER_ACCEPTED') {
+                    let validatedBody = { $addToSet: { rejectedDrivers: currentOrder.driver }, $unset: { driver: 1 } };
                     let updatedOrder = await Order.findByIdAndUpdate(order.id, validatedBody, { new: true }).populate(populateQuery);
-                    notificationNSP.to('room-' + currentOrder.driver.id).emit(socketEvents.OrderExpired, { order: updatedOrder });
+                    notificationNSP.to('room-' + currentOrder.driver).emit(socketEvents.OrderExpired, { order: updatedOrder });
                     findDriver(updatedOrder);
                 }
             } catch (error) {
@@ -297,9 +297,9 @@ const traderService = async (order) => {
             try {
                 console.log(jobName, ' fire date ', fireDate);
                 currentOrder = await checkExistThenGet(order.id, Order);
-                if (order.status == 'WAITING') {
+                if (currentOrder.status == 'WAITING') {
                     let updatedOrder = await Order.findByIdAndUpdate(order.id, { traderNotResponse: true }, { new: true }).populate(populateQuery);
-                    notificationNSP.to('room-' + currentOrder.trader.id).emit(socketEvents.OrderExpired, { order: updatedOrder });
+                    notificationNSP.to('room-' + updatedOrder.trader.id).emit(socketEvents.OrderExpired, { order: updatedOrder });
                     TraderNotResponseCount();
                 }
             } catch (error) {
@@ -520,8 +520,8 @@ export default {
 
             //console.log('validatedBody.totalPrice ',validatedBody.totalPrice);
             validatedBody.totalPrice = validatedBody.totalPrice +(  ( validatedBody.totalPrice / 100)   *  Number(validatedBody.taxes));
-            validatedBody.totalPrice  = validatedBody.totalPrice.toFixed(2);
-            validatedBody.totalPrice = parseInt(validatedBody.totalPrice);
+            validatedBody.totalPrice  = (validatedBody.totalPrice).toFixed(2);
+            // validatedBody.totalPrice = parseInt(validatedBody.totalPrice);
             if (validatedBody.paymentMethod == 'WALLET' && req.user.wallet < validatedBody.totalPrice) {
                 return next(new ApiError(400, i18n.__('walletInvalid')));
             }
