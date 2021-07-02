@@ -156,7 +156,7 @@ export default {
             if ((user.type == 'ADMIN' || user.type == 'SUB_ADMIN') && complaint) {
                 message.reciver.user = complaint.user;
             }
-            else if ((user.type == 'Driver') && order) {
+            else if ((user.type == 'DRIVER') && order) {
                 message.reciver.user = order.user;
             }
             else if ((user.type == 'CLIENT') && order) {

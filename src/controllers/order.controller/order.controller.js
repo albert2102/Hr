@@ -550,6 +550,14 @@ export default {
             await order.save();
             res.status(200).send(order);
             order = await Order.populate(order, populateQuery)
+            ///////////////////////////////////////////
+
+            if(validatedBody.paymentMethod == 'WALLET'){
+                user.wallet = user.wallet - order.totalPrice ;
+                console.log("user wallet === ",user.wallet)
+                await user.save();
+            }
+            //////////////////////////////////////////
             let description = {
                 ar: 'لديك طلب جديد ',
                 en: 'You have a new Order'
@@ -563,12 +571,7 @@ export default {
             clientOrdersCount(req.user.id);
             ////////////////////////////////////////////////////////////////////////////////////////////
             await sendHtmlEmail(req.user.email, order.orderNumber, order.products.length, order.price, order.transportPrice, order.taxes, order.address.address, order.address.addressName, order.address.buildingNumber, order.address.flatNumber, order.totalPrice);
-            ///////////////////////////////////////////
-
-            if(validatedBody.paymentMethod == 'WALLET'){
-                user.wallet = user.wallet - order.totalPrice ;
-                await user.save();
-            }
+            
         } catch (err) {
             next(err);
         }
