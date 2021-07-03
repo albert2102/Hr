@@ -186,7 +186,8 @@ const userSchema = new Schema({
         default: 0
     },
     productsIncludeTaxes:{
-        type: Boolean
+        type: Boolean,
+        default: false
     },
     institutionStatus:{
         type: String,
