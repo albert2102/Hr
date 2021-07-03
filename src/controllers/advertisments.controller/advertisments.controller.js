@@ -11,7 +11,7 @@ import notifyController from '../notif.controller/notif.controller';
 import config from "../../config";
 import moment from 'moment';
 import schedule from 'node-schedule'
-
+import User from '../../models/user.model/user.model'
 let countNew = async () => {
     try {
         let count = await Advertisments.count({ deleted: false, status: {$in:['WAITING','UPDATED']} });
@@ -45,6 +45,7 @@ export default {
 
     async find(req, res, next) {
         try {
+            
             let page = +req.query.page || 1, limit = +req.query.limit || 20;
 
             let { includeIssuesCount , status, address, description, phone, whatsappNumber, contactBy, price, lat, long, user,archive} = req.query
@@ -144,7 +145,9 @@ export default {
             res.status(200).send(advertisment);
             await countNew();
             ////////////////////////////////////////////////////////////////////////////////////////////
-            await User.findByIdAndUpdate(req.user.id,{AdvertismentCount:req.user.AdvertismentCount + 1});
+            console.log(req.user)
+            console.log(req.user.AdvertismentCount)
+            await User.findByIdAndUpdate(req.user.id,{AdvertismentCount:(req.user.AdvertismentCount + 1)});
 
         } catch (error) {
             next(error)
@@ -194,7 +197,7 @@ export default {
             }
             await advertisment.save();
             res.status(200).send("Deleted Successfully");
-            await User.findByIdAndUpdate(req.user.id,{AdvertismentCount:advertisment.user.AdvertismentCount + 1});
+            await User.findByIdAndUpdate(req.user.id,{AdvertismentCount:(advertisment.user.AdvertismentCount + 1)});
 
         }
         catch (err) {

@@ -360,8 +360,6 @@ export default {
                 } else if (finishedOrders) {
                     query.status = { $in: ['DELIVERED'] }
                 }
-            }else{
-                query.traderNotResponse = false; 
             }
             let date = new Date();
             if (traderNotResponse){ 
