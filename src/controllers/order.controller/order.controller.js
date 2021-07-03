@@ -519,7 +519,7 @@ export default {
             validatedBody = await getFinalPrice(validatedBody)
 
             console.log('validatedBody.totalPrice ',validatedBody.totalPrice);
-            validatedBody.totalPrice = validatedBody.totalPrice +(  ( validatedBody.totalPrice / 100)   *  Number(validatedBody.taxes));
+            validatedBody.totalPrice = validatedBody.totalPrice +(  ( validatedBody.price / 100)   *  Number(validatedBody.taxes));
             validatedBody.totalPrice  = (validatedBody.totalPrice).toFixed(2);
             // validatedBody.totalPrice = parseInt(validatedBody.totalPrice);
             if (validatedBody.paymentMethod == 'WALLET' && req.user.wallet < validatedBody.totalPrice) {
