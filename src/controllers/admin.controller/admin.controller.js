@@ -20,7 +20,7 @@ let populateQuery = [
 let count = async (type) => {
     try {
         let count = await User.count({ deleted: false, status: 'WAITING', type: type });
-        if (type = 'DRIVER') {
+        if (type == 'DRIVER') {
             adminNSP.emit(socketEvents.WaitingDriverCount, { count: count });
 
         } else {
