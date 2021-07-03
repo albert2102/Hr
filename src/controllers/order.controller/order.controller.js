@@ -480,7 +480,6 @@ export default {
         try {
             let user = req.user;
             let validatedBody = checkValidations(req);
-            console.log(validatedBody)
             validatedBody.orderNumber = '' + (new Date()).getTime();
             validatedBody.user = user.id;
             let resuktCheckAval = await checkAvailability(validatedBody.products);
@@ -518,7 +517,7 @@ export default {
             validatedBody.price = await calculatePrice(validatedBody.products)
             validatedBody = await getFinalPrice(validatedBody)
 
-            console.log('validatedBody.totalPrice ',validatedBody.totalPrice);
+            // console.log('validatedBody.totalPrice ',validatedBody.totalPrice);
             validatedBody.totalPrice = validatedBody.totalPrice +(  ( validatedBody.price / 100)   *  Number(validatedBody.taxes));
             validatedBody.totalPrice  = (validatedBody.totalPrice).toFixed(2);
             // validatedBody.totalPrice = parseInt(validatedBody.totalPrice);
