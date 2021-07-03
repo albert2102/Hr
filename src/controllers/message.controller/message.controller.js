@@ -508,7 +508,7 @@ export default {
                 deleted: false,
                 lastMessage: true,
                 complaint: null,
-                order: null,
+                // order: null,
                 messageType:{$ne:'SUPPORT'}
             };
 
