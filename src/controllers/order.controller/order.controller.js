@@ -502,7 +502,7 @@ export default {
                 // let durationPrice = duration * Number(trader.deliveryPricePerSecond);
                 // validatedBody.durationDelivery = duration;
                 // validatedBody.durationDelivery = Math.round(validatedBody.durationDelivery / 60 ) // client update to be by minutes
-                validatedBody.durationDelivery = (validatedBody.durationDelivery ).toFixed(2);
+                validatedBody.durationDelivery = Math.round(validatedBody.durationDelivery );
                 let durationPrice = Number(validatedBody.durationDelivery) * Number(trader.deliveryPricePerSecond); // per minutes
                 console.log(durationPrice)
                 if (durationPrice < Number(trader.minDeliveryPrice)) {
@@ -518,7 +518,7 @@ export default {
             validatedBody.price = await calculatePrice(validatedBody.products)
             validatedBody = await getFinalPrice(validatedBody)
 
-            //console.log('validatedBody.totalPrice ',validatedBody.totalPrice);
+            console.log('validatedBody.totalPrice ',validatedBody.totalPrice);
             validatedBody.totalPrice = validatedBody.totalPrice +(  ( validatedBody.totalPrice / 100)   *  Number(validatedBody.taxes));
             validatedBody.totalPrice  = (validatedBody.totalPrice).toFixed(2);
             // validatedBody.totalPrice = parseInt(validatedBody.totalPrice);
