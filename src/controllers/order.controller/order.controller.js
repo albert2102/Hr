@@ -501,8 +501,9 @@ export default {
                 // duration = await duration_time({ lat: req.user.geoLocation.coordinates[1], long: req.user.geoLocation.coordinates[0] }, { lat: trader.geoLocation.coordinates[1], long: trader.geoLocation.coordinates[0] });
                 // let durationPrice = duration * Number(trader.deliveryPricePerSecond);
                 // validatedBody.durationDelivery = duration;
-                validatedBody.durationDelivery = Math.round(validatedBody.durationDelivery / 60 ) // client update to be by minutes
-                let durationPrice = Number(validatedBody.durationDelivery) * Number(trader.deliveryPricePerSecond);
+                // validatedBody.durationDelivery = Math.round(validatedBody.durationDelivery / 60 ) // client update to be by minutes
+                validatedBody.durationDelivery = (validatedBody.durationDelivery ).toFixed(2);
+                let durationPrice = Number(validatedBody.durationDelivery) * Number(trader.deliveryPricePerSecond); // per minutes
                 console.log(durationPrice)
                 if (durationPrice < Number(trader.minDeliveryPrice)) {
                     validatedBody.transportPrice = Number(trader.minDeliveryPrice);
