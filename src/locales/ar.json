@@ -227,5 +227,6 @@
 	"ruleDuplicated": "ruleDuplicated",
 	"ordersRequired": "ordersRequired",
 	"minDeliveryPriceRequired": "minDeliveryPriceRequired",
-	"walletInvalid": "walletInvalid"
+	"walletInvalid": "walletInvalid",
+	"userRequired": "userRequired"
 }

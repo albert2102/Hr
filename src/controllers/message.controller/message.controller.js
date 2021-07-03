@@ -42,7 +42,8 @@ let countUnseenForAdmin = async () => {
             lastMessage: true
         };
         const chatCount = await Message.count(query);
-        chatNSP.to('room-admin').emit(SocketEvents.NewMessageCount, { count: chatCount });
+        adminNSP.emit(SocketEvents.NewMessageCount, { count: chatCount });
+
     } catch (error) {
         throw error;
     }
@@ -61,7 +62,8 @@ let countUnseenSupportChatForAdmin = async () => {
 
         };
         const chatCount = await Message.count(query);
-        chatNSP.to('room-admin').emit(SocketEvents.SupportChatCount, { count: chatCount });
+        adminNSP.emit(SocketEvents.SupportChatCount, { count: chatCount });
+
     } catch (error) {
         throw error;
     }
@@ -364,15 +366,25 @@ export default {
         try {
             let user = req.user.id;
             let page = +req.query.page || 1, limit = +req.query.limit || 20;
-
+            
+            
+            if ((req.user.type == 'ADMIN') || (req.user.type == 'SUB_ADMIN')) {
+                if(!req.query.user){
+                    return next(new ApiError(404, i18n.__('userRequired')));
+                }
+                user = req.query.user;
+            }
             let query = { messageType: 'SUPPORT', deleted: false, $or: [{ sender: user }, { 'reciver.user': user }] };
-
             let messages = await Message.find(query).populate(popQuery).sort({ _id: -1 }).limit(limit).skip((page - 1) * limit);
             let messagesCount = await Message.count(query);
             const pageCount = Math.ceil(messagesCount / limit);
             res.send(new ApiResponse(messages, page, pageCount, limit, messagesCount, req));
-            await Message.updateMany({ deleted: false, messageType: 'SUPPORT', 'reciver.user': user, 'reciver.read': false }, { $set: { 'reciver.read': true, 'reciver.readDate': new Date() } })
-
+            if ((req.user.type == 'ADMIN') || (req.user.type == 'SUB_ADMIN')) {
+                await Message.updateMany({ deleted: false, messageType: 'SUPPORT', sender: user, 'reciver.read': false }, { $set: { 'reciver.read': true, 'reciver.readDate': new Date() } })
+                await countUnseenSupportChatForAdmin();
+            }else{
+                await Message.updateMany({ deleted: false, messageType: 'SUPPORT', 'reciver.user': user, 'reciver.read': false }, { $set: { 'reciver.read': true, 'reciver.readDate': new Date() } })
+            }
         } catch (error) {
             next(error);
         }
