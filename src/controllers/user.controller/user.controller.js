@@ -277,6 +277,7 @@ export default {
         try {
             let userId = req.user.id;
             let validatedBody = checkValidations(req);
+            console.log(validatedBody)
             let user = await checkExistThenGet(userId, User, { deleted: false });
             if (validatedBody.email) {
                 validatedBody.email = (validatedBody.email.trim()).toLowerCase();
