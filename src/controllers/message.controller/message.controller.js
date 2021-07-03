@@ -324,7 +324,7 @@ export default {
             }
 
             if (data.reciver) {
-                friend = await checkExistThenGet(data.reciver, User, { deleted: false });
+                let friend = await checkExistThenGet(data.reciver, User, { deleted: false });
                 message = { reciver: { user: friend.id }, sender: user.id, message: {} };
             }
 
