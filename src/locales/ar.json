@@ -213,5 +213,6 @@
 	"unauthrized": "unauthrized",
 	"AdvertismentsNotFound": "AdvertismentsNotFound",
 	"traderBusy": "المتجر غير متاح الان",
-	"targetRequired": "targetRequired"
+	"targetRequired": "targetRequired",
+	"userRequired": "userRequired"
 }
