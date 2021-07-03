@@ -480,6 +480,7 @@ export default {
         try {
             let user = req.user;
             let validatedBody = checkValidations(req);
+            console.log(validatedBody)
             validatedBody.orderNumber = '' + (new Date()).getTime();
             validatedBody.user = user.id;
             let resuktCheckAval = await checkAvailability(validatedBody.products);
