@@ -508,7 +508,8 @@ export default {
                 deleted: false,
                 lastMessage: true,
                 complaint: null,
-                order: null
+                order: null,
+                messageType:{$ne:'SUPPORT'}
             };
 
             var chats = await Message.find(query).populate(popQuery).sort({ _id: -1 }).limit(limit).skip((page - 1) * limit)
