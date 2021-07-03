@@ -99,6 +99,7 @@ module.exports = {
             console.log('New admin Connected ' + id + ' on admin nsp ');
             await NotificationController.getCountNotification(id, true);
             await messageController.countUnseenForAdmin();
+            await messageController.countUnseenSupportChatForAdmin();
             await contactUsController.countNotReplied();
             await advertismentController.countNew();
             await issueController.countNew();

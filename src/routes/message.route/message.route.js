@@ -43,6 +43,7 @@ router.route('/lastContacts').get(requireAuth,messageController.getLastContacts)
 router.route('/complaintslastChats').get(requireAuth, messageController.getLastComplaintsChatsForAdmin)
 router.route('/orderslastChats').get(requireAuth, messageController.getLastOrdersChatsForAdmin)
 router.route('/lastChats').get(requireAuth, messageController.getLastChatsForAdmin)
+router.route('/lastSupportChats').get(requireAuth, messageController.getLastSupportChatsForAdmin)
 router.route('/adminGetSpecificChat').get(requireAuth, messageController.getSpecificChat)
 
 
