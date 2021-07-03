@@ -213,5 +213,19 @@
 	"unauthrized": "unauthrized",
 	"AdvertismentsNotFound": "AdvertismentsNotFound",
 	"traderBusy": "المتجر غير متاح الان",
-	"targetRequired": "targetRequired"
+	"targetRequired": "targetRequired",
+	"idsRequired": "idsRequired",
+	"reciverRequired": "reciverRequired",
+	"rejectedReasonRequired": "rejectedReasonRequired",
+	"arcontactusReasonsRequired": "arcontactusReasonsRequired",
+	"encontactusReasonsRequired": "encontactusReasonsRequired",
+	"notAllowToMakeOrder": "notAllowToMakeOrder",
+	"numberRequired": "numberRequired",
+	"propertiesRequired": "propertiesRequired",
+	"sliderRequired": "sliderRequired",
+	"durationDeliveryRequired": "durationDeliveryRequired",
+	"ruleDuplicated": "ruleDuplicated",
+	"ordersRequired": "ordersRequired",
+	"minDeliveryPriceRequired": "minDeliveryPriceRequired",
+	"walletInvalid": "walletInvalid"
 }
