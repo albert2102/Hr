@@ -1,6 +1,6 @@
 import Message from "../../models/message.model/message.model";
 import { checkExistThenGet, checkExist } from "../../helpers/CheckMethods";
-import { createPromise,handleImg } from '../shared.controller/shared.controller'
+import { createPromise, handleImg } from '../shared.controller/shared.controller'
 import User from '../../models/user.model/user.model';
 import SocketEvents from '../../socketEvents'
 import { body } from "express-validator/check";
@@ -47,24 +47,43 @@ let countUnseenForAdmin = async () => {
         throw error;
     }
 }
+
+let countUnseenSupportChatForAdmin = async () => {
+    try {
+        let query = {
+            deleted: false,
+            'reciver.user': null,
+            'reciver.read': false,
+            lastMessage: true,
+            complaint: null,
+            order: null,
+            messageType: 'SUPPORT'
+
+        };
+        const chatCount = await Message.count(query);
+        chatNSP.to('room-admin').emit(SocketEvents.SupportChatCount, { count: chatCount });
+    } catch (error) {
+        throw error;
+    }
+}
 let handelNewMessageSocket = async (message) => {
     try {
         if (message.reciver && message.reciver.user && chatNSP.adapter.rooms['room-' + message.reciver.user.id]) {
             await countUnseen(message.reciver.user.id)
             chatNSP.to('room-' + message.reciver.user.id).emit(SocketEvents.NewMessage, { message: message });
             if (message.reciver.user.activeChatHead == false) {
-                let text= {
-                    ar:(message.message.text) ? message.message.text : ' رسالة جديدة ',
-                    en: (message.message.text) ? message.message.text :'New Message :'
+                let text = {
+                    ar: (message.message.text) ? message.message.text : ' رسالة جديدة ',
+                    en: (message.message.text) ? message.message.text : 'New Message :'
                 };
                 await notificationController.pushNotification(message.reciver.user.id, 'MESSAGE', message.sender.id, text)
-                
+
             }
         } else if (message.reciver && message.reciver.user && !chatNSP.adapter.rooms['room-' + message.reciver.user.id]) {
             await countUnseen(message.reciver.user.id)
-            let text= {
-                ar:(message.message.text) ? message.message.text : ' رسالة جديدة ',
-                en: (message.message.text) ? message.message.text :'New Message :'
+            let text = {
+                ar: (message.message.text) ? message.message.text : ' رسالة جديدة ',
+                en: (message.message.text) ? message.message.text : 'New Message :'
             };
             await notificationController.pushNotification(message.reciver.user.id, 'MESSAGE', message.sender.id, text)
         } else if (!message.reciver.user) {
@@ -115,7 +134,7 @@ export default {
             body('text').optional().not().isEmpty().withMessage(() => i18n.__('messageRequired')),
             body('order').not().isEmpty().withMessage(() => i18n.__('orderRequired'))
                 .custom(async (value, { req }) => {
-                    req.order = await checkExistThenGet(value, Order, { deleted: false ,driver:{$ne: null}});
+                    req.order = await checkExistThenGet(value, Order, { deleted: false, driver: { $ne: null } });
                 }),
 
         ]
@@ -130,8 +149,8 @@ export default {
             let order = req.order;
             let message = { sender: user.id, message: {}, reciver: {} };
 
-            if(complaint) message.complaint = complaint.id;
-            if(order) message.order = order.id;
+            if (complaint) message.complaint = complaint.id;
+            if (order) message.order = order.id;
 
             if (!(data.text || req.file)) {
                 return next(new ApiError(404, i18n.__('messageRequired')))
@@ -172,13 +191,13 @@ export default {
             res.status(200).send(createdMessage);
 
             if (complaint) {
-                await Message.updateMany({ deleted: false, _id: { $ne: createdMessage.id }, complaint: complaint.id}, { $set: { lastMessage: false } });
+                await Message.updateMany({ deleted: false, _id: { $ne: createdMessage.id }, complaint: complaint.id }, { $set: { lastMessage: false } });
 
-            }else if (order) {
-                await Message.updateMany({ deleted: false, _id: { $ne: createdMessage.id }, order: order.id}, { $set: { lastMessage: false } });
-            }else if (data.reciver){
-                await Message.updateMany({ deleted: false, _id: { $ne: createdMessage.id },lastMessage: true, complaint: null, order: null, $or: [{ sender: +user.id,'reciver.user':data.reciver }, { sender:data.reciver,'reciver.user': +user.id }] }, { $set: { lastMessage: false }  });
-                
+            } else if (order) {
+                await Message.updateMany({ deleted: false, _id: { $ne: createdMessage.id }, order: order.id }, { $set: { lastMessage: false } });
+            } else if (data.reciver) {
+                await Message.updateMany({ deleted: false, _id: { $ne: createdMessage.id }, lastMessage: true, complaint: null, order: null, $or: [{ sender: +user.id, 'reciver.user': data.reciver }, { sender: data.reciver, 'reciver.user': +user.id }] }, { $set: { lastMessage: false } });
+
             }
             handelNewMessageSocket(createdMessage);
 
@@ -206,11 +225,11 @@ export default {
             let user = req.user;
             let data = checkValidations(req);
             let complaint = req.complaint;
-            
-            let message = {  message: {}, reciver: {} };
+
+            let message = { message: {}, reciver: {} };
 
             message.complaint = complaint.id;
-            
+
 
             if (!(data.text || req.file)) {
                 return next(new ApiError(404, i18n.__('messageRequired')))
@@ -237,10 +256,10 @@ export default {
             createdMessage = await Message.populate(createdMessage, popQuery);
             res.status(200).send(createdMessage);
 
-           
-            await Message.updateMany({ deleted: false, _id: { $ne: createdMessage.id }, complaint: complaint.id}, { $set: { lastMessage: false } });
 
-            
+            await Message.updateMany({ deleted: false, _id: { $ne: createdMessage.id }, complaint: complaint.id }, { $set: { lastMessage: false } });
+
+
             handelNewMessageSocket(createdMessage);
 
         } catch (error) {
@@ -251,7 +270,7 @@ export default {
 
     async getVisitorChatHistory(req, res, next) {
         try {
-           
+
             let { complaint } = req.query;
             let page = +req.query.page || 1,
                 limit = +req.query.limit || 20;
@@ -260,7 +279,7 @@ export default {
             if (complaint) {
                 query.order = null;
                 query.complaint = complaint;
-            } 
+            }
             else {
                 return next(new ApiError(404, i18n.__('targetRequired')));
             }
@@ -269,8 +288,8 @@ export default {
             const chatCount = await Message.count(query);
             const pageCount = Math.ceil(chatCount / limit);
             res.send(new ApiResponse(chats, page, pageCount, limit, chatCount, req));
-            await Message.updateMany({ deleted: false,firebaseToken: null, 'reciver.read': false, complaint: complaint }, { $set: { 'reciver.read': true, 'reciver.readDate': new Date() } })
-            
+            await Message.updateMany({ deleted: false, firebaseToken: null, 'reciver.read': false, complaint: complaint }, { $set: { 'reciver.read': true, 'reciver.readDate': new Date() } })
+
         } catch (error) {
             next(error);
         }
@@ -296,15 +315,15 @@ export default {
                 return next(new ApiError(404, i18n.__('messageRequired')))
             }
 
-            if ((req.user.type == 'ADMIN') || (req.user.type == 'SUB_ADMIN') ) {
+            if ((req.user.type == 'ADMIN') || (req.user.type == 'SUB_ADMIN')) {
                 if (!data.reciver) {
-                    return next(new ApiError(404,i18n.__('reciverRequired')));
+                    return next(new ApiError(404, i18n.__('reciverRequired')));
                 }
             }
 
             if (data.reciver) {
                 friend = await checkExistThenGet(data.reciver, User, { deleted: false });
-                message = {reciver : { user: friend.id }, sender: user.id, message: {} };
+                message = { reciver: { user: friend.id }, sender: user.id, message: {} };
             }
 
             message.messageType = 'SUPPORT'
@@ -325,34 +344,35 @@ export default {
                 }
             }
 
-            
+
 
             let createdMessage = await Message.create(message);
             createdMessage = await Message.populate(createdMessage, popQuery);
             res.status(200).send(createdMessage);
-            if ((req.user.type == 'ADMIN') || (req.user.type == 'SUB_ADMIN') ) {
+            if ((req.user.type == 'ADMIN') || (req.user.type == 'SUB_ADMIN')) {
                 chatNSP.to('room-admin').emit(SocketEvents.NewMessage, { createdMessage });
-            }else{
+            } else {
                 handelNewMessageSocket(createdMessage);
             }
+            await countUnseenSupportChatForAdmin();
         } catch (error) {
             next(error)
         }
     },
 
-    async getSupportChat(req, res, next){
+    async getSupportChat(req, res, next) {
         try {
             let user = req.user.id;
             let page = +req.query.page || 1, limit = +req.query.limit || 20;
 
-            let query = {messageType:'SUPPORT', deleted: false , $or:[{sender:user},{'reciver.user': user}]  };
+            let query = { messageType: 'SUPPORT', deleted: false, $or: [{ sender: user }, { 'reciver.user': user }] };
 
             let messages = await Message.find(query).populate(popQuery).sort({ _id: -1 }).limit(limit).skip((page - 1) * limit);
             let messagesCount = await Message.count(query);
             const pageCount = Math.ceil(messagesCount / limit);
             res.send(new ApiResponse(messages, page, pageCount, limit, messagesCount, req));
-            await Message.updateMany({ deleted: false,messageType:'SUPPORT' , 'reciver.user': user ,'reciver.read':false}, { $set: { 'reciver.read': true, 'reciver.readDate': new Date() } })
-            
+            await Message.updateMany({ deleted: false, messageType: 'SUPPORT', 'reciver.user': user, 'reciver.read': false }, { $set: { 'reciver.read': true, 'reciver.readDate': new Date() } })
+
         } catch (error) {
             next(error);
         }
@@ -383,7 +403,7 @@ export default {
 
     async getChatHistory(req, res, next) {
         try {
-            let user = req.user ?  req.user.id : null;
+            let user = req.user ? req.user.id : null;
             let { friend, complaint, order } = req.query;
             console.log(req.query)
             let page = +req.query.page || 1,
@@ -393,7 +413,7 @@ export default {
             if (friend) {
                 query.complaint = null;
                 query.order = null;
-                query.$or = [{ sender: user, 'reciver.user': friend }, { sender: friend, 'reciver.user': user}];
+                query.$or = [{ sender: user, 'reciver.user': friend }, { sender: friend, 'reciver.user': user }];
             } else if (complaint) {
                 query.order = null;
                 query.complaint = complaint;
@@ -415,8 +435,8 @@ export default {
                 await Message.updateMany({ deleted: false, sender: friend, 'reciver.user': user, 'reciver.read': false }, { $set: { 'reciver.read': true, 'reciver.readDate': new Date() } });
             } else if (complaint) {
                 complaint = await Complaint.findOne({ _id: complaint });
-                await Message.updateMany({ deleted: false,'reciver.user': user, 'reciver.read': false, complaint: complaint.id }, { $set: { 'reciver.read': true, 'reciver.readDate': new Date() } })
-            }else if (order) {
+                await Message.updateMany({ deleted: false, 'reciver.user': user, 'reciver.read': false, complaint: complaint.id }, { $set: { 'reciver.read': true, 'reciver.readDate': new Date() } })
+            } else if (order) {
                 order = await Order.findOne({ _id: order });
                 await Message.updateMany({ deleted: false, 'reciver.user': user, 'reciver.read': false, order: order.id }, { $set: { 'reciver.read': true, 'reciver.readDate': new Date() } })
             }
@@ -432,8 +452,8 @@ export default {
             let page = +req.query.page || 1, limit = +req.query.limit || 20;
             let query = {
                 deleted: false,
-                messageType:{$ne:'SUPPORT'},
-                 $or: [
+                messageType: { $ne: 'SUPPORT' },
+                $or: [
                     { lastMessage: true, complaint: null, order: null, $or: [{ sender: +user }, { 'reciver.user': +user }] },
                     { lastMessage: true, complaint: { $ne: null }, order: null, $or: [{ sender: +user }, { 'reciver.user': +user }] },
                     { lastMessage: true, order: { $ne: null }, complaint: null, $or: [{ sender: +user }, { 'reciver.user': +user }] }
@@ -445,11 +465,11 @@ export default {
             let data = [];
             let length = messages.length;
             for (let index = 0; index < length; index++) {
-                let countQuery = { deleted: false, 'reciver.read' : false, 'reciver.user': +user };
-                if (! messages[index].order && ! messages[index].complaint) countQuery.sender = messages[index].sender.id;
+                let countQuery = { deleted: false, 'reciver.read': false, 'reciver.user': +user };
+                if (!messages[index].order && !messages[index].complaint) countQuery.sender = messages[index].sender.id;
                 if (messages[index].order) countQuery.order = messages[index].order;
                 if (messages[index].complaint) countQuery.complaint = messages[index].complaint;
-                
+
                 resolveData.push(createPromise(Message.count(countQuery)));
             }
             let resolveResult = await Promise.all(resolveData);
@@ -479,7 +499,7 @@ export default {
             let query = {
                 deleted: false,
                 lastMessage: true,
-                complaint:{$ne:null}
+                complaint: { $ne: null }
             };
             if (complaint) query.complaint = complaint;
             if (complaintNumber) {
@@ -509,7 +529,7 @@ export default {
                 lastMessage: true,
                 complaint: null,
                 order: null,
-                messageType:{$ne:'SUPPORT'}
+                messageType: { $ne: 'SUPPORT' }
             };
 
             var chats = await Message.find(query).populate(popQuery).sort({ _id: -1 }).limit(limit).skip((page - 1) * limit)
@@ -534,10 +554,10 @@ export default {
                 deleted: false,
                 lastMessage: true,
                 complaint: null,
-                order: {$ne: null}
-                 
+                order: { $ne: null }
+
             };
-            
+
             var chats = await Message.find(query).populate(popQuery).sort({ _id: -1 }).limit(limit).skip((page - 1) * limit)
             const chatCount = await Message.count(query);
             const pageCount = Math.ceil(chatCount / limit);
@@ -554,9 +574,9 @@ export default {
             if (req.user.type != 'ADMIN' && req.user.type != 'SUB_ADMIN') {
                 return next(new ApiError(403, ('unauthorized')));
             }
-            let { user,friend, complaint, order } = req.query;
-            if(user && !friend) return next(new ApiError(403, ('friend is required')));
-            if(!user && friend) return next(new ApiError(403, ('friend is required')));
+            let { user, friend, complaint, order } = req.query;
+            if (user && !friend) return next(new ApiError(403, ('friend is required')));
+            if (!user && friend) return next(new ApiError(403, ('friend is required')));
 
             let page = +req.query.page || 1,
                 limit = +req.query.limit || 20;
@@ -565,7 +585,7 @@ export default {
             if (friend && user) {
                 query.complaint = null;
                 query.order = null;
-                query.$or = [{ sender: user, 'reciver.user': friend }, { sender: friend, 'reciver.user': user}];
+                query.$or = [{ sender: user, 'reciver.user': friend }, { sender: friend, 'reciver.user': user }];
             } else if (complaint) {
                 query.order = null;
                 query.complaint = complaint;
@@ -588,9 +608,34 @@ export default {
         }
     },
 
-    
+    async getLastSupportChatsForAdmin(req, res, next) {
+        try {
+            let page = +req.query.page || 1,
+                limit = +req.query.limit || 20;
+            if (req.user.type != 'ADMIN' && req.user.type != 'SUB_ADMIN') {
+                return next(new ApiError(403, ('unauthorized')));
+            }
+
+            let query = {
+                deleted: false,
+                lastMessage: true,
+                complaint: null,
+                order: null,
+                messageType: 'SUPPORT'
+            };
+
+            var chats = await Message.find(query).populate(popQuery).sort({ _id: -1 }).limit(limit).skip((page - 1) * limit)
+            const chatCount = await Message.count(query);
+            const pageCount = Math.ceil(chatCount / limit);
+            res.send(new ApiResponse(chats, page, pageCount, limit, chatCount, req));
+            await countUnseenSupportChatForAdmin();
+        } catch (error) {
+            next(error)
+        }
+    },
 
     countUnseen,
     updateSeen,
-    countUnseenForAdmin
+    countUnseenForAdmin,
+    countUnseenSupportChatForAdmin
 }

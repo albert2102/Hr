@@ -35,4 +35,5 @@ socketEvents.FinishedOrdersCount = 'FinishedOrdersCount';
 socketEvents.TraderNotResponseCount = 'TraderNotResponseCount';
 socketEvents.UpdatedTrader = 'UpdatedTrader';
 socketEvents.RequestMoneyCount = 'RequestMoneyCount'
+socketEvents.SupportChatCount = 'SupportChatCount'
 export default socketEvents;
