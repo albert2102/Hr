@@ -643,9 +643,9 @@ export default {
                 ////////////// find drivers /////////////////////////
                 if (updatedOrder.orderType == 'DELIVERY') await findDriver(updatedOrder);
                 ////////////////////////////////////////////////////
-                description = { en: updatedOrder.orderNumber + ' : ' + 'Your Order Has Been Approved', ar: updatedOrder.orderNumber + ' : ' + '  جاري تجهيز طلبك' };
+                description = { en: 'Your Order Has Been Approved', ar:  '  جاري تجهيز طلبك' };
             } else {
-                description = { en: updatedOrder.orderNumber + ' : ' + 'Your Order Has Been Rejected ' + validatedBody.rejectReason, ar: updatedOrder.orderNumber + ' : ' + ' تم رفض طلبك ' + validatedBody.rejectReason };
+                description = { en:'Your Order Has Been Rejected ' + validatedBody.rejectReason, ar:  ' تم رفض طلبك ' + validatedBody.rejectReason };
             }
 
             await notifyController.create(req.user.id, updatedOrder.user.id, description, updatedOrder.id, 'CHANGE_ORDER_STATUS', updatedOrder.id);
@@ -715,7 +715,7 @@ export default {
             updatedOrder = Order.schema.methods.toJSONLocalizedOnly(updatedOrder, i18n.getLocale());
             res.status(200).send(updatedOrder);
 
-            let description = { ar: updatedOrder.orderNumber + ' : ' + ' تم تغير حالة الطلب الي تم الشحن ', en: updatedOrder.orderNumber + ' : ' + 'Order Status Changed To Order Shipped' };
+            let description = { ar:  ' تم تغير حالة الطلب الي تم الشحن ', en:  'Order Status Changed To Order Shipped' };
 
             await notifyController.create(req.user.id, updatedOrder.user.id, description, updatedOrder.id, 'CHANGE_ORDER_STATUS', updatedOrder.id);
             notifyController.pushNotification(updatedOrder.user.id, 'CHANGE_ORDER_STATUS', updatedOrder.id, description);
@@ -747,7 +747,7 @@ export default {
             updatedOrder = Order.schema.methods.toJSONLocalizedOnly(updatedOrder, i18n.getLocale());
             res.status(200).send(updatedOrder);
 
-            let description = { ar: updatedOrder.orderNumber + ' : ' + ' تم تغير حالة الطلب الي تم التسليم ', en: updatedOrder.orderNumber + ' : ' + 'Order Status Changed To Delivered' };
+            let description = { ar:  ' تم تغير حالة الطلب الي تم التسليم ', en:  'Order Status Changed To Delivered' };
 
             await notifyController.create(req.user.id, updatedOrder.user.id, description, updatedOrder.id, 'CHANGE_ORDER_STATUS', updatedOrder.id);
             notifyController.pushNotification(updatedOrder.user.id, 'CHANGE_ORDER_STATUS', updatedOrder.id, description);
@@ -873,7 +873,7 @@ export default {
             let updatedOrder = await Order.findByIdAndUpdate(validatedBody.order, { traderNotResponse: false }, { new: true }).populate(populateQuery);
             updatedOrder = Order.schema.methods.toJSONLocalizedOnly(updatedOrder, i18n.getLocale());
             res.status(200).send(updatedOrder);
-            let description = { en: updatedOrder.orderNumber + ' : ' + 'The admin sent the order back to you. Please accept the order as soon as possible.', ar: updatedOrder.orderNumber + ' : ' + '  قام الادمن بإعادة ارسال الطلب اليك مرة اخري من فضلك وافق على الطلب في اسرع وقت ' };
+            let description = { en: 'The admin sent the order back to you. Please accept the order as soon as possible.', ar:  '  قام الادمن بإعادة ارسال الطلب اليك مرة اخري من فضلك وافق على الطلب في اسرع وقت ' };
 
             await notifyController.create(req.user.id, updatedOrder.trader.id, description, updatedOrder.id, 'ORDER', updatedOrder.id);
             notifyController.pushNotification(updatedOrder.trader.id, 'ORDER', updatedOrder.id, description);
