@@ -703,7 +703,7 @@ export default {
                 }
             }
             await notificationController.create(req.user.id, verifyUser.id, description, verifyUser.id, 'JOIN_STATUS');
-            notificationController.pushNotification(verifyUser.id, 'JOIN_STATUS', verifyUser.id, description, config.notificationTitle);
+            notificationController.pushNotification(verifyUser.id, 'JOIN_STATUS', verifyUser.id, description);
 
 
 

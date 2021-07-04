@@ -203,6 +203,8 @@ const orderService = async (order) => {
         let company = await Company.findOne({ deleted: false });
         date = date + company.driverWaitingTime;
         date = new Date(date);
+        console.log(new Date())
+
         let jobName = 'order-' + order.id;
         let currentOrder = await checkExistThenGet(order.id, Order, { populate: populateQuery });
 
@@ -210,7 +212,8 @@ const orderService = async (order) => {
             try {
                 console.log(jobName, ' fire date ', fireDate);
                 currentOrder = await checkExistThenGet(order.id, Order);
-                if (currentOrder.status == 'DRIVER_ACCEPTED') {
+                console.log(currentOrder)
+                if (currentOrder.status == 'ACCEPTED') {
                     let validatedBody = { $addToSet: { rejectedDrivers: currentOrder.driver }, $unset: { driver: 1 } };
                     let updatedOrder = await Order.findByIdAndUpdate(order.id, validatedBody, { new: true }).populate(populateQuery);
                     notificationNSP.to('room-' + currentOrder.driver).emit(socketEvents.OrderExpired, { order: updatedOrder });
@@ -236,6 +239,7 @@ const findDriver = async (order) => {
             status: 'ACCEPTED',
             type: 'DRIVER',
             _id: { $nin: busyDrivers },
+            _id: { $nin: order.rejectedDrivers },
         };
 
         let driver;
