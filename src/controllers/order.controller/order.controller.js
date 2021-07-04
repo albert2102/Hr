@@ -557,8 +557,9 @@ export default {
 
             if(validatedBody.paymentMethod == 'WALLET'){
                 user.wallet = user.wallet - order.totalPrice ;
-                console.log("user wallet === ",user.wallet)
                 await user.save();
+                notificationNSP.to('room-'+user.id).emit(socketEvents.NewUser, { user: user });
+                
             }
             //////////////////////////////////////////
             let description = {
