@@ -72,7 +72,7 @@ let driverOrdersCount = async (userId) => {
         notificationNSP.to('room-' + userId).emit(socketEvents.CurrentOrdersCount, { count: result[0] });
         notificationNSP.to('room-' + userId).emit(socketEvents.FinishedOrdersCount, { count: result[1] });
 
-        await User.findByIdAndUpdate(userId, { currentOrderCount: result[1], finishedOrderCount: result[2] })
+        await User.findByIdAndUpdate(userId, { currentOrderCount: result[0], finishedOrderCount: result[1] })
 
     } catch (error) {
         throw error;
@@ -655,10 +655,10 @@ export default {
             notificationNSP.to('room-' + updatedOrder.user.id).emit(socketEvents.ChangeOrderStatus, { order: updatedOrder });
 
             if (updatedOrder.user.language == "ar") {
-                await sendChangeOrderEmail(updatedOrder.user.email, description.ar)
+                await sendChangeOrderEmail(updatedOrder.user.email, description.ar +' : ' +updatedOrder.orderNumber)
             }
             else {
-                await sendChangeOrderEmail(updatedOrder.user.email, description.en)
+                await sendChangeOrderEmail(updatedOrder.user.email, description.en +' : ' +updatedOrder.orderNumber)
             }
 
         } catch (err) {
@@ -724,10 +724,10 @@ export default {
             notificationNSP.to('room-' + updatedOrder.user.id).emit(socketEvents.ChangeOrderStatus, { order: updatedOrder });
 
             if (updatedOrder.user.language == "ar") {
-                await sendChangeOrderEmail(updatedOrder.user.email, description.ar)
+                await sendChangeOrderEmail(updatedOrder.user.email, description.ar +' : ' +updatedOrder.orderNumber)
             }
             else {
-                await sendChangeOrderEmail(updatedOrder.user.email, description.en)
+                await sendChangeOrderEmail(updatedOrder.user.email, description.en +' : ' +updatedOrder.orderNumber)
             }
         } catch (err) {
             next(err);
@@ -757,10 +757,10 @@ export default {
             notificationNSP.to('room-' + updatedOrder.trader.id).emit(socketEvents.ChangeOrderStatus, { order: updatedOrder });
 
             if (updatedOrder.user.language == "ar") {
-                await sendChangeOrderEmail(updatedOrder.user.email, description.ar)
+                await sendChangeOrderEmail(updatedOrder.user.email, description.ar +' : ' +updatedOrder.orderNumber)
             }
             else {
-                await sendChangeOrderEmail(updatedOrder.user.email, description.en)
+                await sendChangeOrderEmail(updatedOrder.user.email, description.en +' : ' +updatedOrder.orderNumber)
             }
 
             ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -782,7 +782,7 @@ export default {
             if (user.type == 'CLIENT' && order.user.id != user.id) {
                 return next(new ApiError(403, i18n__('notAllowToCancel')));
             }
-            if (order.orderType == 'DELIVERY' && order.status == 'DRIVER_ACCEPTED') {
+            if (user.type == 'CLIENT' && order.orderType == 'DELIVERY' && order.status == 'DRIVER_ACCEPTED') {
                 return next(new ApiError(403, i18n__('notAllowToCancel')));
             }
             order.status = 'CANCELED';
@@ -794,7 +794,13 @@ export default {
             await notifyController.create(req.user.id, order.trader.id, description, order.id, 'CHANGE_ORDER_STATUS', order.id);
             notifyController.pushNotification(order.trader.id, 'CHANGE_ORDER_STATUS', order.id, description);
             notificationNSP.to('room-' + order.trader.id).emit(socketEvents.ChangeOrderStatus, { order: order });
+            
+            if (user.type == 'ADMIN' || user.type == 'SUB_ADMIN'){
 
+                await notifyController.create(req.user.id, order.user.id, description, order.id, 'CHANGE_ORDER_STATUS', order.id);
+                notifyController.pushNotification(order.user.id, 'CHANGE_ORDER_STATUS', order.id, description);
+                notificationNSP.to('room-' + order.user.id).emit(socketEvents.ChangeOrderStatus, { order: order });
+            }
         } catch (err) {
             next(err);
         }
