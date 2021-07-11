@@ -714,13 +714,15 @@ export default {
     /////////////////////////////reports//////////////////////////////////////////////
     async reportsByCategory(req, res, next) {
         try {
-            let { fromDate, toDate } = req.query;
+            let { fromDate, toDate,category } = req.query;
             let query = { deleted: false,type:'INSTITUTION'};
             
             if (fromDate && !toDate) query.createdAt = { $gte: new Date(moment(fromDate).startOf('day')) };
             if (toDate && !fromDate) query.createdAt = { $lt: new Date(moment(toDate).endOf('day')) };
             if (fromDate && toDate) query.createdAt = { $gte: new Date(moment(fromDate).startOf('day')), $lt: new Date(moment(toDate).endOf('day')) };
 
+            if(category) query.category = category;
+            
             let results = await User.aggregate()
                 .match(query)
                 .group({
