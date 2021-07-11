@@ -536,12 +536,12 @@ export default {
             validatedBody.ajamTaxes = Number(trader.ajamTaxes) || 5;
 
             if (validatedBody.orderType == 'FROM_STORE') {
-                let ajamprice = (validatedBody.totalPrice - validatedBody.transportPrice);
+                let ajamprice = (validatedBody.totalPrice - validatedBody.transportPrice - validatedBody.taxes);
                 validatedBody.ajamDues = (ajamprice * (Number(validatedBody.ajamTaxes) / 100)).toFixed(2);
                 validatedBody.driverDues = 0;
                 validatedBody.traderDues = ajamprice - Number(validatedBody.ajamDues);
             } else {
-                let ajamprice = (validatedBody.totalPrice - validatedBody.transportPrice);
+                let ajamprice = (validatedBody.totalPrice - validatedBody.transportPrice - validatedBody.taxes);
                 validatedBody.ajamDues = (ajamprice * (Number(validatedBody.ajamTaxes) / 100)).toFixed(2);
                 validatedBody.driverDues = validatedBody.transportPrice;
                 validatedBody.traderDues = ajamprice - Number(validatedBody.ajamDues);
