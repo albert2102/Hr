@@ -269,7 +269,7 @@ export default {
             body('location').optional().not().isEmpty().withMessage(() => { return i18n.__('locationRequired') }),
             body('location.long').optional().not().isEmpty().withMessage(() => { return i18n.__('longitudeRequired') }),
             body('location.lat').optional().not().isEmpty().withMessage(() => { return i18n.__('latitudeRequired') }),
-        ];
+        ];  
 
         return validations;
     },
