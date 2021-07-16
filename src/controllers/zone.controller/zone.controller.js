@@ -55,9 +55,6 @@ export default {
                             distanceField: "distance",
                         }
                     },
-                    {
-                        $match: { user: { $ne: null } }
-                    },
                     // Logically filter anything outside of the radius
                     {
                         $redact: {
