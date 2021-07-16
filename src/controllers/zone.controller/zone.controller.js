@@ -53,8 +53,10 @@ export default {
                                 coordinates: [+long, +lat]
                             },
                             distanceField: "distance",
-                            query: { user: { $ne: null } }
                         }
+                    },
+                    {
+                        $match: { user: { $ne: null } }
                     },
                     // Logically filter anything outside of the radius
                     {
