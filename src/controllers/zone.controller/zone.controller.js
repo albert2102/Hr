@@ -13,9 +13,9 @@ export default {
     async findAll(req, res, next) {
         try {
             let page = +req.query.page || 1, limit = +req.query.limit || 20;
-            let { name, month, year, all, long, lat,user } = req.query
+            let { name, month, year, all, long, lat, user } = req.query
             let query = { deleted: false };
-            if(user) query.user = user;
+            if (user) query.user = user;
             if (name) {
                 query.$or = [{ 'name.en': { '$regex': name, '$options': 'i' } }, { 'name.ar': { '$regex': name, '$options': 'i' } }]
             }
@@ -47,22 +47,22 @@ export default {
                 zones = await Zone.aggregate([
                     // Find points or objects "near" and project the distance
                     {
-                        "$geoNear": {
-                            "near": {
-                                "type": "Point",
-                                "coordinates": [+long,+lat]
+                        $geoNear: {
+                            near: {
+                                type: "Point",
+                                coordinates: [+long, +lat]
                             },
-                            "distanceField": "distance",
-                            // "query": { "locationType": "circle" }
+                            distanceField: "distance",
+                            query: { user: { $ne: null } }
                         }
                     },
                     // Logically filter anything outside of the radius
                     {
-                        "$redact": {
-                            "$cond": {
-                                "if": { "$gt": ["$distance", "$radius"] },
-                                "then": "$$PRUNE",
-                                "else": "$$KEEP"
+                        $redact: {
+                            $cond: {
+                                if: { $gt: ["$distance", "$radius"] },
+                                then: "$$PRUNE",
+                                else: "$$KEEP"
                             }
                         }
                     }
@@ -112,7 +112,7 @@ export default {
         try {
             let user = req.user;
             let validatedBody = checkValidations(req);
-            if (user.type != 'ADMIN' && user.type != 'SUB_ADMIN'){
+            if (user.type != 'ADMIN' && user.type != 'SUB_ADMIN') {
                 validatedBody.user = user.id;
             }
             console.log(validatedBody.location)
