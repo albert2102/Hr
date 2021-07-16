@@ -13,8 +13,9 @@ export default {
     async findAll(req, res, next) {
         try {
             let page = +req.query.page || 1, limit = +req.query.limit || 20;
-            let { name, month, year, all, long, lat } = req.query
+            let { name, month, year, all, long, lat,user } = req.query
             let query = { deleted: false };
+            if(user) query.user = user;
             if (name) {
                 query.$or = [{ 'name.en': { '$regex': name, '$options': 'i' } }, { 'name.ar': { '$regex': name, '$options': 'i' } }]
             }
@@ -35,21 +36,43 @@ export default {
                 let endOfDate = moment(date).endOf('year');
                 query.createdAt = { $gte: new Date(startOfDate), $lte: new Date(endOfDate) }
             }
-            if (long && lat) {
-                query.geoLocation = { $geoIntersects: { $geometry: { type: "Point", coordinates: [long, lat] } } }
-            }
+
             const zonesCount = await Zone.count(query);
             let zones;
             let pageCount = zonesCount;
             if (all) {
                 limit = pageCount;
                 zones = await Zone.find(query).sort({ createdAt: -1 })
+            } else if (long && lat) {
+                zones = await Zone.aggregate([
+                    // Find points or objects "near" and project the distance
+                    {
+                        "$geoNear": {
+                            "near": {
+                                "type": "Point",
+                                "coordinates": [+long,+lat]
+                            },
+                            "distanceField": "distance",
+                            // "query": { "locationType": "circle" }
+                        }
+                    },
+                    // Logically filter anything outside of the radius
+                    {
+                        "$redact": {
+                            "$cond": {
+                                "if": { "$gt": ["$distance", "$radius"] },
+                                "then": "$$PRUNE",
+                                "else": "$$KEEP"
+                            }
+                        }
+                    }
+                ])
             }
             else {
                 pageCount = Math.ceil(zonesCount / limit);
                 zones = await Zone.find(query).sort({ createdAt: -1 }).limit(limit).skip((page - 1) * limit)
             }
-            zones = Zone.schema.methods.toJSONLocalizedOnly(zones, i18n.getLocale());
+            // zones = Zone.schema.methods.toJSONLocalizedOnly(zones, i18n.getLocale());
             res.send(new ApiResponse(zones, page, pageCount, limit, zonesCount, req));
         } catch (err) {
             next(err);
@@ -62,9 +85,11 @@ export default {
             validations = [
                 body('name.en').not().isEmpty().withMessage(() => { return i18n.__('englishName') }),
                 body('name.ar').not().isEmpty().withMessage(() => { return i18n.__('arabicName') }),
-                body('location').not().isEmpty().withMessage(() => { return i18n.__('locationRequired') }).isArray().withMessage('must be an array'),
-                body('location.*').optional().not().isEmpty().withMessage(() => { return i18n.__('longitudeRequired') }),
-                body('location.*.*').optional().not().isEmpty().withMessage(() => { return i18n.__('latitudeRequired') }),
+                body('radius').not().isEmpty().withMessage(() => { return i18n.__('radiusRequired') }),
+                body('location').not().isEmpty().withMessage(() => { return i18n.__('locationRequired') }),
+                body('location.lat').optional().not().isEmpty().withMessage(() => { return i18n.__('longitudeRequired') }),
+                body('location.long').optional().not().isEmpty().withMessage(() => { return i18n.__('latitudeRequired') }),
+                body('user').optional().not().isEmpty().withMessage(() => { return i18n.__('userRequired') }),
 
             ];
         }
@@ -72,7 +97,12 @@ export default {
             validations = [
 
                 body('name.en').optional().not().isEmpty().withMessage(() => { return i18n.__('englishName') }),
-                body('name.ar').optional().not().isEmpty().withMessage(() => { return i18n.__('arabicName') })
+                body('name.ar').optional().not().isEmpty().withMessage(() => { return i18n.__('arabicName') }),
+                body('radius').not().isEmpty().withMessage(() => { return i18n.__('radiusRequired') }),
+                body('location').not().isEmpty().withMessage(() => { return i18n.__('locationRequired') }),
+                body('location.lat').optional().not().isEmpty().withMessage(() => { return i18n.__('longitudeRequired') }),
+                body('location.long').optional().not().isEmpty().withMessage(() => { return i18n.__('latitudeRequired') }),
+
             ];
         }
         return validations;
@@ -81,13 +111,14 @@ export default {
     async create(req, res, next) {
         try {
             let user = req.user;
-            if (user.type != 'ADMIN' && user.type != 'SUB_ADMIN')
-                return next(new ApiError(403, ('admin.auth')));
             let validatedBody = checkValidations(req);
+            if (user.type != 'ADMIN' && user.type != 'SUB_ADMIN'){
+                validatedBody.user = user.id;
+            }
             console.log(validatedBody.location)
-            validatedBody.geoLocation = {
-                type: 'Polygon',
-                coordinates: validatedBody.location
+            validatedBody.location = {
+                type: 'Point',
+                coordinates: [+validatedBody.location.long, +validatedBody.location.lat]
             }
             let createdZone = await Zone.create(validatedBody);
             createdZone = Zone.schema.methods.toJSONLocalizedOnly(createdZone, i18n.getLocale());
