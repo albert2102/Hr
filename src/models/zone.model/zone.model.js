@@ -15,12 +15,16 @@ const zoneSchema = new Schema({
         type: String,
         i18n: true
     },
-    geoLocation: {
-        type: { type: String, enum: ['Polygon'], default: 'Polygon' },
-        coordinates: { 
-            type: [ [[Number]]] 
-        }
+    location: {
+        type: {type: String,default: 'Point'},
+        coordinates: [Number]
     },
+    radius: {
+        type: Number /// in meters
+    },
+    user:{
+        type: Number
+    }
 }, { timestamps: true });
 
 zoneSchema.set('toJSON', {
@@ -33,7 +37,7 @@ zoneSchema.set('toJSON', {
 });
 
 autoIncrement.initialize(mongoose.connection);
-zoneSchema.index({ geoLocation: "2dsphere" });
+zoneSchema.index({ location: "2dsphere" });
 zoneSchema.plugin(mongooseI18n, { locales: ['en', 'ar'] });
 zoneSchema.plugin(autoIncrement.plugin, { model: 'zone', startAt: 1 });
 export default mongoose.model('zone', zoneSchema);
