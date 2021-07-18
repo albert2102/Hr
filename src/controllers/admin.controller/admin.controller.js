@@ -721,7 +721,7 @@ export default {
             if (toDate && !fromDate) query.createdAt = { $lt: new Date(moment(toDate).endOf('day')) };
             if (fromDate && toDate) query.createdAt = { $gte: new Date(moment(fromDate).startOf('day')), $lt: new Date(moment(toDate).endOf('day')) };
 
-            if(category) query.category = category;
+            if(category) query.category = +category;
             
             let results = await User.aggregate()
                 .match(query)
