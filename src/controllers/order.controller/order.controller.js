@@ -17,9 +17,11 @@ import socketEvents from '../../socketEvents';
 import { generateVerifyCode } from '../../services/generator-code-service'
 import Company from '../../models/company.model/company.model';
 import config from '../../config';
-import { sendEmail,sendHtmlEmail,sendChangeOrderEmail } from '../../services/emailMessage.service';
+import { sendEmail, sendHtmlEmail, sendChangeOrderEmail } from '../../services/emailMessage.service';
 import { duration_time } from '../../calculateDistance'
 import schedule from 'node-schedule';
+import https from 'https';
+import querystring from 'querystring';
 
 let populateQuery = [
     { path: 'user', model: 'user' },
@@ -80,7 +82,7 @@ let driverOrdersCount = async (userId) => {
 }
 let clientOrdersCount = async (userId) => {
     try {
-        let currentOrdersQuery = {deleted:false,user:userId}
+        let currentOrdersQuery = { deleted: false, user: userId }
         let count = await Order.count(currentOrdersQuery)
 
         await User.findByIdAndUpdate(userId, { ordersCount: count })
@@ -235,7 +237,7 @@ const findDriver = async (order) => {
             deleted: false,
             online: true,
             activated: true,
-            ajamTaxes: {$ne: null},
+            ajamTaxes: { $ne: null },
             status: 'ACCEPTED',
             type: 'DRIVER',
             _id: { $nin: busyDrivers },
@@ -314,6 +316,72 @@ const traderService = async (order) => {
         throw error;
     }
 }
+
+//////////////////////////Payment////////////////////////
+const getCheckoutId = async (request, response, next, order, paymentBrand) => {
+    try {
+        let cardEntityId;
+        var checkoutIdPath = '/v1/checkouts';
+        let amount = order.totalPrice;
+        let name = request.user.name.split(" ");
+        if (name.length == 1) {
+            name.push(name[0]);
+        }
+        if (paymentBrand == 'MADA') {
+            cardEntityId = config.payment.Entity_ID_Mada;
+        } else {
+            cardEntityId = config.payment.Entity_ID_Card;
+        }
+        let body = {
+            'merchantTransactionId': order.orderNumber,
+            'entityId': cardEntityId,
+            'amount': Number(amount).toFixed(2),
+            'currency': config.payment.Currency,
+            'paymentType': config.payment.PaymentType,
+            'notificationUrl': config.payment.notificationUrl,
+            // 'testMode': config.payment.testMode,
+            'customer.email': request.user.email || '',
+            'billing.street1': request.address.address || '',
+            'billing.city': 'Riyadh',
+            'billing.state': 'Layla',
+            'billing.country': 'SA',
+            'billing.postcode': '11461',
+            'customer.givenName': name[0],
+            'customer.surname': name[1]
+        }
+        // if(paymentBrand != 'MADA') body.testMode = config.payment.testMode;
+        console.log(body)
+        var data = querystring.stringify(body);
+        var options = {
+            port: 443,
+            host: config.payment.host,
+            path: checkoutIdPath,
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'Content-Length': data.length,
+                'Authorization': config.payment.access_token
+            }
+        };
+        var postRequest = https.request(options, function (res) {
+            res.setEncoding('utf8');
+            res.on('data', async function (chunk) {
+                let result = JSON.parse(chunk)
+                console.log(result)
+
+                result = { checkoutId: result.id, amount: amount }
+                console.log(result)
+                result.order = await Order.findByIdAndUpdate(order.id, { $set: { checkoutId: result.checkoutId, paymentStatus: 'PENDING' } }, { new: true });
+                response.status(200).send(result);
+            });
+        });
+        postRequest.write(data);
+        postRequest.end();
+    } catch (error) {
+        next(error)
+    }
+}
+////////////////////////////////////////////////////////////////////////////
 export default {
 
     async findAll(req, res, next) {
@@ -323,7 +391,7 @@ export default {
                 userName, price, orderDate, totalPrice, promoCode, orderType, driver,
                 orderNumber, numberOfProducts, waitingOrders, currentOrders, finishedOrders, traderNotResponse, trader
             } = req.query;
-            let query = {deleted: false, $or: [{ paymentMethod: 'CREDIT', paymentStatus: 'SUCCESSED' }, { paymentMethod: { $in: ['CASH', 'WALLET'] } }] };
+            let query = { deleted: false, $or: [{ paymentMethod: 'DIGITAL', paymentStatus: 'SUCCESSED' }, { paymentMethod: { $in: ['CASH', 'WALLET'] } }] };
             if (trader) query.trader = trader;
             if (orderType) query.orderType = orderType;
             if (driver) query.driver = driver;
@@ -366,7 +434,7 @@ export default {
                 }
             }
             let date = new Date();
-            if (traderNotResponse){ 
+            if (traderNotResponse) {
                 query.traderNotResponse = traderNotResponse;
                 query.status = 'WAITING';
             }
@@ -447,12 +515,12 @@ export default {
                     return true;
                 }),
             body('paymentMethod').not().isEmpty().withMessage(() => { return i18n.__('paymentMethodRequired') }).isIn(['DIGITAL', 'WALLET', 'CASH']).withMessage('Wrong type')
-                .custom(async (val, { req }) => {
+               /* .custom(async (val, { req }) => {
                     if (val == 'DIGITAL' && !req.body.creditCard) {
                         throw new Error(i18n.__('creditCardRequired'));
                     }
                     return true;
-                }),
+                })*/,
             body('creditCard').optional().not().isEmpty().withMessage(() => { return i18n.__('creditCardRequired') })
                 .custom(async (val, { req }) => {
                     let query = { deleted: false, user: req.user.id };
@@ -505,7 +573,7 @@ export default {
                 // let durationPrice = duration * Number(trader.deliveryPricePerSecond);
                 // validatedBody.durationDelivery = duration;
                 // validatedBody.durationDelivery = Math.round(validatedBody.durationDelivery / 60 ) // client update to be by minutes
-                validatedBody.durationDelivery = Math.round(validatedBody.durationDelivery );
+                validatedBody.durationDelivery = Math.round(validatedBody.durationDelivery);
                 let durationPrice = Number(validatedBody.durationDelivery) * Number(trader.deliveryPricePerSecond); // per minutes
                 console.log(durationPrice)
                 if (durationPrice < Number(trader.minDeliveryPrice)) {
@@ -522,15 +590,13 @@ export default {
             validatedBody = await getFinalPrice(validatedBody)
 
             // console.log('validatedBody.totalPrice ',validatedBody.totalPrice);
-            validatedBody.totalPrice = validatedBody.totalPrice +(  ( validatedBody.price / 100)   *  Number(validatedBody.taxes));
-            validatedBody.totalPrice  = (validatedBody.totalPrice).toFixed(2);
+            validatedBody.totalPrice = validatedBody.totalPrice + ((validatedBody.price / 100) * Number(validatedBody.taxes));
+            validatedBody.totalPrice = (validatedBody.totalPrice).toFixed(2);
             // validatedBody.totalPrice = parseInt(validatedBody.totalPrice);
             if (validatedBody.paymentMethod == 'WALLET' && req.user.wallet < validatedBody.totalPrice) {
                 return next(new ApiError(400, i18n.__('walletInvalid')));
             }
-            if (validatedBody.paymentMethod == 'DIGITAL') {
-                return next(new ApiError(400, i18n.__('notAvaliableNow')));
-            }
+            
 
             /////////////////////////////////////////////////////////////////////////////////////////////
             validatedBody.ajamTaxes = Number(trader.ajamTaxes) || 5;
@@ -547,19 +613,22 @@ export default {
                 validatedBody.traderDues = ajamprice - Number(validatedBody.ajamDues);
             }
             /////////////////////////////////////////////////////////////////////////////////////////////
-
             let order = await Order.create(validatedBody);
             order.orderNumber = order.orderNumber + order.id;
             await order.save();
-            res.status(200).send(order);
+            if (validatedBody.paymentMethod == 'DIGITAL') {
+                getCheckoutId(req, res, next, order, 'VISA');
+            } else {
+                res.status(200).send(order);
+            }
             order = await Order.populate(order, populateQuery)
             ///////////////////////////////////////////
 
-            if(validatedBody.paymentMethod == 'WALLET'){
-                user.wallet = user.wallet - order.totalPrice ;
+            if (validatedBody.paymentMethod == 'WALLET') {
+                user.wallet = user.wallet - order.totalPrice;
                 await user.save();
-                notificationNSP.to('room-'+user.id).emit(socketEvents.NewUser, { user: user });
-                
+                notificationNSP.to('room-' + user.id).emit(socketEvents.NewUser, { user: user });
+
             }
             //////////////////////////////////////////
             let description = {
@@ -575,7 +644,7 @@ export default {
             clientOrdersCount(req.user.id);
             ////////////////////////////////////////////////////////////////////////////////////////////
             await sendHtmlEmail(req.user.email, order.orderNumber, order.products.length, order.price, order.transportPrice, order.taxes, order.address.address, order.address.addressName, order.address.buildingNumber, order.address.flatNumber, order.totalPrice);
-            
+
         } catch (err) {
             next(err);
         }
@@ -632,7 +701,7 @@ export default {
             let validatedBody = checkValidations(req);
             if (validatedBody.status == 'ACCEPTED') {
                 validatedBody.acceptedDate = new Date();
-            }else{
+            } else {
                 validatedBody.rejectedDate = new Date();
             }
             let updatedOrder = await Order.findByIdAndUpdate(orderId, validatedBody, { new: true }).populate(populateQuery);
@@ -644,9 +713,9 @@ export default {
                 ////////////// find drivers /////////////////////////
                 if (updatedOrder.orderType == 'DELIVERY') await findDriver(updatedOrder);
                 ////////////////////////////////////////////////////
-                description = { en: 'Your Order Has Been Approved', ar:  '  جاري تجهيز طلبك' };
+                description = { en: 'Your Order Has Been Approved', ar: '  جاري تجهيز طلبك' };
             } else {
-                description = { en:'Your Order Has Been Rejected ' + validatedBody.rejectReason, ar:  ' تم رفض طلبك ' + validatedBody.rejectReason };
+                description = { en: 'Your Order Has Been Rejected ' + validatedBody.rejectReason, ar: ' تم رفض طلبك ' + validatedBody.rejectReason };
             }
 
             await notifyController.create(req.user.id, updatedOrder.user.id, description, updatedOrder.id, 'CHANGE_ORDER_STATUS', updatedOrder.id);
@@ -655,10 +724,10 @@ export default {
             notificationNSP.to('room-' + updatedOrder.user.id).emit(socketEvents.ChangeOrderStatus, { order: updatedOrder });
 
             if (updatedOrder.user.language == "ar") {
-                await sendChangeOrderEmail(updatedOrder.user.email, description.ar +' : ' +updatedOrder.orderNumber)
+                await sendChangeOrderEmail(updatedOrder.user.email, description.ar + ' : ' + updatedOrder.orderNumber)
             }
             else {
-                await sendChangeOrderEmail(updatedOrder.user.email, description.en +' : ' +updatedOrder.orderNumber)
+                await sendChangeOrderEmail(updatedOrder.user.email, description.en + ' : ' + updatedOrder.orderNumber)
             }
 
         } catch (err) {
@@ -712,11 +781,11 @@ export default {
 
             let { orderId } = req.params;
             await checkExist(orderId, Order, { deleted: false, $or: [{ status: "ACCEPTED", orderType: "FROM_STORE" }, { status: "DRIVER_ACCEPTED", orderType: "DELIVERY" }] });
-            let updatedOrder = await Order.findByIdAndUpdate(orderId, { status: 'SHIPPED',shippedDate:new Date() }, { new: true }).populate(populateQuery);
+            let updatedOrder = await Order.findByIdAndUpdate(orderId, { status: 'SHIPPED', shippedDate: new Date() }, { new: true }).populate(populateQuery);
             updatedOrder = Order.schema.methods.toJSONLocalizedOnly(updatedOrder, i18n.getLocale());
             res.status(200).send(updatedOrder);
 
-            let description = { ar:  ' تم تغير حالة الطلب الي تم الشحن ', en:  'Order Status Changed To Order Shipped' };
+            let description = { ar: ' تم تغير حالة الطلب الي تم الشحن ', en: 'Order Status Changed To Order Shipped' };
 
             await notifyController.create(req.user.id, updatedOrder.user.id, description, updatedOrder.id, 'CHANGE_ORDER_STATUS', updatedOrder.id);
             notifyController.pushNotification(updatedOrder.user.id, 'CHANGE_ORDER_STATUS', updatedOrder.id, description);
@@ -724,10 +793,10 @@ export default {
             notificationNSP.to('room-' + updatedOrder.user.id).emit(socketEvents.ChangeOrderStatus, { order: updatedOrder });
 
             if (updatedOrder.user.language == "ar") {
-                await sendChangeOrderEmail(updatedOrder.user.email, description.ar +' : ' +updatedOrder.orderNumber)
+                await sendChangeOrderEmail(updatedOrder.user.email, description.ar + ' : ' + updatedOrder.orderNumber)
             }
             else {
-                await sendChangeOrderEmail(updatedOrder.user.email, description.en +' : ' +updatedOrder.orderNumber)
+                await sendChangeOrderEmail(updatedOrder.user.email, description.en + ' : ' + updatedOrder.orderNumber)
             }
         } catch (err) {
             next(err);
@@ -748,7 +817,7 @@ export default {
             updatedOrder = Order.schema.methods.toJSONLocalizedOnly(updatedOrder, i18n.getLocale());
             res.status(200).send(updatedOrder);
 
-            let description = { ar:  ' تم تغير حالة الطلب الي تم التسليم ', en:  'Order Status Changed To Delivered' };
+            let description = { ar: ' تم تغير حالة الطلب الي تم التسليم ', en: 'Order Status Changed To Delivered' };
 
             await notifyController.create(req.user.id, updatedOrder.user.id, description, updatedOrder.id, 'CHANGE_ORDER_STATUS', updatedOrder.id);
             notifyController.pushNotification(updatedOrder.user.id, 'CHANGE_ORDER_STATUS', updatedOrder.id, description);
@@ -757,10 +826,10 @@ export default {
             notificationNSP.to('room-' + updatedOrder.trader.id).emit(socketEvents.ChangeOrderStatus, { order: updatedOrder });
 
             if (updatedOrder.user.language == "ar") {
-                await sendChangeOrderEmail(updatedOrder.user.email, description.ar +' : ' +updatedOrder.orderNumber)
+                await sendChangeOrderEmail(updatedOrder.user.email, description.ar + ' : ' + updatedOrder.orderNumber)
             }
             else {
-                await sendChangeOrderEmail(updatedOrder.user.email, description.en +' : ' +updatedOrder.orderNumber)
+                await sendChangeOrderEmail(updatedOrder.user.email, description.en + ' : ' + updatedOrder.orderNumber)
             }
 
             ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -789,13 +858,13 @@ export default {
             order.cancelledDate = new Date();
             await order.save();
             res.status(200).send(order);
-            let description = { ar:  'تم الغاء هذا الطلب ', en: ' Order Canceled' };
+            let description = { ar: 'تم الغاء هذا الطلب ', en: ' Order Canceled' };
 
             await notifyController.create(req.user.id, order.trader.id, description, order.id, 'CHANGE_ORDER_STATUS', order.id);
             notifyController.pushNotification(order.trader.id, 'CHANGE_ORDER_STATUS', order.id, description);
             notificationNSP.to('room-' + order.trader.id).emit(socketEvents.ChangeOrderStatus, { order: order });
-            
-            if (user.type == 'ADMIN' || user.type == 'SUB_ADMIN'){
+
+            if (user.type == 'ADMIN' || user.type == 'SUB_ADMIN') {
 
                 await notifyController.create(req.user.id, order.user.id, description, order.id, 'CHANGE_ORDER_STATUS', order.id);
                 notifyController.pushNotification(order.user.id, 'CHANGE_ORDER_STATUS', order.id, description);
@@ -880,7 +949,7 @@ export default {
             let updatedOrder = await Order.findByIdAndUpdate(validatedBody.order, { traderNotResponse: false }, { new: true }).populate(populateQuery);
             updatedOrder = Order.schema.methods.toJSONLocalizedOnly(updatedOrder, i18n.getLocale());
             res.status(200).send(updatedOrder);
-            let description = { en: 'The admin sent the order back to you. Please accept the order as soon as possible.', ar:  '  قام الادمن بإعادة ارسال الطلب اليك مرة اخري من فضلك وافق على الطلب في اسرع وقت ' };
+            let description = { en: 'The admin sent the order back to you. Please accept the order as soon as possible.', ar: '  قام الادمن بإعادة ارسال الطلب اليك مرة اخري من فضلك وافق على الطلب في اسرع وقت ' };
 
             await notifyController.create(req.user.id, updatedOrder.trader.id, description, updatedOrder.id, 'ORDER', updatedOrder.id);
             notifyController.pushNotification(updatedOrder.trader.id, 'ORDER', updatedOrder.id, description);
@@ -899,11 +968,11 @@ export default {
             let { fromDate, toDate } = req.query;
 
             if (req.user.type == 'ADMIN' || req.user.type == 'SUB_ADMIN') {
-                if(!req.query.user){
+                if (!req.query.user) {
                     return next(new ApiError(403, ('specifiuserinquery')));
-                }else{
+                } else {
                     user = req.query.user;
-                    user = await checkExistThenGet(user,User,{deleted:false})
+                    user = await checkExistThenGet(user, User, { deleted: false })
                 }
             } else {
                 user = req.user;
@@ -942,11 +1011,11 @@ export default {
             let { fromDate, toDate } = req.query;
 
             if (req.user.type == 'ADMIN' || req.user.type == 'SUB_ADMIN') {
-                if(!req.query.user){
+                if (!req.query.user) {
                     return next(new ApiError(403, ('specifiuserinquery')));
-                }else{
+                } else {
                     user = req.query.user;
-                    user = await checkExistThenGet(user,User,{deleted:false})
+                    user = await checkExistThenGet(user, User, { deleted: false })
                 }
             } else {
                 user = req.user;

@@ -166,7 +166,18 @@ const orderSchema = new Schema({
     deliveredDate: {
         type: Date
     },
-    /////////////////////////////////////
+    ///////////////////////////////////////////////////////
+    checkoutId:{
+        type:String
+    },
+    paymentId:{
+        type:String
+    },
+    paymentStatus:{
+        type:String,
+        enum:['PENDING','FAILED','SUCCESSED','REFUNDED'],
+        
+    },
 }, { timestamps: true });
 orderSchema.set('toJSON', {
     transform: function (doc, ret, options) {
