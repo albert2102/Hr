@@ -228,6 +228,5 @@
 	"ordersRequired": "ordersRequired",
 	"minDeliveryPriceRequired": "minDeliveryPriceRequired",
 	"walletInvalid": "walletInvalid",
-	"userRequired": "userRequired",
-	"notAvaliableNow": "notAvaliableNow"
+	"userRequired": "userRequired"
 }
