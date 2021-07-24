@@ -607,7 +607,7 @@ export default {
                 validatedBody.driverDues = validatedBody.transportPrice;
             }
             //////////////////////////////////////////////////////////////////
-            if(trader.type == 'INSTITUTION' && trader.productsIncludeTaxes){
+            if(trader.type == 'INSTITUTION' && !trader.productsIncludeTaxes){
                 let traderPrice = validatedBody.price;
                 validatedBody.ajamDues = (traderPrice * (Number(validatedBody.ajamTaxes) / 100)).toFixed(2);
                 validatedBody.traderDues = (traderPrice - Number(validatedBody.ajamDues)) + ((validatedBody.price / 100) * Number(validatedBody.taxes));
