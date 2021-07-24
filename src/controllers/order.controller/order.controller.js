@@ -602,16 +602,22 @@ export default {
             validatedBody.ajamTaxes = Number(trader.ajamTaxes) || 5;
 
             if (validatedBody.orderType == 'FROM_STORE') {
-                let ajamprice = (validatedBody.totalPrice - validatedBody.transportPrice - validatedBody.taxes);
-                validatedBody.ajamDues = (ajamprice * (Number(validatedBody.ajamTaxes) / 100)).toFixed(2);
                 validatedBody.driverDues = 0;
-                validatedBody.traderDues = ajamprice - Number(validatedBody.ajamDues);
             } else {
-                let ajamprice = (validatedBody.totalPrice - validatedBody.transportPrice - validatedBody.taxes);
-                validatedBody.ajamDues = (ajamprice * (Number(validatedBody.ajamTaxes) / 100)).toFixed(2);
                 validatedBody.driverDues = validatedBody.transportPrice;
-                validatedBody.traderDues = ajamprice - Number(validatedBody.ajamDues);
             }
+            //////////////////////////////////////////////////////////////////
+            if(trader.type == 'INSTITUTION' && trader.productsIncludeTaxes){
+                let traderPrice = validatedBody.price;
+                validatedBody.ajamDues = (traderPrice * (Number(validatedBody.ajamTaxes) / 100)).toFixed(2);
+                validatedBody.traderDues = (traderPrice - Number(validatedBody.ajamDues)) + ((validatedBody.price / 100) * Number(validatedBody.taxes));
+            }
+            else{
+                let traderPrice = validatedBody.price - ((validatedBody.price / 100) * Number(validatedBody.taxes));
+                validatedBody.ajamDues = (traderPrice * (Number(validatedBody.ajamTaxes) / 100)).toFixed(2);
+                validatedBody.traderDues = (traderPrice - Number(validatedBody.ajamDues)) + ((validatedBody.price / 100) * Number(validatedBody.taxes));
+            }
+            
             /////////////////////////////////////////////////////////////////////////////////////////////
             let order = await Order.create(validatedBody);
             order.orderNumber = order.orderNumber + order.id;
