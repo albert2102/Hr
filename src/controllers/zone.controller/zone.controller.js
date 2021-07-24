@@ -152,9 +152,16 @@ export default {
             let { removeLanguage } = req.query;
             let zone = await checkExistThenGet(zoneId, Zone, { deleted: false });
             var validatedBody = checkValidations(req);
-
+            let data = {};
+            if (validatedBody.location) {
+                data.location = {
+                    type: 'Point',
+                    coordinates: [+validatedBody.location.long, +validatedBody.location.lat]
+                }
+                delete validatedBody.location;
+            }
             validatedBody = dotObject.dot(validatedBody);
-            let updatedZone = await Zone.findByIdAndUpdate(zoneId, validatedBody, { new: true })
+            let updatedZone = await Zone.findByIdAndUpdate(zoneId,  { ...validatedBody, ...data }, { new: true })
             if (!removeLanguage) {
                 updatedZone = Zone.schema.methods.toJSONLocalizedOnly(updatedZone, i18n.getLocale());
             }

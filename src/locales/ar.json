@@ -229,5 +229,6 @@
 	"minDeliveryPriceRequired": "minDeliveryPriceRequired",
 	"walletInvalid": "walletInvalid",
 	"userRequired": "userRequired",
-	"radiusRequired": "radiusRequired"
+	"radiusRequired": "radiusRequired",
+	"paymentFail": "paymentFail"
 }
