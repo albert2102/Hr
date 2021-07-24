@@ -145,8 +145,8 @@ export default {
     async update(req, res, next) {
         try {
             let user = req.user;
-            if (user.type != 'ADMIN' && user.type != 'SUB_ADMIN')
-                return next(new ApiError(403, ('admin.auth')));
+            // if (user.type != 'ADMIN' && user.type != 'SUB_ADMIN')
+            //     return next(new ApiError(403, ('admin.auth')));
 
             let { zoneId } = req.params;
             let { removeLanguage } = req.query;
