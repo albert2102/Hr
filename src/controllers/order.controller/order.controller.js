@@ -819,6 +819,8 @@ export default {
                 let driver = await User.findById(order.driver);
                 updatedQuery.ajamTaxesFromDriver = driver.ajamTaxes;
                 updatedQuery.ajamDuesFromDriver = (Number(order.transportPrice) * (Number(updatedQuery.ajamTaxesFromDriver) / 100)).toFixed(2);
+                updatedQuery.driverDues = order.driverDues - updatedQuery.ajamDuesFromDriver;
+        
             }
             let updatedOrder = await Order.findByIdAndUpdate(orderId, updatedQuery, { new: true }).populate(populateQuery);
             updatedOrder = Order.schema.methods.toJSONLocalizedOnly(updatedOrder, i18n.getLocale());
