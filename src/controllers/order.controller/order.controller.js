@@ -332,6 +332,10 @@ const getCheckoutId = async (request, response, next, order, paymentBrand) => {
         } else {
             cardEntityId = config.payment.Entity_ID_Card;
         }
+        let address = 'From Store';
+        if(order.type != 'FROM_STOE'){
+            address = request.address.address;
+        }
         let body = {
             'merchantTransactionId': order.orderNumber,
             'entityId': cardEntityId,
@@ -341,7 +345,7 @@ const getCheckoutId = async (request, response, next, order, paymentBrand) => {
             'notificationUrl': config.payment.notificationUrl,
             // 'testMode': config.payment.testMode,
             'customer.email': request.user.email || '',
-            'billing.street1': request.address.address || '',
+            'billing.street1': address || '',
             'billing.city': 'Riyadh',
             'billing.state': 'Layla',
             'billing.country': 'SA',
