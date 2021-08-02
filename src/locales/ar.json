@@ -230,5 +230,6 @@
 	"walletInvalid": "walletInvalid",
 	"userRequired": "userRequired",
 	"radiusRequired": "radiusRequired",
-	"paymentFail": "paymentFail"
+	"paymentFail": "paymentFail",
+	"paymentSuccess": "paymentSuccess"
 }
