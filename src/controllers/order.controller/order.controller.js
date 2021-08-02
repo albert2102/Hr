@@ -333,8 +333,7 @@ const getCheckoutId = async (request, response, next, order, paymentBrand) => {
             cardEntityId = config.payment.Entity_ID_Card;
         }
         let address = 'From Store';
-        console.log(request)
-        if(order.type != 'FROM_STOE'){
+        if(order.orderType != 'FROM_STORE'){
             address = request.address.address;
         }
 
