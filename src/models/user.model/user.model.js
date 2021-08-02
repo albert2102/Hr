@@ -237,6 +237,12 @@ const userSchema = new Schema({
         type: Number,
         default:0
     },
+    lastCheckoutCreditId:{
+        type: String
+    },
+    lastCheckoutCreditAmount:{
+        type: Number
+    }
 }, { timestamps: true });
 
 
