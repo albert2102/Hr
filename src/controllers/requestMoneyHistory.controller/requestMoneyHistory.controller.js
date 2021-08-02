@@ -36,7 +36,7 @@ export default {
                 body('orders').not().isEmpty().withMessage(() => { return i18n.__('ordersRequired') }),
                 body('orders.*').not().isEmpty().withMessage(() => { return i18n.__('orderRequired') })
                     .custom(async (value) => {
-                        await checkExist(value, Order, { deleted: false,status: 'DELIVERED' });
+                        await checkExist(value, Order, { deleted: false, status: 'DELIVERED' });
                     })
             ];
         }
@@ -154,16 +154,16 @@ export default {
             requestMoney.payedBy = user.id
             requestMoney.payedDate = new Date();
             await requestMoney.save();
-            let description = { ar: ' تم تحول فلوسك المطلوبة , لو في اى استفسار تواصل مع الدعم ' , en: 'Your requested money has been transferred, if you have any questions, contact support'};
-            
+            let description = { ar: ' تم تحول فلوسك المطلوبة , لو في اى استفسار تواصل مع الدعم ', en: 'Your requested money has been transferred, if you have any questions, contact support' };
+
             if (requestMoney.driver) {
-                await Order.updateMany({ _id: { $in: requestMoney.orders } }, {driverPayoffDues:true,driverPayoffDuesDate:new Date()})
-                
+                await Order.updateMany({ _id: { $in: requestMoney.orders } }, { driverPayoffDues: true, driverPayoffDuesDate: new Date() })
+
                 await notifyController.create(req.user.id, requestMoney.driver, description, requestMoney.id, 'TRANSFER_MONEY');
                 notifyController.pushNotification(requestMoney.driver, 'TRANSFER_MONEY', requestMoney.id, description);
-            }else {
-                await Order.updateMany({ _id: { $in: requestMoney.orders } }, {traderPayoffDues:true,traderPayoffDuesDate:new Date()})
-                
+            } else {
+                await Order.updateMany({ _id: { $in: requestMoney.orders } }, { traderPayoffDues: true, traderPayoffDuesDate: new Date() })
+
                 await notifyController.create(req.user.id, requestMoney.trader, description, requestMoney.id, 'TRANSFER_MONEY');
                 notifyController.pushNotification(requestMoney.trader, 'TRANSFER_MONEY', requestMoney.id, description);
             }
@@ -174,4 +174,68 @@ export default {
         }
     },
     countNew,
+
+    /////////////////////////////////////////////////////////////////////////////
+    AdminPayedForTrader(isUpdate = false) {
+        let validations
+        if (!isUpdate) {
+            validations = [
+                body('orders').not().isEmpty().withMessage(() => { return i18n.__('ordersRequired') }),
+                body('orders.*').not().isEmpty().withMessage(() => { return i18n.__('orderRequired') })
+                    .custom(async (value) => {
+                        await checkExist(value, Order, { deleted: false, status: 'DELIVERED' });
+                    }),
+                body('trader').not().isEmpty().withMessage(() => { return i18n.__('traderRequired') })
+                    .custom(async (value) => {
+                        await checkExist(value, User, { deleted: false, type: 'INSTITUTION' });
+                    })
+
+            ];
+        }
+        return validations;
+    },
+    AdminPayedForDriver(isUpdate = false) {
+        let validations
+        if (!isUpdate) {
+            validations = [
+                body('orders').not().isEmpty().withMessage(() => { return i18n.__('ordersRequired') }),
+                body('orders.*').not().isEmpty().withMessage(() => { return i18n.__('orderRequired') })
+                    .custom(async (value) => {
+                        await checkExist(value, Order, { deleted: false, status: 'DELIVERED' });
+                    }),
+                body('driver').not().isEmpty().withMessage(() => { return i18n.__('driverRequired') })
+                    .custom(async (value) => {
+                        await checkExist(value, User, { deleted: false, type: 'DRIVER' });
+                    })
+            ];
+        }
+        return validations;
+    },
+    async AdminPayedOrders(req, res, next) {
+        try {
+            let user = req.user;
+            if (user.type != 'ADMIN' && user.type != 'SUB_ADMIN')
+                return next(new ApiError(403, i18n.__('unauthrized')));
+
+            let validatedBody = checkValidations(req);
+
+            let description = { ar: ' تم تحول فلوسك المطلوبة , لو في اى استفسار تواصل مع الدعم ', en: 'Your requested money has been transferred, if you have any questions, contact support' };
+
+            if (validatedBody.driver) {
+                await Order.updateMany({ _id: { $in: validatedBody.orders } }, { driverPayoffDues: true, driverPayoffDuesDate: new Date() })
+
+                await notifyController.create(req.user.id, validatedBody.driver, description, validatedBody.id, 'TRANSFER_MONEY');
+                notifyController.pushNotification(validatedBody.driver, 'TRANSFER_MONEY', validatedBody.id, description);
+            } else {
+                await Order.updateMany({ _id: { $in: validatedBody.orders } }, { traderPayoffDues: true, traderPayoffDuesDate: new Date() })
+
+                await notifyController.create(req.user.id, validatedBody.trader, description, validatedBody.id, 'TRANSFER_MONEY');
+                notifyController.pushNotification(validatedBody.trader, 'TRANSFER_MONEY', validatedBody.id, description);
+            }
+            res.status(200).send("Done");
+            await countNew();
+        } catch (err) {
+            next(err);
+        }
+    },
 }
