@@ -228,5 +228,7 @@
 	"ordersRequired": "ordersRequired",
 	"minDeliveryPriceRequired": "minDeliveryPriceRequired",
 	"walletInvalid": "walletInvalid",
-	"userRequired": "userRequired"
+	"userRequired": "userRequired",
+	"paymentFail": "paymentFail",
+	"paymentSuccess": "paymentSuccess"
 }

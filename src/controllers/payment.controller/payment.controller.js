@@ -12,9 +12,8 @@ import CreditCard from "../../models/credit.model/credit.model";
 
 let populateQuery = [
     { path: 'user', model: 'user' },
-    { path: 'products.product', model: 'product', populate: [{ path: 'tradeMark', model: 'tradeMark' }, { path: 'category', model: 'category' }] },
-    { path: 'products.color', model: 'color' },
-    { path: 'products.size', model: 'size' },
+    { path: 'trader', model: 'user' },
+    { path: 'products.product', model: 'product', populate: [{ path: 'trader', model: 'user' }, { path: 'productCategory', model: 'productCategory' }] },
     { path: 'address', model: 'address', populate: [{ path: 'city', model: 'city', populate: [{ path: 'country', model: 'country' }] }] },
     { path: 'promoCode', model: 'promocode' },
     { path: 'category', model: 'category' },
@@ -114,7 +113,7 @@ export default {
                     'Authorization': config.payment.access_token
                 }
             };
-            //console.log(options)
+            // console.log(options)
             let jsonResult = "";
             var postRequest = https.request(options, function (res) {
                 res.setEncoding('utf8');
