@@ -23,17 +23,12 @@ export default {
     validateGetCheckoutId() {
         return [
             body('amount').not().isEmpty().withMessage(() => { return i18n.__('amountRequired') }),
-            body('creditCard').not().isEmpty().withMessage(() => { return i18n.__('creditCardRequired') })
-                .custom(async (value, { req }) => {
-                    req.credit = await checkExistThenGet(value, CreditCard, { deleted: false, user: req.user.id });
-                    return true;
-                }),
         ]
     },
 
     async getCreditCheckoutId(request, response, next) {
         try {
-            let cardEntityId;
+            let cardEntityId = config.payment.Entity_ID_Card;
             var checkoutIdPath = '/v1/checkouts';
             const validatedBody = checkValidations(request);
             let amount = validatedBody.amount;
@@ -41,19 +36,15 @@ export default {
             if (name.length == 1) {
                 name.push(name[0]);
             }
-
-            /*if (request.credit.paymentBrand == 'MADA') {
-                cardEntityId = config.payment.Entity_ID_Mada;
-            } else {*/
-            cardEntityId = config.payment.Entity_ID_Card;
-            // }
-
-            var data = querystring.stringify({
+            
+            let body = {
+                'merchantTransactionId': request.user.id,
                 'entityId': cardEntityId,
-                'amount': amount,
+                'amount': Number(amount).toFixed(2),
                 'currency': config.payment.Currency,
                 'paymentType': config.payment.PaymentType,
                 'notificationUrl': config.payment.notificationUrl,
+                'testMode': config.payment.testMode,
                 'customer.email': request.user.email || '',
                 'billing.street1': request.user.address || '',
                 'billing.city': 'Riyadh',
@@ -62,7 +53,9 @@ export default {
                 'billing.postcode': '11461',
                 'customer.givenName': name[0],
                 'customer.surname': name[1]
-            });
+            }
+            // console.log(body)
+            var data = querystring.stringify(body);
             var options = {
                 port: 443,
                 host: config.payment.host,
@@ -74,14 +67,15 @@ export default {
                     'Authorization': config.payment.access_token
                 }
             };
-            console.log(data)
             var postRequest = https.request(options, function (res) {
                 res.setEncoding('utf8');
                 res.on('data', async function (chunk) {
-                    let result = { result: JSON.parse(chunk), amount: amount }
-                    console.log("result : ", result)
-                    let user = await User.findByIdAndUpdate(request.user.id, { lastCheckoutCredit: amount, lastCheckoutCreditId: result.result.id });
+                    let result = JSON.parse(chunk)
+                    result = { checkoutId: result.id, amount: amount }
+                    console.log(result)
                     response.status(200).send(result);
+                    await User.findByIdAndUpdate(request.user.id,{ lastCheckoutCreditId: result.checkoutId,lastCheckoutCreditAmount:result.amount });
+
                 });
             });
             postRequest.write(data);
@@ -138,7 +132,7 @@ export default {
                             await user.save();
                             return response.status(200).send({ user, result: i18n.__('paymentSuccess') });
                         } else {
-                            let order =  await Order.findOneAndUpdate({ checkoutId: validatedBody.resourcePath }, { $set: { paymentStatus: 'SUCCESSED', paymentId: state.id } }).populate(populateQuery);
+                            let order = await Order.findOneAndUpdate({ checkoutId: validatedBody.resourcePath }, { $set: { paymentStatus: 'SUCCESSED', paymentId: state.id } }).populate(populateQuery);
                             return response.status(200).send({ result: i18n.__('paymentSuccess') });
                         }
                     } else {
@@ -271,6 +265,65 @@ export default {
             }
         } catch (error) {
             next(error);
+        }
+    },
+
+    ////////////////////////////////////////////////////////////////
+
+    validateGetPaymentStatus() {
+        return [
+            body('resourcePath').not().isEmpty().withMessage('resourcePathRequired'),
+
+        ]
+    },
+
+    async getWalletPaymentStatus(request, response, next) {
+        try {
+            const validatedBody = checkValidations(request);
+            var path = '/v1/checkouts/' + validatedBody.resourcePath + '/payment';
+            path += '?entityId=' + config.payment.Entity_ID_Card;
+            console.log(path)
+            var options = {
+                port: 443,
+                host: config.payment.host,
+                path: path,
+                method: 'GET',
+                headers: {
+                    'Authorization': config.payment.access_token
+                }
+            };
+            // console.log(options)
+            let jsonResult = "";
+            var postRequest = https.request(options, function (res) {
+                res.setEncoding('utf8');
+                res.on('data', async function (chunk) {
+                    try {
+                        jsonResult = jsonResult + chunk;
+                    } catch (error) {
+                        next(error);
+                    }
+                });
+                res.on('end', async function () {
+                    // return response.status(200).send({data:JSON.parse(jsonResult)})
+                    let state = JSON.parse(jsonResult);
+                    const success_regex_1 = RegExp(/^(000\.000\.|000\.100\.1|000\.[36])/);
+                    const success_regex_2 = RegExp(/^(000\.400\.0[^3]|000\.400\.100)/);
+                    if (success_regex_1.test(state.result.code) || success_regex_2.test(state.result.code)) {
+                        let user = await User.findOne({ deleted: false, _id: request.user.id, lastCheckoutCreditId: validatedBody.resourcePath });
+                            user.wallet = user.wallet + user.lastCheckoutCreditAmount;
+                            user.lastCheckoutCreditAmount = 0;
+                            user.lastCheckoutCreditId = '';
+                            await user.save();
+                            return response.status(200).send({ user, result: i18n.__('paymentSuccess') });
+                        
+                    } else {
+                        return response.status(400).send({ result: i18n.__('paymentFail') });
+                    }
+                })
+            });
+            postRequest.end();
+        } catch (error) {
+            next(error)
         }
     },
 
