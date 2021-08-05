@@ -1130,4 +1130,42 @@ export default {
             next(err);
         }
     },
+
+    /////////////////////////////////////////////////////////////////////////////////
+
+    validateResendOrderToDriver() {
+        let validations = [
+            body('order').not().isEmpty().withMessage(() => { return i18n.__('orderRequired') }),
+            body('driver').not().isEmpty().withMessage(() => { return i18n.__('driverRequired') })
+            .custom(async (val, { req }) => {
+                req.driver = await checkExistThenGet(val, User, { deleted: false, type:'DRIVER' })
+                return true;
+            }),
+        ];
+        return validations;
+    },
+    async resendOrderToDriver(req, res, next) {
+        try {
+            if (req.user.type != 'ADMIN' && req.user.type != 'SUB_ADMIN')
+                return next(new ApiError(403, ('notAllowToChangeStatus')));
+
+            let validatedBody = checkValidations(req);
+            await checkExist(validatedBody.order, Order, { deleted: false, status: 'NOT_ASSIGN'});
+            let updatedOrder = await Order.findByIdAndUpdate(validatedBody.order, { status: 'ACCEPTED', driver:validatedBody.driver, lastActionDate: new Date() }, { new: true }).populate(populateQuery);
+            updatedOrder = Order.schema.methods.toJSONLocalizedOnly(updatedOrder, i18n.getLocale());
+            res.status(200).send(updatedOrder);
+            let description = { en: 'The admin sent the order to you. Please accept the order as soon as possible.', ar: '  قام الادمن بارسال الطلب اليك مرة اخري من فضلك وافق على الطلب في اسرع وقت ' };
+
+            await notifyController.create(req.user.id, updatedOrder.driver.id, description, updatedOrder.id, 'ORDER', updatedOrder.id);
+            notifyController.pushNotification(updatedOrder.driver.id, 'ORDER', updatedOrder.id, description);
+
+            notificationNSP.to('room-' + updatedOrder.driver.id).emit(socketEvents.NewOrder, { order: updatedOrder });
+            driverOrdersCount(updatedOrder.driver.id);
+            findDriver(updatedOrder);
+
+
+        } catch (err) {
+            next(err);
+        }
+    },
 }

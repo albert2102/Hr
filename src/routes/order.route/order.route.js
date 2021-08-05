@@ -17,6 +17,8 @@ router.route('/deleteMutliple').delete(requireAuth,orderController.validateDelet
 router.route('/resendOrder')
     .post(requireAuth, orderController.validateResendOrderToTrader(), orderController.resendOrderToTrader)
     
+router.route('/resendOrderToDriver')
+    .post(requireAuth, orderController.validateResendOrderToDriver(), orderController.resendOrderToDriver)
 //////////////////////////////////////////Rate/////////////////////////////////////////////////////////
 router.route('/traderRate')
     .get(/*requireAuth,*/ orderController.getRates)
