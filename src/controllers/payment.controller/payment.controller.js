@@ -97,7 +97,7 @@ export default {
             const validatedBody = checkValidations(request);
             var path = '/v1/checkouts/' + validatedBody.resourcePath + '/payment';
             path += '?entityId=' + config.payment.Entity_ID_Card;
-            console.log(path)
+            // console.log(path)
             var options = {
                 port: 443,
                 host: config.payment.host,
@@ -114,7 +114,7 @@ export default {
                 res.on('data', async function (chunk) {
                     try {
                         jsonResult = jsonResult + chunk;
-                        console.log({ data: JSON.parse(jsonResult) })
+                        // console.log({ data: JSON.parse(jsonResult) })
                     } catch (error) {
                         next(error);
                     }

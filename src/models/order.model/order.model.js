@@ -178,6 +178,11 @@ const orderSchema = new Schema({
         enum:['PENDING','FAILED','SUCCESSED','REFUNDED'],
         
     },
+    ///////////////////////////////////////////////////////
+    lastActionDate:{
+        type: Date,
+        default: new Date()
+    }
 }, { timestamps: true });
 orderSchema.set('toJSON', {
     transform: function (doc, ret, options) {

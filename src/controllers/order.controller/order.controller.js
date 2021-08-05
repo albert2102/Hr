@@ -270,7 +270,7 @@ const findDriver = async (order) => {
         if (driver) {
             console.log("in ifffffffffffffffffffffffffffffffffffff")
             order.driver = driver._id;
-            order = await Order.findByIdAndUpdate(order.id, { driver: driver._id }).populate(populateQuery)
+            order = await Order.findByIdAndUpdate(order.id, { driver: driver._id,lastActionDate:new Date() }).populate(populateQuery)
             orderService(order);
             notificationNSP.to('room-' + driver._id).emit(socketEvents.NewOrder, { order: order });
             let description = {
@@ -883,6 +883,16 @@ export default {
                 await notifyController.create(req.user.id, order.user.id, description, order.id, 'CHANGE_ORDER_STATUS', order.id);
                 notifyController.pushNotification(order.user.id, 'CHANGE_ORDER_STATUS', order.id, description);
                 notificationNSP.to('room-' + order.user.id).emit(socketEvents.ChangeOrderStatus, { order: order });
+                
+            }
+
+            ////////////////////////////RefundOrder////////////////////////////////////////
+            if(order.paymentMethod == 'DIGITAL' || order.paymentMethod == 'WALLET'){
+                description = { ar: 'تم استرجاع قيمة الطلب في محفظتك يمكنك الاطلاع عليه ', en: 'The value of the order has been recovered in your wallet, you can view it.' };
+                await User.findByIdAndUpdate(order.user.id,{wallet: order.user.wallet + order.totalPrice});
+                await notifyController.create(req.user.id, order.user.id, description, order.id, 'REFUNDED_TO_WALLET', order.id);
+                notifyController.pushNotification(order.user.id, 'REFUNDED_TO_WALLET', order.id, description);
+                
             }
         } catch (err) {
             next(err);
@@ -960,7 +970,7 @@ export default {
 
             let validatedBody = checkValidations(req);
             await checkExist(validatedBody.order, Order, { deleted: false, status: 'WAITING', traderNotResponse: true });
-            let updatedOrder = await Order.findByIdAndUpdate(validatedBody.order, { traderNotResponse: false }, { new: true }).populate(populateQuery);
+            let updatedOrder = await Order.findByIdAndUpdate(validatedBody.order, { traderNotResponse: false, lastActionDate:new Date()}, { new: true }).populate(populateQuery);
             updatedOrder = Order.schema.methods.toJSONLocalizedOnly(updatedOrder, i18n.getLocale());
             res.status(200).send(updatedOrder);
             let description = { en: 'The admin sent the order back to you. Please accept the order as soon as possible.', ar: '  قام الادمن بإعادة ارسال الطلب اليك مرة اخري من فضلك وافق على الطلب في اسرع وقت ' };

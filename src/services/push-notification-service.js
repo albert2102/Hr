@@ -13,7 +13,7 @@ export async function sendPushNotification(notifi) {
     try {
         
         for (let index = 0; index < notifi.targetUser.tokens.length; index++) {
-		  console.log('hi')
+		//   console.log('hi')
             var userToken = notifi.targetUser.tokens[index].token;
             if (notifi.targetUser.tokens[index].type == 'android') {
                 var payload = { token: userToken};
@@ -36,7 +36,7 @@ export async function sendPushNotification(notifi) {
                     payload.data.badge = notifi.image;
                     payload.notification.image = notifi.image;
                 }
-                console.log(payload)
+                // console.log(payload)
                 admin.messaging().send(payload)
                     .then(response => {
                         console.log('Successfully sent a message');
