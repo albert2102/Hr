@@ -888,8 +888,10 @@ export default {
 
             ////////////////////////////RefundOrder////////////////////////////////////////
             if(order.paymentMethod == 'DIGITAL' || order.paymentMethod == 'WALLET'){
+                let newUser = await User.findByIdAndUpdate(order.user.id,{wallet: order.user.wallet + order.totalPrice});
+                notificationNSP.to('room-' + user.id).emit(socketEvents.NewUser, { user: newUser });
+                
                 description = { ar: 'تم استرجاع قيمة الطلب في محفظتك يمكنك الاطلاع عليه ', en: 'The value of the order has been recovered in your wallet, you can view it.' };
-                await User.findByIdAndUpdate(order.user.id,{wallet: order.user.wallet + order.totalPrice});
                 await notifyController.create(req.user.id, order.user.id, description, order.id, 'REFUNDED_TO_WALLET', order.id);
                 notifyController.pushNotification(order.user.id, 'REFUNDED_TO_WALLET', order.id, description);
                 
