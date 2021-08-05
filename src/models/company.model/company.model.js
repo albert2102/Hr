@@ -136,6 +136,8 @@ const CompanySchema = new Schema({
         type: Number,
         default: -500
     }
+    ////////////////////////////////////////////////
+    
 }, { timestamps: true });
 
 CompanySchema.set('toJSON', {

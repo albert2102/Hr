@@ -25,7 +25,7 @@ const NotifSchema = new Schema({
     subjectType:{
         type:String,
         enum:['USER','CONTACTUS','ADMIN','ORDER','CHANGE_ORDER_STATUS','PROMOCODE','PRODUCT',
-        'ADVERTISMENT','ADDED_TO_WALLET','JOIN_STATUS','ADDVERTISMENT_STOPED','TRANSFER_MONEY']
+        'ADVERTISMENT','ADDED_TO_WALLET','JOIN_STATUS','ADDVERTISMENT_STOPED','TRANSFER_MONEY','REFUNDED_TO_WALLET']
     },
     mailType:{
         type:String,
