@@ -135,9 +135,12 @@ const CompanySchema = new Schema({
     driverDuesToStop:{
         type: Number,
         default: -500
-    }
+    },
     ////////////////////////////////////////////////
-    
+    orderCancelTime:{
+        type: Number,
+        default: 60 //sec
+    }
 }, { timestamps: true });
 
 CompanySchema.set('toJSON', {
