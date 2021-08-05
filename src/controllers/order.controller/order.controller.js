@@ -242,6 +242,7 @@ const findDriver = async (order) => {
             type: 'DRIVER',
             _id: { $nin: busyDrivers },
             _id: { $nin: order.rejectedDrivers },
+            stopReceiveOrders: false
         };
 
         let driver;
@@ -270,7 +271,7 @@ const findDriver = async (order) => {
         if (driver) {
             console.log("in ifffffffffffffffffffffffffffffffffffff")
             order.driver = driver._id;
-            order = await Order.findByIdAndUpdate(order.id, { driver: driver._id,lastActionDate:new Date() }).populate(populateQuery)
+            order = await Order.findByIdAndUpdate(order.id, { driver: driver._id, lastActionDate: new Date() }).populate(populateQuery)
             orderService(order);
             notificationNSP.to('room-' + driver._id).emit(socketEvents.NewOrder, { order: order });
             let description = {
@@ -333,7 +334,7 @@ const getCheckoutId = async (request, response, next, order, paymentBrand) => {
             cardEntityId = config.payment.Entity_ID_Card;
         }
         let address = 'From Store';
-        if(order.orderType != 'FROM_STORE'){
+        if (order.orderType != 'FROM_STORE') {
             address = request.address.address;
         }
 
@@ -441,7 +442,7 @@ export default {
             let date = new Date();
             if (traderNotResponse) {
                 query.traderNotResponse = traderNotResponse;
-                query.status = 'WAITING';
+                if(traderNotResponse == true) query.status = 'WAITING';
             }
             if (orderDate) query.createdAt = { $gte: new Date(moment(orderDate).startOf('day')), $lt: new Date(moment(orderDate).endOf('day')) };
 
@@ -601,7 +602,7 @@ export default {
             if (validatedBody.paymentMethod == 'WALLET' && req.user.wallet < validatedBody.totalPrice) {
                 return next(new ApiError(400, i18n.__('walletInvalid')));
             }
-            
+
 
             /////////////////////////////////////////////////////////////////////////////////////////////
             validatedBody.ajamTaxes = Number(trader.ajamTaxes) || 5;
@@ -612,18 +613,18 @@ export default {
                 validatedBody.driverDues = validatedBody.transportPrice;
             }
             //////////////////////////////////////////////////////////////////
-            if(trader.type == 'INSTITUTION' && !trader.productsIncludeTaxes){
+            if (trader.type == 'INSTITUTION' && !trader.productsIncludeTaxes) {
                 let traderPrice = validatedBody.price;
                 validatedBody.ajamDues = (traderPrice * (Number(validatedBody.ajamTaxes) / 100)).toFixed(2);
                 validatedBody.traderDues = (traderPrice - Number(validatedBody.ajamDues)) + ((validatedBody.price / 100) * Number(validatedBody.taxes));
             }
-            else{
+            else {
                 let taxes = company.taxes;
                 let traderPrice = validatedBody.price - ((validatedBody.price / 100) * Number(taxes));
                 validatedBody.ajamDues = (traderPrice * (Number(validatedBody.ajamTaxes) / 100)).toFixed(2);
                 validatedBody.traderDues = (traderPrice - Number(validatedBody.ajamDues)) + ((validatedBody.price / 100) * Number(taxes));
             }
-            
+
             /////////////////////////////////////////////////////////////////////////////////////////////
             let order = await Order.create(validatedBody);
             order.orderNumber = order.orderNumber + order.id;
@@ -825,7 +826,7 @@ export default {
                 updatedQuery.ajamTaxesFromDriver = driver.ajamTaxes;
                 updatedQuery.ajamDuesFromDriver = (Number(order.transportPrice) * (Number(updatedQuery.ajamTaxesFromDriver) / 100)).toFixed(2);
                 updatedQuery.driverDues = order.driverDues - updatedQuery.ajamDuesFromDriver;
-        
+
             }
             let updatedOrder = await Order.findByIdAndUpdate(orderId, updatedQuery, { new: true }).populate(populateQuery);
             updatedOrder = Order.schema.methods.toJSONLocalizedOnly(updatedOrder, i18n.getLocale());
@@ -883,18 +884,18 @@ export default {
                 await notifyController.create(req.user.id, order.user.id, description, order.id, 'CHANGE_ORDER_STATUS', order.id);
                 notifyController.pushNotification(order.user.id, 'CHANGE_ORDER_STATUS', order.id, description);
                 notificationNSP.to('room-' + order.user.id).emit(socketEvents.ChangeOrderStatus, { order: order });
-                
+
             }
 
             ////////////////////////////RefundOrder////////////////////////////////////////
-            if(order.paymentMethod == 'DIGITAL' || order.paymentMethod == 'WALLET'){
-                let newUser = await User.findByIdAndUpdate(order.user.id,{wallet: order.user.wallet + order.totalPrice});
+            if (order.paymentMethod == 'DIGITAL' || order.paymentMethod == 'WALLET') {
+                let newUser = await User.findByIdAndUpdate(order.user.id, { wallet: order.user.wallet + order.totalPrice });
                 notificationNSP.to('room-' + user.id).emit(socketEvents.NewUser, { user: newUser });
-                
+
                 description = { ar: 'تم استرجاع قيمة الطلب في محفظتك يمكنك الاطلاع عليه ', en: 'The value of the order has been recovered in your wallet, you can view it.' };
                 await notifyController.create(req.user.id, order.user.id, description, order.id, 'REFUNDED_TO_WALLET', order.id);
                 notifyController.pushNotification(order.user.id, 'REFUNDED_TO_WALLET', order.id, description);
-                
+
             }
         } catch (err) {
             next(err);
@@ -972,7 +973,7 @@ export default {
 
             let validatedBody = checkValidations(req);
             await checkExist(validatedBody.order, Order, { deleted: false, status: 'WAITING', traderNotResponse: true });
-            let updatedOrder = await Order.findByIdAndUpdate(validatedBody.order, { traderNotResponse: false, lastActionDate:new Date()}, { new: true }).populate(populateQuery);
+            let updatedOrder = await Order.findByIdAndUpdate(validatedBody.order, { traderNotResponse: false, lastActionDate: new Date() }, { new: true }).populate(populateQuery);
             updatedOrder = Order.schema.methods.toJSONLocalizedOnly(updatedOrder, i18n.getLocale());
             res.status(200).send(updatedOrder);
             let description = { en: 'The admin sent the order back to you. Please accept the order as soon as possible.', ar: '  قام الادمن بإعادة ارسال الطلب اليك مرة اخري من فضلك وافق على الطلب في اسرع وقت ' };
@@ -1095,7 +1096,15 @@ export default {
             total = total + Number(user.wallet);
 
             res.send({ data: results, total: total });
+            if (total < 0) {
+                user.currentAppAmount = total;
+                let comapny = await Company.findOne({ deleted: false });
+                if (total <= comapny.driverDuesToStop) {
+                    user.stopReceiveOrders = true;
+                }
+                await user.save();
 
+            }
         } catch (err) {
             next(err);
         }
