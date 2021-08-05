@@ -37,7 +37,9 @@ export default {
         let validations = [];
         if (!isUpdate) {
             validations = [
-    
+                
+                body('orderCancelTime').optional().not().isEmpty().withMessage(() => { return i18n.__('orderCancelTimeRequired') }),
+
                 body('contactusReasons').not().isEmpty().withMessage(() => { return i18n.__('contactusReasonsRequired') }).isArray().withMessage('Must Be Array'),
                 body('contactusReasons.*.ar').not().isEmpty().withMessage(() => { return i18n.__('arcontactusReasonsRequired') }),
                 body('contactusReasons.*.en').not().isEmpty().withMessage(() => { return i18n.__('encontactusReasonsRequired') }),
@@ -103,6 +105,8 @@ export default {
         }
         else {
             validations = [
+                body('orderCancelTime').optional().not().isEmpty().withMessage(() => { return i18n.__('orderCancelTimeRequired') }),
+
                 body('contactusReasons').optional().not().isEmpty().withMessage(() => { return i18n.__('contactusReasonsRequired') }).isArray().withMessage('Must Be Array'),
                 body('contactusReasons.*.ar').not().isEmpty().withMessage(() => { return i18n.__('arcontactusReasonsRequired') }),
                 body('contactusReasons.*.en').not().isEmpty().withMessage(() => { return i18n.__('encontactusReasonsRequired') }),
