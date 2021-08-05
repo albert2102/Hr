@@ -9,6 +9,7 @@ import i18n from 'i18n'
 var https = require('https');
 var querystring = require('querystring');
 import CreditCard from "../../models/credit.model/credit.model";
+import Company from '../../models/company.model/company.model';
 
 let populateQuery = [
     { path: 'user', model: 'user' },
@@ -311,10 +312,21 @@ export default {
                     if (success_regex_1.test(state.result.code) || success_regex_2.test(state.result.code)) {
                         let user = await User.findOne({ deleted: false, _id: request.user.id, lastCheckoutCreditId: validatedBody.resourcePath });
                             user.wallet = user.wallet + user.lastCheckoutCreditAmount;
-                            user.lastCheckoutCreditAmount = 0;
-                            user.lastCheckoutCreditId = '';
-                            await user.save();
+                            
+                            if (user.type == 'DRIVER') {
+                                let currentAmount = user.currentAppAmount + user.lastCheckoutCreditAmount;
+                                let comapny = await Company.findOne({ deleted: false });
+                                if (currentAmount > comapny.driverDuesToStop) {
+                                    user.stopReceiveOrders = false;
+                                    user.currentAppAmount = currentAmount;
+                                }
+                                user.lastCheckoutCreditAmount = 0;
+                                user.lastCheckoutCreditId = '';
+                                await user.save();
+                
+                            }
                             return response.status(200).send({ user, result: i18n.__('paymentSuccess') });
+                            
                         
                     } else {
                         return response.status(400).send({ result: i18n.__('paymentFail') });

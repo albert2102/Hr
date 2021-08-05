@@ -139,7 +139,7 @@ const CompanySchema = new Schema({
     ////////////////////////////////////////////////
     orderCancelTime:{
         type: Number,
-        default: 60 //sec
+        default: 5 //min
     }
 }, { timestamps: true });
 

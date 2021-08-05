@@ -242,6 +242,14 @@ const userSchema = new Schema({
     },
     lastCheckoutCreditAmount:{
         type: Number
+    },
+    ///////////////////////////////////////////
+    currentAppAmount:{ // for driver
+        type: Number
+    },
+    stopReceiveOrders:{
+        type: Boolean,
+        default: false
     }
 }, { timestamps: true });
 

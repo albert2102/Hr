@@ -10,6 +10,7 @@ import ApiError from "../../helpers/ApiError";
 import { generateVerifyCode } from '../../services/generator-code-service'
 import socketEvents from '../../socketEvents';
 import notifyController from '../notif.controller/notif.controller';
+import Company from '../../models/company.model/company.model';
 
 let populateQuery = [{ path: 'user', model: 'user' }];
 
@@ -20,7 +21,7 @@ export default {
         let validations
         if (!isUpdate) {
             validations = [
-                body('type').not().isEmpty().withMessage(() => { return i18n.__('typeRequired') }).isIn(['ORANGE','BLUE']).withMessage('Wrong type'),
+                body('type').not().isEmpty().withMessage(() => { return i18n.__('typeRequired') }).isIn(['ORANGE', 'BLUE']).withMessage('Wrong type'),
                 body('price').not().isEmpty().withMessage(() => { return i18n.__('priceRequired') }),
                 body('value').not().isEmpty().withMessage(() => { return i18n.__('valueRequired') }),
                 // body('number').not().isEmpty().withMessage(() => { return i18n.__('numberRequired') })
@@ -36,7 +37,7 @@ export default {
         }
         else {
             validations = [
-                body('type').optional().not().isEmpty().withMessage(() => { return i18n.__('typeRequired') }).isIn(['ORANGE','BLUE']).withMessage('Wrong type'),
+                body('type').optional().not().isEmpty().withMessage(() => { return i18n.__('typeRequired') }).isIn(['ORANGE', 'BLUE']).withMessage('Wrong type'),
                 body('price').optional().not().isEmpty().withMessage(() => { return i18n.__('priceRequired') }),
                 body('value').optional().not().isEmpty().withMessage(() => { return i18n.__('valueRequired') }),
                 // body('number').optional().not().isEmpty().withMessage(() => { return i18n.__('numberRequired') })
@@ -57,7 +58,7 @@ export default {
     async findAll(req, res, next) {
         try {
             let page = +req.query.page || 1, limit = +req.query.limit || 20;
-            var { number, price, value, month, year, user,type } = req.query;
+            var { number, price, value, month, year, user, type } = req.query;
             let query = { deleted: false };
 
             if (type) query.type = type;
@@ -168,7 +169,7 @@ export default {
             body('price').not().isEmpty().withMessage(() => { return i18n.__('priceRequired') }),
             body('value').not().isEmpty().withMessage(() => { return i18n.__('valueRequired') }),
             body('count').not().isEmpty().withMessage(() => { return i18n.__('countRequired') }).isNumeric().withMessage('must be numeric'),
-            body('type').not().isEmpty().withMessage(() => { return i18n.__('typeRequired') }).isIn(['ORANGE','BLUE']).withMessage('Wrong type'),
+            body('type').not().isEmpty().withMessage(() => { return i18n.__('typeRequired') }).isIn(['ORANGE', 'BLUE']).withMessage('Wrong type'),
         ];
     },
 
@@ -198,14 +199,13 @@ export default {
     validateUseCard() {
         return [
             body('number').not().isEmpty().withMessage(() => { return i18n.__('numberRequired') })
-                .isNumeric().withMessage(() => { return i18n.__('invalidNumber') })
-                .custom(async (val, { req }) => {
+               /* .custom(async (val, { req }) => {
                     let query = { number: val, deleted: false, used: true };
                     req.card = await ShippingCard.findOne(query).lean();
                     if (req.card)
                         throw new Error(i18n.__('invalidCard'));
                     return true;
-                })
+                })*/
         ];
     },
     async useCard(req, res, next) {
@@ -223,7 +223,20 @@ export default {
             await user.save();
             res.status(200).send({ user: user });
 
+            if (user.type == 'DRIVER') {
+                let currentAmount = user.currentAppAmount + Number(shippingCard.value);
+            
+                let comapny = await Company.findOne({ deleted: false });
+        
+                if (currentAmount > Number(comapny.driverDuesToStop)) {
+                    user.stopReceiveOrders = false;
+                    user.currentAppAmount = currentAmount;
+                }
+                await user.save();
+
+            }
             notificationNSP.to('room-' + user.id).emit(socketEvents.NewUser, { user: user });
+
         } catch (err) {
             next(err);
         }
