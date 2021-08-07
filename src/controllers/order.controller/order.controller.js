@@ -22,6 +22,8 @@ import { duration_time } from '../../calculateDistance'
 import schedule from 'node-schedule';
 import https from 'https';
 import querystring from 'querystring';
+import Zone from '../../models/zone.model/zone.model';
+import pluck from 'arr-pluck';
 
 let populateQuery = [
     { path: 'user', model: 'user' },
@@ -244,9 +246,14 @@ const findDriver = async (order) => {
             _id: { $nin: order.rejectedDrivers },
             stopReceiveOrders: false
         };
+        if(busyDrivers.length > 0 && order.rejectedDrivers.length > 0){
+            let busyIds = busyDrivers.concat(order.rejectedDrivers);
+            userQuery._id = {$nin: busyIds};
+        }
 
         let driver;
-        let drivers = await User.aggregate([
+        let zones = await Zone.aggregate([
+            // Find points or objects "near" and project the distance
             {
                 $geoNear: {
                     near: {
@@ -257,12 +264,30 @@ const findDriver = async (order) => {
                 }
             },
             {
-                $match: userQuery
+                $match: { deleted: false, user: { $ne: null } }
             },
+            // Logically filter anything outside of the radius
             {
-                $limit: 10
-            }
+                $redact: {
+                    $cond: {
+                        if: { $gt: ["$dist.calculated", "$radius"] },
+                        then: "$$PRUNE",
+                        else: "$$KEEP"
+                    }
+                }
+            },
+
         ]);
+        let ids = [...pluck(zones, 'user')];
+        // console.log("ids ====== ", ids)
+        if (userQuery._id) {
+            userQuery._id['$in'] =  ids ;
+        } else {
+            userQuery._id = { $in: ids };
+        }
+        // console.log(userQuery)
+        let drivers = await User.find(userQuery);
+
         console.log('drivers length in find drivers ', drivers.length);
         if (drivers && (drivers.length > 0)) {
             driver = drivers[0];
@@ -442,7 +467,7 @@ export default {
             let date = new Date();
             if (traderNotResponse) {
                 query.traderNotResponse = traderNotResponse;
-                if(traderNotResponse == true) query.status = 'WAITING';
+                if (traderNotResponse == true) query.status = 'WAITING';
             }
             if (orderDate) query.createdAt = { $gte: new Date(moment(orderDate).startOf('day')), $lt: new Date(moment(orderDate).endOf('day')) };
 
@@ -710,7 +735,7 @@ export default {
                 return next(new ApiError(403, ('notAllowToChangeStatus')));
 
             let { orderId } = req.params;
-            await checkExist(orderId, Order, { deleted: false, status: 'WAITING' });
+            await checkExist(orderId, Order, { deleted: false/*, status: 'WAITING'*/ });
             let validatedBody = checkValidations(req);
             if (validatedBody.status == 'ACCEPTED') {
                 validatedBody.acceptedDate = new Date();
@@ -1137,10 +1162,10 @@ export default {
         let validations = [
             body('order').not().isEmpty().withMessage(() => { return i18n.__('orderRequired') }),
             body('driver').not().isEmpty().withMessage(() => { return i18n.__('driverRequired') })
-            .custom(async (val, { req }) => {
-                req.driver = await checkExistThenGet(val, User, { deleted: false, type:'DRIVER' })
-                return true;
-            }),
+                .custom(async (val, { req }) => {
+                    req.driver = await checkExistThenGet(val, User, { deleted: false, type: 'DRIVER' })
+                    return true;
+                }),
         ];
         return validations;
     },
@@ -1150,8 +1175,8 @@ export default {
                 return next(new ApiError(403, ('notAllowToChangeStatus')));
 
             let validatedBody = checkValidations(req);
-            await checkExist(validatedBody.order, Order, { deleted: false, status: 'NOT_ASSIGN'});
-            let updatedOrder = await Order.findByIdAndUpdate(validatedBody.order, { status: 'ACCEPTED', driver:validatedBody.driver, lastActionDate: new Date() }, { new: true }).populate(populateQuery);
+            await checkExist(validatedBody.order, Order, { deleted: false, status: 'NOT_ASSIGN' });
+            let updatedOrder = await Order.findByIdAndUpdate(validatedBody.order, { status: 'ACCEPTED', driver: validatedBody.driver, lastActionDate: new Date() }, { new: true }).populate(populateQuery);
             updatedOrder = Order.schema.methods.toJSONLocalizedOnly(updatedOrder, i18n.getLocale());
             res.status(200).send(updatedOrder);
             let description = { en: 'The admin sent the order to you. Please accept the order as soon as possible.', ar: '  قام الادمن بارسال الطلب اليك مرة اخري من فضلك وافق على الطلب في اسرع وقت ' };

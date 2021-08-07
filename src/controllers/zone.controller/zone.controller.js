@@ -6,7 +6,8 @@ import { body } from "express-validator/check";
 import Zone from "../../models/zone.model/zone.model";
 import i18n from 'i18n'
 import dotObject from 'dot-object';
-import moment from 'moment'
+import moment from 'moment';
+import pluck from 'arr-pluck';
 
 export default {
 
@@ -55,6 +56,9 @@ export default {
                             distanceField: "distance",
                         }
                     },
+                    {
+                        $match: {deleted: false,user:{$ne: null}}
+                    },
                     // Logically filter anything outside of the radius
                     {
                         $redact: {
@@ -64,8 +68,12 @@ export default {
                                 else: "$$KEEP"
                             }
                         }
-                    }
-                ])
+                    },
+
+                ]);
+
+                let users = [...pluck(zones, 'user')];
+                console.log(users)
             }
             else {
                 pageCount = Math.ceil(zonesCount / limit);
