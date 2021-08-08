@@ -234,6 +234,7 @@ const orderService = async (order) => {
 
 const findDriver = async (order) => {
     try {
+        
         let busyDrivers = await Order.find({ deleted: false, status: { $in: ['ACCEPTED', 'DRIVER_ACCEPTED', 'SHIPPED'], } }).distinct('driver');
         let userQuery = {
             deleted: false,
@@ -246,6 +247,7 @@ const findDriver = async (order) => {
             _id: { $nin: order.rejectedDrivers },
             stopReceiveOrders: false
         };
+        
         if(busyDrivers.length > 0 && order.rejectedDrivers.length > 0){
             let busyIds = busyDrivers.concat(order.rejectedDrivers);
             userQuery._id = {$nin: busyIds};
@@ -287,6 +289,13 @@ const findDriver = async (order) => {
         }
         // console.log(userQuery)
         let drivers = await User.find(userQuery);
+
+        if(order.paymentMethod != 'CASH'){
+            userQuery.stopReceiveOrders = true;
+            let stopDriversForCreditOnly = await User.find(userQuery);
+            if(stopDriversForCreditOnly.length > 0) drivers = drivers.concat(stopDriversForCreditOnly);
+
+        }
 
         console.log('drivers length in find drivers ', drivers.length);
         if (drivers && (drivers.length > 0)) {
