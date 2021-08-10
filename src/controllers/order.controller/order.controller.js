@@ -660,6 +660,7 @@ export default {
             }
 
             /////////////////////////////////////////////////////////////////////////////////////////////
+            validatedBody.lastActionDate = new Date();
             let order = await Order.create(validatedBody);
             order.orderNumber = order.orderNumber + order.id;
             await order.save();
