@@ -289,7 +289,7 @@ const findDriver = async (order) => {
         } else {
             userQuery._id = { $in: ids };
         }
-        // console.log(userQuery)
+        console.log(userQuery)
         let drivers = await User.find(userQuery);
 
         if(order.paymentMethod != 'CASH'){
