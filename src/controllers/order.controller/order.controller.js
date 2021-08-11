@@ -243,15 +243,15 @@ const findDriver = async (order) => {
             ajamTaxes: { $ne: null },
             status: 'ACCEPTED',
             type: 'DRIVER',
-            _id: { $nin: busyDrivers },
-            _id: { $nin: order.rejectedDrivers },
+            // _id: { $nin: busyDrivers },
+            // _id: { $nin: order.rejectedDrivers },
             stopReceiveOrders: false
         };
         console.log("busyDrivers === ",busyDrivers)
         console.log("rejectedDrivers === ",order.rejectedDrivers)
         if(busyDrivers.length > 0 && order.rejectedDrivers.length > 0){
             let busyIds = busyDrivers.concat(order.rejectedDrivers);
-            userQuery._id = {$nin: busyIds};
+            if(busyIds.length >0) userQuery._id = {$nin: busyIds};
         }
 
         let driver;
