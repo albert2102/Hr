@@ -249,12 +249,14 @@ const findDriver = async (order) => {
         };
         console.log("busyDrivers === ",busyDrivers)
         console.log("rejectedDrivers === ",order.rejectedDrivers)
+
         if(busyDrivers.length > 0 && order.rejectedDrivers.length > 0){
             let busyIds = busyDrivers.concat(order.rejectedDrivers);
-            console.log("busyIds === ",busyIds)
             if(busyIds.length >0) userQuery._id = {$nin: busyIds};
+
         }else if(busyDrivers.length > 0 && order.rejectedDrivers.length == 0){
             userQuery._id = {$nin: busyDrivers};
+
         }else if(busyDrivers.length == 0 && order.rejectedDrivers.length > 0){
             userQuery._id = {$nin: order.rejectedDrivers};
         }
@@ -290,7 +292,8 @@ const findDriver = async (order) => {
         let ids = [...pluck(zones, 'user')];
         console.log("zones ====== ", ids)
         if (userQuery._id) {
-            userQuery._id['$in'] =  ids ;
+            let ninDrivers = userQuery._id.$nin;
+            userQuery.$and= [{_id:{$in:ids}},{_id:{$nin:ninDrivers}}];
         } else {
             userQuery._id = { $in: ids };
         }
