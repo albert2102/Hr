@@ -294,7 +294,7 @@ const findDriver = async (order) => {
         
         if (userQuery._id) {
             let ninDrivers = userQuery._id.$nin;
-            ids = ninDrivers.filter(x => ids.includes(x));
+            ids = ninDrivers.filter(x => !ids.includes(x));
         } 
         console.log("zones ====== ", ids)
 
