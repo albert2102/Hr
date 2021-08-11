@@ -429,7 +429,7 @@ export default {
             let page = +req.query.page || 1, limit = +req.query.limit || 20;
             let { user, status, paymentMethod, month, year, fromDate, toDate, type,
                 userName, price, orderDate, totalPrice, promoCode, orderType, driver,
-                orderNumber, numberOfProducts, waitingOrders, currentOrders, finishedOrders, traderNotResponse, trader
+                orderNumber, numberOfProducts, waitingOrders, currentOrders, finishedOrders, traderNotResponse, trader,defaultOrders
             } = req.query;
             let query = { deleted: false, $or: [{ paymentMethod: 'DIGITAL', paymentStatus: 'SUCCESSED' }, { paymentMethod: { $in: ['CASH', 'WALLET'] } }] };
             if (trader) query.trader = trader;
@@ -472,6 +472,10 @@ export default {
                 } else if (finishedOrders) {
                     query.status = { $in: ['DELIVERED'] }
                 }
+            }
+            //////admin tab///////
+            if(defaultOrders){
+                query.status = {$in:['WAITING','ACCEPTED','DRIVER_ACCEPTED','REJECTED', 'CANCELED', 'SHIPPED', 'DELIVERED']}
             }
             let date = new Date();
             if (traderNotResponse) {
