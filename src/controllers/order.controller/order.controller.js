@@ -291,13 +291,15 @@ const findDriver = async (order) => {
 
         let ids = [...pluck(zones, 'user')];
         console.log("zones ====== ", ids)
+        
         if (userQuery._id) {
             let ninDrivers = userQuery._id.$nin;
-            userQuery.$and= [{_id:{$in:ids}},{_id:{$nin:ninDrivers}}];
-            delete userQuery._id;
-        } else {
-            userQuery._id = { $in: ids };
-        }
+            ids = ninDrivers.filter(x => ids.includes(x));
+        } 
+        console.log("zones ====== ", ids)
+
+        userQuery._id = { $in: ids };
+
         console.log(userQuery)
         let drivers = await User.find(userQuery);
 
