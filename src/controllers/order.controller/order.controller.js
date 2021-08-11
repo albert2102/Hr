@@ -294,6 +294,7 @@ const findDriver = async (order) => {
         if (userQuery._id) {
             let ninDrivers = userQuery._id.$nin;
             userQuery.$and= [{_id:{$in:ids}},{_id:{$nin:ninDrivers}}];
+            delete userQuery._id;
         } else {
             userQuery._id = { $in: ids };
         }
