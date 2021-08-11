@@ -452,7 +452,7 @@ export default {
                         query.traderNotResponse = false;
 
                 } else if (currentOrders) {
-                    query.status = { $in: ['ACCEPTED', 'DRIVER_ACCEPTED', 'SHIPPED'] }
+                    query.status = { $in: ['ACCEPTED', 'DRIVER_ACCEPTED', 'SHIPPED','NOT_ASSIGN'] }
 
                 } else if (finishedOrders) {
                     query.status = { $in: ['DELIVERED', 'REJECTED'] }
