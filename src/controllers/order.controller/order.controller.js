@@ -248,7 +248,7 @@ const findDriver = async (order) => {
             stopReceiveOrders: false
         };
         console.log("busyDrivers === ",busyDrivers)
-        console.log("rejectedDrivers === ",rejectedDrivers)
+        console.log("rejectedDrivers === ",order.rejectedDrivers)
         if(busyDrivers.length > 0 && order.rejectedDrivers.length > 0){
             let busyIds = busyDrivers.concat(order.rejectedDrivers);
             userQuery._id = {$nin: busyIds};
