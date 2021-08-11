@@ -251,7 +251,12 @@ const findDriver = async (order) => {
         console.log("rejectedDrivers === ",order.rejectedDrivers)
         if(busyDrivers.length > 0 && order.rejectedDrivers.length > 0){
             let busyIds = busyDrivers.concat(order.rejectedDrivers);
+            console.log("busyIds === ",busyIds)
             if(busyIds.length >0) userQuery._id = {$nin: busyIds};
+        }else if(busyDrivers.length > 0 && order.rejectedDrivers.length == 0){
+            userQuery._id = {$nin: busyDrivers};
+        }else if(busyDrivers.length == 0 && order.rejectedDrivers.length > 0){
+            userQuery._id = {$nin: order.rejectedDrivers};
         }
 
         let driver;
