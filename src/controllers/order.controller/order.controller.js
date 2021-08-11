@@ -247,7 +247,8 @@ const findDriver = async (order) => {
             _id: { $nin: order.rejectedDrivers },
             stopReceiveOrders: false
         };
-        
+        console.log("busyDrivers === ",busyDrivers)
+        console.log("rejectedDrivers === ",rejectedDrivers)
         if(busyDrivers.length > 0 && order.rejectedDrivers.length > 0){
             let busyIds = busyDrivers.concat(order.rejectedDrivers);
             userQuery._id = {$nin: busyIds};
@@ -280,8 +281,9 @@ const findDriver = async (order) => {
             },
 
         ]);
+
         let ids = [...pluck(zones, 'user')];
-        // console.log("ids ====== ", ids)
+        console.log("zones ====== ", ids)
         if (userQuery._id) {
             userQuery._id['$in'] =  ids ;
         } else {
