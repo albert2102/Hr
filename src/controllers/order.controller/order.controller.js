@@ -325,8 +325,8 @@ const findDriver = async (order) => {
                 ar: 'لديك طلب جديد ',
                 en: 'You have a new Order'
             }
-            await notifyController.create(order.user.id, order.trader.id, description, order.id, 'ORDER', order.id);
-            notifyController.pushNotification(order.trader.id, 'ORDER', order.id, description);
+            await notifyController.create(order.user.id, driver._id, description, order.id, 'ORDER', order.id);
+            notifyController.pushNotification(driver._id, 'ORDER', order.id, description);
             driverOrdersCount(driver._id);
         } else {
             console.log("in elseeeeeeeeeeeeeeeeeeeeeeee")
