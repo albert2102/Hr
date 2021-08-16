@@ -316,6 +316,9 @@ export default {
             user = await User.findOneAndUpdate({ deleted: false, _id: validatedBody.userId }, validatedBody, { new: true })
             user = await User.schema.methods.toJSONLocalizedOnly(user, i18n.getLocale());
             res.status(200).send(user);
+            if (user.type == 'INSTITUTION') {
+                notificationNSP.emit(socketEvents.UpdatedTrader, { user: user });
+            }
         } catch (error) {
             next(error);
         }
@@ -687,7 +690,7 @@ export default {
             await count(verifyUser.type);
 
             let description ;
-
+            
             if (verifyUser.type == 'DRIVER') {
                 if (validatedBody.status == 'ACCEPTED') {
                     description = {en:"You are now a captain in the Agam team",ar:"انت الآن  كابتن لدي فريق أجَمْ"}
@@ -702,8 +705,8 @@ export default {
                     description = {en:"You request to join Ajam has been rejected",ar:"تم رفض طلبك لمشاركة أجَمْ كمتجر"}
                 }
             }
-            await notificationController.create(req.user.id, verifyUser.id, description, verifyUser.id, 'JOIN_STATUS');
-            notificationController.pushNotification(verifyUser.id, 'JOIN_STATUS', verifyUser.id, description);
+            await notificationController.create(req.user.id, validatedBody.userId, description, validatedBody.userId, 'JOIN_STATUS');
+            notificationController.pushNotification(validatedBody.userId, 'JOIN_STATUS', validatedBody.userId, description);
 
 
 

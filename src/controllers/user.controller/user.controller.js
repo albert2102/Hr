@@ -304,7 +304,7 @@ export default {
                         user = await User.schema.methods.toJSONLocalizedOnly(user, i18n.getLocale());
 
                         res.status(200).send(user);
-                        if (user.type == 'INSTITUTION' && validatedBody.institutionStatus) {
+                        if (user.type == 'INSTITUTION') {
                             notificationNSP.emit(socketEvents.UpdatedTrader, { user: user });
                         }
                     } else {
@@ -717,7 +717,7 @@ export default {
                 limit = +req.query.limit || 20;
             var { text, hasOffer, open, long, lat, category, highestRated } = req.query;
 
-            let query = { deleted: false, type: 'INSTITUTION' };
+            let query = { deleted: false, type: 'INSTITUTION',activated: true };
             let sortQuery = { createdAt: -1 };
             if (open) query.institutionStatus = 'OPEN'; // مفتوح
             if (highestRated) sortQuery = { totalRate: -1 }; //الاعلي تقييما
