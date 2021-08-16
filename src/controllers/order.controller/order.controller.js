@@ -738,6 +738,7 @@ export default {
             await order.save();
             res.status(200).send("Deleted Successfully");
             clientOrdersCount(order.user);
+            await Notification.updateMany({deleted: false,subject:orderId,subjectType:{$in:['ORDER','CHANGE_ORDER_STATUS']}})
 
         }
         catch (err) {
@@ -781,7 +782,7 @@ export default {
                 ////////////// find drivers /////////////////////////
                 if (updatedOrder.orderType == 'DELIVERY') await findDriver(updatedOrder);
                 ////////////////////////////////////////////////////
-                description = { en: 'Your Order Has Been Approved', ar: '  جاري تجهيز طلبك' };
+                description = { en: 'Your Order Has Been Approved', ar: ' جاري تجهيز طلبك' };
             } else {
                 description = { en: 'Your Order Has Been Rejected ' + validatedBody.rejectReason, ar: ' تم رفض طلبك ' + validatedBody.rejectReason };
             }
@@ -792,7 +793,7 @@ export default {
             notificationNSP.to('room-' + updatedOrder.user.id).emit(socketEvents.ChangeOrderStatus, { order: updatedOrder });
 
             if (updatedOrder.user.language == "ar") {
-                await sendChangeOrderEmail(updatedOrder.user.email, description.ar + ' : ' + updatedOrder.orderNumber)
+                await sendChangeOrderEmail(updatedOrder.user.email, description.ar + 'رقم ' + ' : ' + updatedOrder.orderNumber)
             }
             else {
                 await sendChangeOrderEmail(updatedOrder.user.email, description.en + ' : ' + updatedOrder.orderNumber)
@@ -935,7 +936,7 @@ export default {
             notificationNSP.to('room-' + order.trader.id).emit(socketEvents.ChangeOrderStatus, { order: order });
 
             if (user.type == 'ADMIN' || user.type == 'SUB_ADMIN') {
-
+                description = {ar:'نأسف لم نتمكن من تلبيه طلبك الان وسيتم استرداد المدفوعات',en:'We are sorry that we are unable to fulfill your order now and the payment is being refunded'}
                 await notifyController.create(req.user.id, order.user.id, description, order.id, 'CHANGE_ORDER_STATUS', order.id);
                 notifyController.pushNotification(order.user.id, 'CHANGE_ORDER_STATUS', order.id, description);
                 notificationNSP.to('room-' + order.user.id).emit(socketEvents.ChangeOrderStatus, { order: order });
@@ -1180,6 +1181,8 @@ export default {
             let validatedBody = checkValidations(req);
             await Order.updateMany({ _id: { $in: validatedBody.ids }, deleted: false }, { deleted: true, deletedDate: new Date() })
             res.status(200).send("Deleted Successfully");
+            await Notification.updateMany({deleted: false,subject:{ $in: validatedBody.ids },subjectType:{$in:['ORDER','CHANGE_ORDER_STATUS']}})
+
         }
         catch (err) {
             next(err);

@@ -37,7 +37,7 @@ export default {
             if (name.length == 1) {
                 name.push(name[0]);
             }
-            
+
             let body = {
                 'merchantTransactionId': request.user.id,
                 'entityId': cardEntityId,
@@ -75,7 +75,7 @@ export default {
                     result = { checkoutId: result.id, amount: amount }
                     console.log(result)
                     response.status(200).send(result);
-                    await User.findByIdAndUpdate(request.user.id,{ lastCheckoutCreditId: result.checkoutId,lastCheckoutCreditAmount:result.amount });
+                    await User.findByIdAndUpdate(request.user.id, { lastCheckoutCreditId: result.checkoutId, lastCheckoutCreditAmount: result.amount });
 
                 });
             });
@@ -311,23 +311,24 @@ export default {
                     const success_regex_2 = RegExp(/^(000\.400\.0[^3]|000\.400\.100)/);
                     if (success_regex_1.test(state.result.code) || success_regex_2.test(state.result.code)) {
                         let user = await User.findOne({ deleted: false, _id: request.user.id, lastCheckoutCreditId: validatedBody.resourcePath });
-                            user.wallet = user.wallet + user.lastCheckoutCreditAmount;
-                            
-                            if (user.type == 'DRIVER') {
-                                let currentAmount = user.currentAppAmount + user.lastCheckoutCreditAmount;
-                                let comapny = await Company.findOne({ deleted: false });
-                                if (currentAmount > comapny.driverDuesToStop) {
-                                    user.stopReceiveOrders = false;
-                                    user.currentAppAmount = currentAmount;
-                                }
-                                user.lastCheckoutCreditAmount = 0;
-                                user.lastCheckoutCreditId = '';
-                                await user.save();
-                
+                        user.wallet = user.wallet + user.lastCheckoutCreditAmount;
+
+                        if (user.type == 'DRIVER') {
+                            let currentAmount = user.currentAppAmount + user.lastCheckoutCreditAmount;
+                            let comapny = await Company.findOne({ deleted: false });
+                            if (currentAmount > comapny.driverDuesToStop) {
+                                user.stopReceiveOrders = false;
+                                user.currentAppAmount = currentAmount;
                             }
-                            return response.status(200).send({ user, result: i18n.__('paymentSuccess') });
-                            
-                        
+                            user.lastCheckoutCreditAmount = 0;
+                            user.lastCheckoutCreditId = '';
+
+                        }
+                        await user.save();
+
+                        return response.status(200).send({ user, result: i18n.__('paymentSuccess') });
+
+
                     } else {
                         return response.status(400).send({ result: i18n.__('paymentFail') });
                     }
