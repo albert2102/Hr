@@ -36,7 +36,7 @@ let populateQuery = [
 
 let TraderNotResponseCount = async () => {
     try {
-        let count = await Order.count({ deleted: false, traderNotResponse: true, status: 'WAITING' });
+        let count = await Order.count({ deleted: false, traderNotResponse: true, status: 'WAITING',$or: [{ paymentMethod: 'DIGITAL', paymentStatus: 'SUCCESSED' }, { paymentMethod: { $in: ['CASH', 'WALLET'] } }] });
         adminNSP.emit(socketEvents.TraderNotResponseCount, { count: count });
 
     } catch (error) {
@@ -45,7 +45,7 @@ let TraderNotResponseCount = async () => {
 }
 let DriverNotResponseCount = async () => {
     try {
-        let count = await Order.count({ deleted: false, status: 'NOT_ASSIGN' });
+        let count = await Order.count({ deleted: false, status: 'NOT_ASSIGN',$or: [{ paymentMethod: 'DIGITAL', paymentStatus: 'SUCCESSED' }, { paymentMethod: { $in: ['CASH', 'WALLET'] } }] });
         adminNSP.emit(socketEvents.DriverNotResponseCount, { count: count });
 
     } catch (error) {
