@@ -218,7 +218,7 @@ const orderService = async (order) => {
                 currentOrder = await checkExistThenGet(order.id, Order);
                 console.log(currentOrder)
                 if (currentOrder.status == 'ACCEPTED') {
-                    let validatedBody = { $addToSet: { rejectedDrivers: currentOrder.driver }, $unset: { driver: 1 } };
+                    let validatedBody = { $addToSet: { rejectedDrivers: currentOrder.driver }, $unset: { driver: 1 },lastActionDate: new Date() };
                     let updatedOrder = await Order.findByIdAndUpdate(order.id, validatedBody, { new: true }).populate(populateQuery);
                     notificationNSP.to('room-' + currentOrder.driver).emit(socketEvents.OrderExpired, { order: updatedOrder });
                     findDriver(updatedOrder);
@@ -790,7 +790,7 @@ export default {
             notificationNSP.to('room-' + updatedOrder.user.id).emit(socketEvents.ChangeOrderStatus, { order: updatedOrder });
 
             if (updatedOrder.user.language == "ar") {
-                await sendChangeOrderEmail(updatedOrder.user.email, description.ar + 'رقم ' + ' : ' + updatedOrder.orderNumber)
+                await sendChangeOrderEmail(updatedOrder.user.email, description.ar + ' رقم ' + ' : ' + updatedOrder.orderNumber)
             }
             else {
                 await sendChangeOrderEmail(updatedOrder.user.email, description.en + ' : ' + updatedOrder.orderNumber)
