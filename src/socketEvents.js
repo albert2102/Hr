@@ -33,6 +33,7 @@ socketEvents.NewOrdersCount = 'NewOrdersCount';
 socketEvents.CurrentOrdersCount = 'CurrentOrdersCount';
 socketEvents.FinishedOrdersCount = 'FinishedOrdersCount';
 socketEvents.TraderNotResponseCount = 'TraderNotResponseCount';
+socketEvents.DriverNotResponseCount = 'DriverNotResponseCount';
 socketEvents.UpdatedTrader = 'UpdatedTrader';
 socketEvents.RequestMoneyCount = 'RequestMoneyCount'
 socketEvents.SupportChatCount = 'SupportChatCount'

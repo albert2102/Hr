@@ -50,8 +50,17 @@ const cancelJob = (jobName)=>{
 
 let TraderNotResponseCount = async () => {
     try {
-        let count = await Order.count({ deleted: false, traderNotResponse: true, status: 'WAITING' });
+        let count = await Order.count({ deleted: false, traderNotResponse: true, status: 'WAITING', $or: [{ paymentMethod: 'DIGITAL', paymentStatus: 'SUCCESSED' }, { paymentMethod: { $in: ['CASH', 'WALLET'] } }] });
         adminNSP.emit(socketEvents.TraderNotResponseCount, { count: count });
+
+    } catch (error) {
+        throw error;
+    }
+}
+let DriverNotResponseCount = async () => {
+    try {
+        let count = await Order.count({ deleted: false, status: 'NOT_ASSIGN',$or: [{ paymentMethod: 'DIGITAL', paymentStatus: 'SUCCESSED' }, { paymentMethod: { $in: ['CASH', 'WALLET'] } }] });
+        adminNSP.emit(socketEvents.DriverNotResponseCount, { count: count });
 
     } catch (error) {
         throw error;
@@ -60,7 +69,7 @@ let TraderNotResponseCount = async () => {
 let traderOrdersCount = async (userId) => {
     try {
         let newOrdersQuery = { deleted: false, status: 'WAITING', trader: userId, traderNotResponse: false };
-        let currentOrdersQuery = { deleted: false, trader: userId, status: { $in: ['ACCEPTED', 'DRIVER_ACCEPTED', 'SHIPPED'] } };
+        let currentOrdersQuery = { deleted: false, trader: userId, status: { $in: ['ACCEPTED', 'DRIVER_ACCEPTED', 'SHIPPED','NOT_ASSIGN'] } };
         let finishedOrdersQuery = { deleted: false, trader: userId, status: { $in: ['DELIVERED'] } };
 
         let promiseData = [
@@ -232,7 +241,7 @@ const orderService = async (order) => {
                 currentOrder = await checkExistThenGet(order.id, Order);
                 console.log(currentOrder)
                 if (currentOrder.status == 'ACCEPTED') {
-                    let validatedBody = { $addToSet: { rejectedDrivers: currentOrder.driver }, $unset: { driver: 1 } };
+                    let validatedBody = { $addToSet: { rejectedDrivers: currentOrder.driver }, $unset: { driver: 1 },lastActionDate: new Date() };
                     let updatedOrder = await Order.findByIdAndUpdate(order.id, validatedBody, { new: true }).populate(populateQuery);
                     notificationNSP.to('room-' + currentOrder.driver).emit(socketEvents.OrderExpired, { order: updatedOrder });
                     findDriver(updatedOrder);
@@ -348,6 +357,7 @@ const findDriver = async (order) => {
         } else {
             console.log("in elseeeeeeeeeeeeeeeeeeeeeeee")
             order = await Order.findByIdAndUpdate(order.id, { status: 'NOT_ASSIGN' });
+            await DriverNotResponseCount();
         }
     } catch (error) {
         throw error;
@@ -371,7 +381,7 @@ const traderService = async (order) => {
                 if (currentOrder.status == 'WAITING') {
                     let updatedOrder = await Order.findByIdAndUpdate(order.id, { traderNotResponse: true }, { new: true }).populate(populateQuery);
                     notificationNSP.to('room-' + updatedOrder.trader.id).emit(socketEvents.OrderExpired, { order: updatedOrder });
-                    TraderNotResponseCount();
+                    await TraderNotResponseCount();
                 }
             } catch (error) {
                 throw error;
@@ -510,7 +520,7 @@ export default {
             let date = new Date();
             if (traderNotResponse) {
                 query.traderNotResponse = traderNotResponse;
-                if (traderNotResponse == true) query.status = 'WAITING';
+                if (traderNotResponse == true || traderNotResponse == 'true') query.status = 'WAITING';
             }
             if (orderDate) query.createdAt = { $gte: new Date(moment(orderDate).startOf('day')), $lt: new Date(moment(orderDate).endOf('day')) };
 
@@ -546,7 +556,6 @@ export default {
                 let endOfDate = moment(date).endOf('year');
                 query.createdAt = { $gte: new Date(startOfDate), $lte: new Date(endOfDate) }
             }
-
             let orders = await Order.find(query).populate(populateQuery).sort({ createdAt: -1 }).limit(limit).skip((page - 1) * limit);
             orders = Order.schema.methods.toJSONLocalizedOnly(orders, i18n.getLocale());
             let ordersCount = await Order.count(query);
@@ -807,7 +816,7 @@ export default {
             notificationNSP.to('room-' + updatedOrder.user.id).emit(socketEvents.ChangeOrderStatus, { order: updatedOrder });
 
             if (updatedOrder.user.language == "ar") {
-                await sendChangeOrderEmail(updatedOrder.user.email, description.ar + 'رقم ' + ' : ' + updatedOrder.orderNumber)
+                await sendChangeOrderEmail(updatedOrder.user.email, description.ar + ' رقم ' + ' : ' + updatedOrder.orderNumber)
             }
             else {
                 await sendChangeOrderEmail(updatedOrder.user.email, description.en + ' : ' + updatedOrder.orderNumber)
@@ -1237,10 +1246,11 @@ export default {
             notificationNSP.to('room-' + updatedOrder.driver.id).emit(socketEvents.NewOrder, { order: updatedOrder });
             driverOrdersCount(updatedOrder.driver.id);
             findDriver(updatedOrder);
-
+            await DriverNotResponseCount();
 
         } catch (err) {
             next(err);
         }
     },
+    DriverNotResponseCount,
 }
