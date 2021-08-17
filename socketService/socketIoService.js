@@ -106,6 +106,8 @@ module.exports = {
             await adminController.count('INSTITUTION');
             await adminController.count('DRIVER');
             await requestMoneyHistoryController.countNew();
+            await orderController.TraderNotResponseCount();
+            await orderController.DriverNotResponseCount();
         })
     },
 

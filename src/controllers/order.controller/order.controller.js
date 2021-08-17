@@ -43,6 +43,15 @@ let TraderNotResponseCount = async () => {
         throw error;
     }
 }
+let DriverNotResponseCount = async () => {
+    try {
+        let count = await Order.count({ deleted: false, status: 'NOT_ASSIGN' });
+        adminNSP.emit(socketEvents.DriverNotResponseCount, { count: count });
+
+    } catch (error) {
+        throw error;
+    }
+}
 let traderOrdersCount = async (userId) => {
     try {
         let newOrdersQuery = { deleted: false, status: 'WAITING', trader: userId, traderNotResponse: false };
@@ -334,6 +343,7 @@ const findDriver = async (order) => {
         } else {
             console.log("in elseeeeeeeeeeeeeeeeeeeeeeee")
             order = await Order.findByIdAndUpdate(order.id, { status: 'NOT_ASSIGN' });
+            await DriverNotResponseCount();
         }
     } catch (error) {
         throw error;
@@ -357,7 +367,7 @@ const traderService = async (order) => {
                 if (currentOrder.status == 'WAITING') {
                     let updatedOrder = await Order.findByIdAndUpdate(order.id, { traderNotResponse: true }, { new: true }).populate(populateQuery);
                     notificationNSP.to('room-' + updatedOrder.trader.id).emit(socketEvents.OrderExpired, { order: updatedOrder });
-                    TraderNotResponseCount();
+                    await TraderNotResponseCount();
                 }
             } catch (error) {
                 throw error;
@@ -1220,10 +1230,11 @@ export default {
             notificationNSP.to('room-' + updatedOrder.driver.id).emit(socketEvents.NewOrder, { order: updatedOrder });
             driverOrdersCount(updatedOrder.driver.id);
             findDriver(updatedOrder);
-
+            await DriverNotResponseCount();
 
         } catch (err) {
             next(err);
         }
     },
+    DriverNotResponseCount,
 }
