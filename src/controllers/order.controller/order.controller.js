@@ -286,6 +286,9 @@ const findDriver = async (order) => {
                     }
                 }
             },
+            {
+                $sort: { "dist.calculated": 1 }
+            }
 
         ]);
 
