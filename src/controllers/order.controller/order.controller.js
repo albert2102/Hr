@@ -34,6 +34,20 @@ let populateQuery = [
     { path: 'promoCode', model: 'promocode' },
 ];
 
+const cancelJob = (jobName)=>{
+    try {
+        let job = schedule.scheduledJobs[jobName];
+        console.log('============== job ======================');
+        console.log(job);
+        console.log('====================================');
+        if (job) {
+            job.cancel();
+        }
+    } catch (error) {
+        throw error ;
+    }
+}
+
 let TraderNotResponseCount = async () => {
     try {
         let count = await Order.count({ deleted: false, traderNotResponse: true, status: 'WAITING' });
@@ -833,6 +847,9 @@ export default {
                 validatedBody['$addToSet'] = { rejectedDrivers: req.user.id };
                 delete validatedBody.status;
                 updatedOrder = await Order.findByIdAndUpdate(orderId, validatedBody, { new: true }).populate(populateQuery);
+                
+                let jobName = 'order-' + updatedOrder.id;
+                cancelJob(jobName);
                 await findDriver(updatedOrder);
             }
             updatedOrder = Order.schema.methods.toJSONLocalizedOnly(updatedOrder, i18n.getLocale());
