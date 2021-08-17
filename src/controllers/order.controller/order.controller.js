@@ -36,7 +36,7 @@ let populateQuery = [
 
 let TraderNotResponseCount = async () => {
     try {
-        let count = await Order.count({ deleted: false, traderNotResponse: true, status: 'WAITING',$or: [{ paymentMethod: 'DIGITAL', paymentStatus: 'SUCCESSED' }, { paymentMethod: { $in: ['CASH', 'WALLET'] } }] });
+        let count = await Order.count({ deleted: false, traderNotResponse: true, status: 'WAITING', $or: [{ paymentMethod: 'DIGITAL', paymentStatus: 'SUCCESSED' }, { paymentMethod: { $in: ['CASH', 'WALLET'] } }] });
         adminNSP.emit(socketEvents.TraderNotResponseCount, { count: count });
 
     } catch (error) {
@@ -506,7 +506,7 @@ export default {
             let date = new Date();
             if (traderNotResponse) {
                 query.traderNotResponse = traderNotResponse;
-                if (traderNotResponse == true) query.status = 'WAITING';
+                if (traderNotResponse == true || traderNotResponse == 'true') query.status = 'WAITING';
             }
             if (orderDate) query.createdAt = { $gte: new Date(moment(orderDate).startOf('day')), $lt: new Date(moment(orderDate).endOf('day')) };
 
@@ -542,7 +542,6 @@ export default {
                 let endOfDate = moment(date).endOf('year');
                 query.createdAt = { $gte: new Date(startOfDate), $lte: new Date(endOfDate) }
             }
-
             let orders = await Order.find(query).populate(populateQuery).sort({ createdAt: -1 }).limit(limit).skip((page - 1) * limit);
             orders = Order.schema.methods.toJSONLocalizedOnly(orders, i18n.getLocale());
             let ordersCount = await Order.count(query);
