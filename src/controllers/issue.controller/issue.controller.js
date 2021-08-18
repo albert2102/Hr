@@ -94,13 +94,15 @@ export default {
     async create(req, res, next) {
         try {
             let user = req.user;
+            let adv = req.advertisment;
+            console.log(adv)
             let validatedBody = checkValidations(req);
             validatedBody.user = user.id;
             let createdissue = await Issue.create(validatedBody);
             createdissue = Issue.schema.methods.toJSONLocalizedOnly(createdissue, i18n.getLocale());
             res.status(200).send(createdissue);
             await countNew();
-            await Advertisments.findByIdAndUpdate(validatedBody.advertisment,{issuesCount:req.advertisment.issuesCount + 1})
+            await Advertisments.findByIdAndUpdate(adv.id,{issuesCount:adv.issuesCount + 1})
 
         } catch (err) {
             console.log(err);
