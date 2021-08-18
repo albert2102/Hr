@@ -101,7 +101,6 @@ export default {
             res.status(200).send(createdissue);
             await countNew();
             let adv = await Advertisments.findById(validatedBody.advertisment);
-            console.log(adv)
             await Advertisments.findByIdAndUpdate(adv.id,{issuesCount:adv.issuesCount + 1})
 
         } catch (err) {

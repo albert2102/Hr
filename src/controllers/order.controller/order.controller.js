@@ -810,7 +810,7 @@ export default {
                 description = { en: 'Your Order Has Been Rejected ' + validatedBody.rejectReason, ar: ' تم رفض طلبك ' + validatedBody.rejectReason };
             }
 
-            await notifyController.create(req.user.id, updatedOrder.user.id, description, updatedOrder.id, 'CHANGE_ORDER_STATUS', updatedOrder.id);
+            await notifyController.create(req.user.id, updatedOrder.user.id, description, updatedOrder.id, 'CHANGE_ORDER_STATUS', updatedOrder.id,updatedOrder.status);
             notifyController.pushNotification(updatedOrder.user.id, 'CHANGE_ORDER_STATUS', updatedOrder.id, description);
 
             notificationNSP.to('room-' + updatedOrder.user.id).emit(socketEvents.ChangeOrderStatus, { order: updatedOrder });
@@ -882,7 +882,7 @@ export default {
 
             let description = { ar: ' تم تغير حالة الطلب الي تم الشحن ', en: 'Order Status Changed To Order Shipped' };
 
-            await notifyController.create(req.user.id, updatedOrder.user.id, description, updatedOrder.id, 'CHANGE_ORDER_STATUS', updatedOrder.id);
+            await notifyController.create(req.user.id, updatedOrder.user.id, description, updatedOrder.id, 'CHANGE_ORDER_STATUS', updatedOrder.id,updatedOrder.status);
             notifyController.pushNotification(updatedOrder.user.id, 'CHANGE_ORDER_STATUS', updatedOrder.id, description);
 
             notificationNSP.to('room-' + updatedOrder.user.id).emit(socketEvents.ChangeOrderStatus, { order: updatedOrder });
@@ -916,7 +916,7 @@ export default {
 
             let description = { ar: ' تم تغير حالة الطلب الي تم التسليم ', en: 'Order Status Changed To Delivered' };
 
-            await notifyController.create(req.user.id, updatedOrder.user.id, description, updatedOrder.id, 'CHANGE_ORDER_STATUS', updatedOrder.id);
+            await notifyController.create(req.user.id, updatedOrder.user.id, description, updatedOrder.id, 'CHANGE_ORDER_STATUS', updatedOrder.id,updatedOrder.status);
             notifyController.pushNotification(updatedOrder.user.id, 'CHANGE_ORDER_STATUS', updatedOrder.id, description);
 
             notificationNSP.to('room-' + updatedOrder.user.id).emit(socketEvents.ChangeOrderStatus, { order: updatedOrder });
@@ -957,13 +957,13 @@ export default {
             res.status(200).send(order);
             let description = { ar: 'تم الغاء هذا الطلب ', en: ' Order Canceled' };
 
-            await notifyController.create(req.user.id, order.trader.id, description, order.id, 'CHANGE_ORDER_STATUS', order.id);
+            await notifyController.create(req.user.id, order.trader.id, description, order.id, 'CHANGE_ORDER_STATUS', order.id,order.status);
             notifyController.pushNotification(order.trader.id, 'CHANGE_ORDER_STATUS', order.id, description);
             notificationNSP.to('room-' + order.trader.id).emit(socketEvents.ChangeOrderStatus, { order: order });
 
             if (user.type == 'ADMIN' || user.type == 'SUB_ADMIN') {
                 description = {ar:'نأسف لم نتمكن من تلبيه طلبك الان وسيتم استرداد المدفوعات',en:'We are sorry that we are unable to fulfill your order now and the payment is being refunded'}
-                await notifyController.create(req.user.id, order.user.id, description, order.id, 'CHANGE_ORDER_STATUS', order.id);
+                await notifyController.create(req.user.id, order.user.id, description, order.id, 'CHANGE_ORDER_STATUS', order.id,order.status);
                 notifyController.pushNotification(order.user.id, 'CHANGE_ORDER_STATUS', order.id, description);
                 notificationNSP.to('room-' + order.user.id).emit(socketEvents.ChangeOrderStatus, { order: order });
 

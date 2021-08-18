@@ -18,12 +18,14 @@ const populateQuery = [
 
 ];
 
-let create = async (resource, target, description, subject, subjectType, order) => {
+let create = async (resource, target, description, subject, subjectType, order,orderStatus) => {
     try {
         var query = { resource, target, description, subject, subjectType }
         if (subjectType == "PROMOCODE") query.promoCode = subject;
         if (subjectType == "ORDER") query.order = subject;
         if (subjectType == "CHANGE_ORDER_STATUS") query.order = subject;
+        
+        if (orderStatus) query.orderStatus = orderStatus;
 
         if (subject && subjectType) {
             query.subjectType = subjectType;

@@ -71,6 +71,9 @@ const NotifSchema = new Schema({
     deletedDate:{
         type: Date
     },
+    orderStatus:{
+        type: String
+    }
 }, { timestamps: true });
 
 NotifSchema.set('toJSON', {
