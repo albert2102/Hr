@@ -4,6 +4,7 @@ import { checkExistThenGet ,checkExist} from "../../helpers/CheckMethods";
 import { checkValidations, handleImg } from "../shared.controller/shared.controller";
 import { body } from "express-validator/check";
 import ProductCategory from "../../models/product-category.model/product-category.model";
+import Product from "../../models/product.model/product.model";
 import User from '../../models/user.model/user.model';
 import i18n from 'i18n'
 import dotObject from 'dot-object';
@@ -191,6 +192,7 @@ export default {
             productCategory.deleted = true;
             await productCategory.save();
             res.status(200).send('Deleted Successfully');
+            await Product.updateMany({deleted: false,productCategory:productCategoryId},{deleted: true})
         }
         catch (err) {
             next(err);
