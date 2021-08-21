@@ -140,6 +140,10 @@ const CompanySchema = new Schema({
     orderCancelTime:{
         type: Number,
         default: 5 //min
+    },
+    iosVersion:{
+        type: String,
+        default: '1.0.0'
     }
 }, { timestamps: true });
 
