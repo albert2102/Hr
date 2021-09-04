@@ -691,7 +691,11 @@ export default {
             }
             let user = await User.findOne(query);
             if (user) {
+                if (!user.activated) {
+                    return next(new ApiError(403, i18n.__('accountStop')));
+                }else{
                 res.status(200).send({ user, token: generateToken(user.id) });
+                }
             }
             else {
                 let createdUser = await User.create(validatedBody);
