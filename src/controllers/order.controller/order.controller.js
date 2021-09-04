@@ -89,6 +89,7 @@ let traderOrdersCount = async (userId) => {
 }
 let driverOrdersCount = async (userId) => {
     try {
+        console.log("driverOrdersCount")
         let currentOrdersQuery = { deleted: false, driver: userId, status: { $in: ['DRIVER_ACCEPTED', 'SHIPPED'] } };
         let finishedOrdersQuery = { deleted: false, driver: userId, status: { $in: ['DELIVERED'] } };
 
