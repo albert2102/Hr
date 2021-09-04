@@ -842,7 +842,7 @@ export default {
                 return next(new ApiError(403, ('notAllowToChangeStatus')));
 
             let { orderId } = req.params;
-            await checkExist(orderId, Order, { deleted: false, status: 'ACCEPTED', driver: req.user.id });
+            await checkExist(orderId, Order, { deleted: false/*, status: 'ACCEPTED',*/ driver: req.user.id });
             let updatedOrder;
             let validatedBody = checkValidations(req);
             if (validatedBody.status == 'ACCEPTED') {
