@@ -261,11 +261,14 @@ export default {
             }
             let user = await checkExistThenGet(validatedBody.userId, User, { deleted: false });
 
-            user.wallet = user.wallet + validatedBody.value;
+            user.wallet = user.wallet + Number(validatedBody.value);
             await user.save();
             res.status(200).send({ user: user });
-
             let description = { ar: ' تم  إضافة  مبلغ بمحفظتك بقيمة' + ' : ' + validatedBody.value, en: 'This amount has been added to your wallet : ' + validatedBody.value };
+
+            if(Number(validatedBody.value) < 0){
+                description = { ar: ' تم  خصم  مبلغ من محفظتك بقيمة' + ' : ' + validatedBody.value, en: 'This amount has been deducted from your wallet : ' + validatedBody.value };
+            }
             await notifyController.create(req.user.id, user.id, description, user.id, 'ADDED_TO_WALLET');
             notifyController.pushNotification(user.id, 'ADDED_TO_WALLET', user.id, description);
             notificationNSP.to('room-' + user.id).emit(socketEvents.NewUser, { user: user });
