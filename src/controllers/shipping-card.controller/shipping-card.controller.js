@@ -213,7 +213,7 @@ export default {
             let validatedBody = checkValidations(req);
 
             let user = req.user;
-            let shippingCard = await ShippingCard.findOne({ number: validatedBody.number })
+            let shippingCard = await ShippingCard.findOne({ number: +validatedBody.number })
             shippingCard.user = user.id;
             shippingCard.used = true;
             shippingCard.usedDate = new Date();
