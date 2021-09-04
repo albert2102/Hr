@@ -232,5 +232,7 @@
 	"radiusRequired": "radiusRequired",
 	"paymentFail": "paymentFail",
 	"paymentSuccess": "paymentSuccess",
-	"invalidCard": "invalidCard"
+	"invalidCard": "invalidCard",
+	"carFormImageRequired": "carFormImageRequired",
+	"ibanNumberRequired": "ibanNumberRequired"
 }
