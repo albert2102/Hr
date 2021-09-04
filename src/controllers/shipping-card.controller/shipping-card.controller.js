@@ -199,13 +199,13 @@ export default {
     validateUseCard() {
         return [
             body('number').not().isEmpty().withMessage(() => { return i18n.__('numberRequired') })
-               /* .custom(async (val, { req }) => {
+                .custom(async (val, { req }) => {
                     let query = { number: val, deleted: false, used: true };
                     req.card = await ShippingCard.findOne(query).lean();
                     if (req.card)
                         throw new Error(i18n.__('invalidCard'));
                     return true;
-                })*/
+                })
         ];
     },
     async useCard(req, res, next) {
