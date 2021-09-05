@@ -826,7 +826,7 @@ export default {
             else {
                 await sendChangeOrderEmail(updatedOrder.user.email, description.en + ' : ' + updatedOrder.orderNumber)
             }
-
+            await traderOrdersCount(updatedOrder.trader.id)
         } catch (err) {
             // console.log(err);
             next(err);
