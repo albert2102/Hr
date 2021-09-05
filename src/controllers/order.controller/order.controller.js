@@ -69,7 +69,7 @@ let DriverNotResponseCount = async () => {
 let traderOrdersCount = async (userId) => {
     try {
         let newOrdersQuery = { deleted: false, status: 'WAITING', trader: userId, traderNotResponse: false };
-        let currentOrdersQuery = { deleted: false, trader: userId, status: { $in: ['ACCEPTED', 'DRIVER_ACCEPTED', 'SHIPPED','NOT_ASSIGN'] } };
+        let currentOrdersQuery = { deleted: false, trader: userId, status: { $in:  ['ACCEPTED', 'DRIVER_ACCEPTED', 'SHIPPED','NOT_ASSIGN'] } };
         let finishedOrdersQuery = { deleted: false, trader: userId, status: { $in: ['DELIVERED'] } };
 
         let promiseData = [
@@ -492,7 +492,7 @@ export default {
                 query.trader = req.user.id;
                 if (waitingOrders) {
                     query.status = { $in: ['WAITING'] },
-                        query.traderNotResponse = false;
+                    query.traderNotResponse = false;
 
                 } else if (currentOrders) {
                     query.status = { $in: ['ACCEPTED', 'DRIVER_ACCEPTED', 'SHIPPED','NOT_ASSIGN'] }
