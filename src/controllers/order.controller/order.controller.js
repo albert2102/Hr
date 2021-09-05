@@ -491,7 +491,7 @@ export default {
             else if (req.user.type == 'INSTITUTION') {
                 query.trader = req.user.id;
                 if (waitingOrders) {
-                    query.status = { $in: ['WAITING'] },
+                    query.status = 'WAITING';
                     query.traderNotResponse = false;
 
                 } else if (currentOrders) {
@@ -507,7 +507,7 @@ export default {
                 query.driver = req.user.id;
                 query.orderType = 'DELIVERY';
                 if (waitingOrders) {
-                    query.status = { $in: ['ACCEPTED'] }
+                    query.status ='ACCEPTED';
                 }
                 else if (currentOrders) {
                     query.status = { $in: ['DRIVER_ACCEPTED', 'SHIPPED'] }

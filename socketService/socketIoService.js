@@ -38,7 +38,7 @@ module.exports = {
                 if (user.type == 'DRIVER') {
                     console.log("in iffffffffffffffffffffffffffffff ",id)
                     await orderController.driverOrdersCount(id);
-                    let waitingOrder = await Order.findOne({ deleted: false, driver: +id, status: 'ACCEPTED' });
+                    let waitingOrder = await Order.findOne({ deleted: false, driver: +id, status: 'ACCEPTED' ,orderType: 'DELIVERY'});
                     if (waitingOrder) {
                         waitingOrder = await Order.populate(waitingOrder, orderPopulateQuery)
                         notificationNSP.to('room-' + id).emit(socketEvents.NewOrder, { order: waitingOrder });
