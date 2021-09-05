@@ -68,9 +68,9 @@ let DriverNotResponseCount = async () => {
 }
 let traderOrdersCount = async (userId) => {
     try {
-        let newOrdersQuery = { deleted: false, status: 'WAITING', trader: userId, traderNotResponse: false };
-        let currentOrdersQuery = { deleted: false, trader: userId, status: { $in:  ['ACCEPTED', 'DRIVER_ACCEPTED', 'SHIPPED','NOT_ASSIGN'] } };
-        let finishedOrdersQuery = { deleted: false, trader: userId, status: { $in: ['DELIVERED'] } };
+        let newOrdersQuery = { deleted: false, status: 'WAITING', trader: userId, traderNotResponse: false,$or: [{ paymentMethod: 'DIGITAL', paymentStatus: 'SUCCESSED' }, { paymentMethod: { $in: ['CASH', 'WALLET'] } }] };
+        let currentOrdersQuery = { deleted: false, trader: userId, status: { $in:  ['ACCEPTED', 'DRIVER_ACCEPTED', 'SHIPPED','NOT_ASSIGN'] },$or: [{ paymentMethod: 'DIGITAL', paymentStatus: 'SUCCESSED' }, { paymentMethod: { $in: ['CASH', 'WALLET'] } }] };
+        let finishedOrdersQuery = { deleted: false, trader: userId, status: { $in: ['DELIVERED'] },$or: [{ paymentMethod: 'DIGITAL', paymentStatus: 'SUCCESSED' }, { paymentMethod: { $in: ['CASH', 'WALLET'] } }] };
 
         let promiseData = [
             Order.count(newOrdersQuery), Order.count(currentOrdersQuery), Order.count(finishedOrdersQuery)
@@ -90,8 +90,8 @@ let traderOrdersCount = async (userId) => {
 let driverOrdersCount = async (userId) => {
     try {
         console.log("driverOrdersCount ", userId)
-        let currentOrdersQuery = { deleted: false, driver: userId, status: { $in: ['DRIVER_ACCEPTED', 'SHIPPED'] } };
-        let finishedOrdersQuery = { deleted: false, driver: userId, status: { $in: ['DELIVERED'] } };
+        let currentOrdersQuery = { deleted: false, driver: userId, status: { $in: ['DRIVER_ACCEPTED', 'SHIPPED'] },$or: [{ paymentMethod: 'DIGITAL', paymentStatus: 'SUCCESSED' }, { paymentMethod: { $in: ['CASH', 'WALLET'] } }] };
+        let finishedOrdersQuery = { deleted: false, driver: userId, status: { $in: ['DELIVERED'] },$or: [{ paymentMethod: 'DIGITAL', paymentStatus: 'SUCCESSED' }, { paymentMethod: { $in: ['CASH', 'WALLET'] } }]};
 
         let promiseData = [
             Order.count(currentOrdersQuery), Order.count(finishedOrdersQuery)
