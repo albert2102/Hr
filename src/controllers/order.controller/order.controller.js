@@ -240,7 +240,7 @@ const orderService = async (order) => {
         var j = schedule.scheduleJob(jobName, date, async (fireDate) => {
             try {
                 console.log(jobName, ' fire date ', fireDate);
-                currentOrder = await checkExistThenGet(order.id, Order);
+                currentOrder = await Order.findById(order.id);
                 console.log(currentOrder)
                 if (currentOrder.status == 'ACCEPTED') {
                     let validatedBody = { $addToSet: { rejectedDrivers: currentOrder.driver }, $unset: { driver: 1 },lastActionDate: new Date() };
