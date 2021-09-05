@@ -1062,7 +1062,7 @@ export default {
             let validatedBody = checkValidations(req);
             await checkExist(validatedBody.order, Order, { deleted: false, status: 'WAITING', traderNotResponse: true });
             let updatedOrder = await Order.findByIdAndUpdate(validatedBody.order, { traderNotResponse: false, lastActionDate: new Date() }, { new: true }).populate(populateQuery);
-            updatedOrder = Order.schema.methods.toJSONLocalizedOnly(updatedOrder, i18n.getLocale());
+            //updatedOrder = Order.schema.methods.toJSONLocalizedOnly(updatedOrder, i18n.getLocale());
             res.status(200).send(updatedOrder);
             let description = { en: 'The admin sent the order back to you. Please accept the order as soon as possible.', ar: '  قام الادمن بإعادة ارسال الطلب اليك مرة اخري من فضلك وافق على الطلب في اسرع وقت ' };
 
@@ -1242,7 +1242,7 @@ export default {
             let validatedBody = checkValidations(req);
             await checkExist(validatedBody.order, Order, { deleted: false, status: 'NOT_ASSIGN' });
             let updatedOrder = await Order.findByIdAndUpdate(validatedBody.order, { status: 'ACCEPTED', driver: validatedBody.driver, lastActionDate: new Date() }, { new: true }).populate(populateQuery);
-            updatedOrder = Order.schema.methods.toJSONLocalizedOnly(updatedOrder, i18n.getLocale());
+            //updatedOrder = Order.schema.methods.toJSONLocalizedOnly(updatedOrder, i18n.getLocale());
             res.status(200).send(updatedOrder);
             let description = { en: 'The admin sent the order to you. Please accept the order as soon as possible.', ar: '  قام الادمن بارسال الطلب اليك مرة اخري من فضلك وافق على الطلب في اسرع وقت ' };
 
