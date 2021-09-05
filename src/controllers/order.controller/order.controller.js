@@ -89,7 +89,7 @@ let traderOrdersCount = async (userId) => {
 }
 let driverOrdersCount = async (userId) => {
     try {
-        console.log("driverOrdersCount")
+        console.log("driverOrdersCount ", userId)
         let currentOrdersQuery = { deleted: false, driver: userId, status: { $in: ['DRIVER_ACCEPTED', 'SHIPPED'] } };
         let finishedOrdersQuery = { deleted: false, driver: userId, status: { $in: ['DELIVERED'] } };
 
@@ -97,6 +97,7 @@ let driverOrdersCount = async (userId) => {
             Order.count(currentOrdersQuery), Order.count(finishedOrdersQuery)
         ];
         let result = await Promise.all(promiseData);
+        console.log(result)
         notificationNSP.to('room-' + userId).emit(socketEvents.CurrentOrdersCount, { count: result[0] });
         notificationNSP.to('room-' + userId).emit(socketEvents.FinishedOrdersCount, { count: result[1] });
 
