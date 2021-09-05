@@ -76,7 +76,7 @@ let traderOrdersCount = async (userId) => {
             Order.count(newOrdersQuery), Order.count(currentOrdersQuery), Order.count(finishedOrdersQuery)
         ];
         let result = await Promise.all(promiseData);
-        console.log(result)
+        // console.log(result)
         notificationNSP.to('room-' + userId).emit(socketEvents.NewOrdersCount, { count: result[0] });
         notificationNSP.to('room-' + userId).emit(socketEvents.CurrentOrdersCount, { count: result[1] });
         notificationNSP.to('room-' + userId).emit(socketEvents.FinishedOrdersCount, { count: result[2] });
@@ -89,7 +89,7 @@ let traderOrdersCount = async (userId) => {
 }
 let driverOrdersCount = async (userId) => {
     try {
-        console.log("driverOrdersCount ", userId)
+        // console.log("driverOrdersCount ", userId)
         let currentOrdersQuery = { deleted: false, driver: userId, status: { $in: ['DRIVER_ACCEPTED', 'SHIPPED'] },$or: [{ paymentMethod: 'DIGITAL', paymentStatus: 'SUCCESSED' }, { paymentMethod: { $in: ['CASH', 'WALLET'] } }] };
         let finishedOrdersQuery = { deleted: false, driver: userId, status: { $in: ['DELIVERED'] },$or: [{ paymentMethod: 'DIGITAL', paymentStatus: 'SUCCESSED' }, { paymentMethod: { $in: ['CASH', 'WALLET'] } }]};
 
@@ -97,7 +97,7 @@ let driverOrdersCount = async (userId) => {
             Order.count(currentOrdersQuery), Order.count(finishedOrdersQuery)
         ];
         let result = await Promise.all(promiseData);
-        console.log(result)
+        // console.log(result)
         notificationNSP.to('room-' + userId).emit(socketEvents.CurrentOrdersCount, { count: result[0] });
         notificationNSP.to('room-' + userId).emit(socketEvents.FinishedOrdersCount, { count: result[1] });
 
@@ -560,7 +560,7 @@ export default {
                 query.createdAt = { $gte: new Date(startOfDate), $lte: new Date(endOfDate) }
             }
 
-            console.log(query)
+            //console.log(query)
             let orders = await Order.find(query).populate(populateQuery).sort({ createdAt: -1 }).limit(limit).skip((page - 1) * limit);
             orders = Order.schema.methods.toJSONLocalizedOnly(orders, i18n.getLocale());
             let ordersCount = await Order.count(query);
