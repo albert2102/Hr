@@ -200,7 +200,7 @@ export default {
         return [
             body('number').not().isEmpty().withMessage(() => { return i18n.__('numberRequired') })
                 .custom(async (val, { req }) => {
-                    await checkExist(val, ShippingCard, { deleted: false,number:val}/*,i18n.__('invalidCard')*/);
+                  /*  await checkExist(val, ShippingCard, { deleted: false,number:val},i18n.__('invalidCard'));*/
                     let query = { number: val, deleted: false, used: true };
                     req.card = await ShippingCard.findOne(query).lean();
                     if (req.card)
