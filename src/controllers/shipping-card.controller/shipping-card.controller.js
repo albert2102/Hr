@@ -202,7 +202,7 @@ export default {
                 .custom(async (val, { req }) => {
                     let query = { number: val, deleted: false};
                     req.card = await ShippingCard.findOne(query).lean();
-                    if (req.card && req.card.user == true)
+                    if (req.card && req.card.used == true)
                         throw new Error(i18n.__('cardAlreadyUsed'));
                     else if(!req.card){
                         throw new Error(i18n.__('invalidCard'));
