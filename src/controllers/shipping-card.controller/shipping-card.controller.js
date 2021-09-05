@@ -200,11 +200,14 @@ export default {
         return [
             body('number').not().isEmpty().withMessage(() => { return i18n.__('numberRequired') })
                 .custom(async (val, { req }) => {
-                  /*  await checkExist(val, ShippingCard, { deleted: false,number:val},i18n.__('invalidCard'));*/
-                    let query = { number: val, deleted: false, used: true };
+                    let query = { number: val, deleted: false};
                     req.card = await ShippingCard.findOne(query).lean();
-                    if (req.card)
+                    if (req.card && req.card.user == true)
+                        throw new Error(i18n.__('cardAlreadyUsed'));
+                    else if(!req.card){
                         throw new Error(i18n.__('invalidCard'));
+                    }
+
                     return true;
                 })
         ];
