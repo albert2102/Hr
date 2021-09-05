@@ -241,7 +241,7 @@ const orderService = async (order) => {
             try {
                 console.log(jobName, ' fire date ', fireDate);
                 currentOrder = await Order.findById(order.id);
-                console.log(currentOrder)
+                console.log("currentOrder ",currentOrder)
                 if (currentOrder.status == 'ACCEPTED') {
                     let validatedBody = { $addToSet: { rejectedDrivers: currentOrder.driver }, $unset: { driver: 1 },lastActionDate: new Date() };
                     let updatedOrder = await Order.findByIdAndUpdate(order.id, validatedBody, { new: true }).populate(populateQuery);
@@ -1252,8 +1252,8 @@ export default {
             notifyController.pushNotification(updatedOrder.driver.id, 'ORDER', updatedOrder.id, description);
 
             notificationNSP.to('room-' + updatedOrder.driver.id).emit(socketEvents.NewOrder, { order: updatedOrder });
-            driverOrdersCount(updatedOrder.driver.id);
-            findDriver(updatedOrder);
+            await driverOrdersCount(updatedOrder.driver.id);
+            orderService(updatedOrder);
             await DriverNotResponseCount();
 
         } catch (err) {
