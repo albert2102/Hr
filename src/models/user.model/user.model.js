@@ -250,6 +250,11 @@ const userSchema = new Schema({
     stopReceiveOrders:{
         type: Boolean,
         default: false
+    },
+    ///////////////////////////
+    openLocation:{
+        type: Boolean,
+        default: false
     }
 }, { timestamps: true });
 

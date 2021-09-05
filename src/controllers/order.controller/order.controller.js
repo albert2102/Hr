@@ -269,7 +269,8 @@ const findDriver = async (order) => {
             type: 'DRIVER',
             // _id: { $nin: busyDrivers },
             // _id: { $nin: order.rejectedDrivers },
-            stopReceiveOrders: false
+            stopReceiveOrders: false,
+            openLocation: true
         };
         console.log("busyDrivers === ",busyDrivers)
         console.log("rejectedDrivers === ",order.rejectedDrivers)
