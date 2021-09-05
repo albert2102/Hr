@@ -559,6 +559,8 @@ export default {
                 let endOfDate = moment(date).endOf('year');
                 query.createdAt = { $gte: new Date(startOfDate), $lte: new Date(endOfDate) }
             }
+
+            console.log(query)
             let orders = await Order.find(query).populate(populateQuery).sort({ createdAt: -1 }).limit(limit).skip((page - 1) * limit);
             orders = Order.schema.methods.toJSONLocalizedOnly(orders, i18n.getLocale());
             let ordersCount = await Order.count(query);
