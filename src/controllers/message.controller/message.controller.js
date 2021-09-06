@@ -70,11 +70,7 @@ let countUnseenSupportChatForAdmin = async () => {
 }
 let handelNewMessageSocket = async (message) => {
     try {
-        console.log(chatNSP.adapter.rooms)
-        console.log(message.reciver.user.id)
-        console.log(chatNSP.adapter.rooms['room-' + message.reciver.user.id])
         if (message.reciver && message.reciver.user && chatNSP.adapter.rooms['room-' + message.reciver.user.id]) {
-            console.log("in ifffffffffffffffffffffffffffffffffffff1")
             await countUnseen(message.reciver.user.id)
             chatNSP.to('room-' + message.reciver.user.id).emit(SocketEvents.NewMessage, { message: message });
             if (message.reciver.user.activeChatHead == false) {
@@ -86,16 +82,13 @@ let handelNewMessageSocket = async (message) => {
 
             }
         } else if (message.reciver && message.reciver.user && !chatNSP.adapter.rooms['room-' + message.reciver.user.id]) {
-            console.log("in ifffffffffffffffffffffffffffffffffffff2")
             await countUnseen(message.reciver.user.id)
-            chatNSP.to('room-' + message.reciver.user.id).emit(SocketEvents.NewMessage, { message: message });
             let text = {
                 ar: (message.message.text) ? message.message.text : ' رسالة جديدة ',
                 en: (message.message.text) ? message.message.text : 'New Message :'
             };
             await notificationController.pushNotification(message.reciver.user.id, 'MESSAGE', message.sender.id, text)
         } else if (!message.reciver.user) {
-            console.log("in ifffffffffffffffffffffffffffffffffffff3")
             chatNSP.to('room-admin').emit(SocketEvents.NewMessage, { message: message });
             await countUnseenForAdmin();
         }

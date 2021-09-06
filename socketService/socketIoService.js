@@ -57,7 +57,7 @@ module.exports = {
             let id = socket.handshake.query.id;
             let roomName = 'room-admin';
             let user = await User.findById(id);
-            if (user && (user.type == 'CLIENT')) roomName = 'room-' + id;
+            if (user) roomName = 'room-' + id;
             if (user) {
                 socket.join(roomName);
                 console.log('New User Connected ' + id + ' on chat ');
