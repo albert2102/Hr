@@ -70,6 +70,7 @@ let countUnseenSupportChatForAdmin = async () => {
 }
 let handelNewMessageSocket = async (message) => {
     try {
+        console.log(chatNSP.adapter.rooms)
         console.log(message.reciver.user.id)
         console.log(chatNSP.adapter.rooms['room-' + message.reciver.user.id])
         if (message.reciver && message.reciver.user && chatNSP.adapter.rooms['room-' + message.reciver.user.id]) {
