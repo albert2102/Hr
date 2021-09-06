@@ -21,7 +21,7 @@ let populateQuery = [
 
 let countNew = async () => {
     try {
-        let count = await RequestMoney.count({ deleted: false, payed: false });
+        let count = await RequestMoney.count({ deleted: false, payedBy: null });
         adminNSP.emit(socketEvents.RequestMoneyCount, { count: count });
     } catch (error) {
         throw error;
@@ -46,7 +46,7 @@ export default {
     async findAll(req, res, next) {
         try {
             let page = +req.query.page || 1, limit = +req.query.limit || 20;
-            var { driver, trader, payedDate, month, year, order } = req.query;
+            var { driver, trader, payedDate, month, year, order,name,email,phone,type } = req.query;
             let query = { deleted: false };
 
             if (driver) query.driver = driver;
@@ -57,7 +57,22 @@ export default {
                 let endOfDate = moment(date).endOf('day');
                 query.payedDate = { $gte: new Date(startOfDate), $lte: new Date(endOfDate) }
             }
+            let usersId
+            if(name){
+                usersId = await User.find({deleted: false,name:{ '$regex': name, '$options': 'i' }}).distinct('_id');
+                query.$or = [{driver:{$in:usersId}},{trader:{$in:usersId}}]
+            }
+            if(phone){
+                usersId = await User.find({deleted: false,phone:{ '$regex': phone, '$options': 'i' }}).distinct('_id');
+                query.$or = [{driver:{$in:usersId}},{trader:{$in:usersId}}]
+            }
+            if(email){
+                usersId = await User.find({deleted: false,email:{ '$regex': email, '$options': 'i' }}).distinct('_id');
+                query.$or = [{driver:{$in:usersId}},{trader:{$in:usersId}}]
+            }
 
+            if(type && type == 'DRIVER') query.driver = {$ne: null};
+            if(type && type == 'TRADER') query.trader = {$ne: null};
             let date = new Date();
             if (month && year) {
                 month = month - 1;
