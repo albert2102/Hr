@@ -84,6 +84,7 @@ let handelNewMessageSocket = async (message) => {
             }
         } else if (message.reciver && message.reciver.user && !chatNSP.adapter.rooms['room-' + message.reciver.user.id]) {
             await countUnseen(message.reciver.user.id)
+            chatNSP.to('room-' + message.reciver.user.id).emit(SocketEvents.NewMessage, { message: message });
             let text = {
                 ar: (message.message.text) ? message.message.text : ' رسالة جديدة ',
                 en: (message.message.text) ? message.message.text : 'New Message :'
