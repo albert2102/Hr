@@ -234,5 +234,6 @@
 	"paymentSuccess": "paymentSuccess",
 	"invalidCard": "invalidCard",
 	"carFormImageRequired": "carFormImageRequired",
-	"ibanNumberRequired": "ibanNumberRequired"
+	"ibanNumberRequired": "ibanNumberRequired",
+	"cardAlreadyUsed": "cardAlreadyUsed"
 }
