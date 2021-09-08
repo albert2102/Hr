@@ -812,7 +812,7 @@ export default {
                 ////////////////////////////////////////////////////
                 description = { en: 'Your Order Has Been Approved', ar: ' جاري تجهيز طلبك' };
             } else {
-                description = { en: 'Your Order Has Been Rejected ' + validatedBody.rejectReason, ar: ' تم رفض طلبك ' + validatedBody.rejectReason };
+                description = { en: 'Your Order Has Been Rejected ' + validatedBody.rejectReason, ar: ' نأسف لعدم اتمام طلبك من ' +  updatedOrder.trader.name+ ' بسبب '+ validatedBody.rejectReason };
             }
 
             await notifyController.create(req.user.id, updatedOrder.user.id, description, updatedOrder.id, 'CHANGE_ORDER_STATUS', updatedOrder.id,updatedOrder.status);
