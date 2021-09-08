@@ -742,6 +742,9 @@ export default {
                 let traders = await Product.find({ deleted: false, $or: [{ 'name.en': { '$regex': text, '$options': 'i' } }, { 'name.ar': { '$regex': text, '$options': 'i' } }] }).distinct('trader')
                 query.$or = [{ name: { '$regex': text, '$options': 'i' } }, { _id: { $in: traders } }];
             }
+            if (lat && long) { 
+                limit = 10;
+            }
             let aggregateQuery = [
                 { $match: query },
                 { $sort: sortQuery },
@@ -749,7 +752,7 @@ export default {
                 { $skip: (page - 1) * limit }];
 
             if (lat && long) { // الاقرب والابعد
-                aggregateQuery.unshift({ $geoNear: { near: { type: "Point", coordinates: [+long, +lat] }, distanceField: "dist.calculated" } })
+                aggregateQuery.unshift({ $geoNear: { near: { type: "Point", coordinates: [+long, +lat] }, distanceField: "dist.calculated" ,maxDistance:10000} })
             }
             let users = await User.aggregate(aggregateQuery)
             let pageCount;
