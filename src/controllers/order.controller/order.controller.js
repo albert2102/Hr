@@ -1246,8 +1246,11 @@ export default {
             let updatedOrder = await Order.findByIdAndUpdate(validatedBody.order, { status: 'ACCEPTED', driver: validatedBody.driver, lastActionDate: new Date() }, { new: true }).populate(populateQuery);
             //updatedOrder = Order.schema.methods.toJSONLocalizedOnly(updatedOrder, i18n.getLocale());
             res.status(200).send(updatedOrder);
-            let description = { en: 'The admin sent the order to you. Please accept the order as soon as possible.', ar: '  قام الادمن بارسال الطلب اليك مرة اخري من فضلك وافق على الطلب في اسرع وقت ' };
-
+            //let description = { en: 'The admin sent the order to you. Please accept the order as soon as possible.', ar: '  قام الادمن بارسال الطلب اليك مرة اخري من فضلك وافق على الطلب في اسرع وقت ' };
+            let description = {
+                ar: 'لديك طلب جديد ',
+                en: 'You have a new Order'
+            }
             await notifyController.create(req.user.id, updatedOrder.driver.id, description, updatedOrder.id, 'ORDER', updatedOrder.id);
             notifyController.pushNotification(updatedOrder.driver.id, 'ORDER', updatedOrder.id, description);
 
