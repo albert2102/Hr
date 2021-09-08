@@ -227,13 +227,13 @@
 	"ruleDuplicated": "ruleDuplicated",
 	"ordersRequired": "ordersRequired",
 	"minDeliveryPriceRequired": "minDeliveryPriceRequired",
-	"walletInvalid": "walletInvalid",
+	"walletInvalid": "لا يوجد معاك رصيد كافي ي محفظتك",
 	"userRequired": "userRequired",
 	"radiusRequired": "radiusRequired",
 	"paymentFail": "paymentFail",
 	"paymentSuccess": "paymentSuccess",
-	"invalidCard": "invalidCard",
+	"invalidCard": "رقم الكارت غير صحيح",
 	"carFormImageRequired": "carFormImageRequired",
 	"ibanNumberRequired": "ibanNumberRequired",
-	"cardAlreadyUsed": "cardAlreadyUsed"
+	"cardAlreadyUsed": "هذا الكارت مستخدم بالفعل"
 }
