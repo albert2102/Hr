@@ -132,7 +132,7 @@ export default {
             data.endDate = moment(data.endDate).endOf('day');
 
             let promocode = await Promocode.create(data);
-            let desc = {
+            var desc = {
                 ar: ' لديك كود خصم جديد ' + promocode.code,
                 en: ' You have a new discount code ' + promocode.code
             }
@@ -140,11 +140,8 @@ export default {
             if (promocode.usersType === 'ALL') {
                 let users = await User.find({ type: 'CLIENT', deleted: false })
                 for (let index = 0; index < users.length; index++) {
-                    if (users[index].language == 'ar') {
-                        notifiController.pushNotification(users[index]._id, 'PROMOCODE', promocode._id, desc.ar);
-                    } else {
-                        notifiController.pushNotification(users[index]._id, 'PROMOCODE', promocode._id, desc.en);
-                    }
+                   notifiController.pushNotification(users[index]._id, 'PROMOCODE', promocode._id, desc);
+                    
                     notifiController.create(req.user.id, users[index]._id, desc, promocode._id, "PROMOCODE")
                     notificationNSP.to('room-' + users[index].id).emit(socketEvents.NewUser, { user: users[index] });
                 }
@@ -152,11 +149,9 @@ export default {
                 let users = await User.find({ _id: { $in: promocode.users } })
                 for (let index = 0; index < users.length; index++) {
                     let user = users[index]
-                    if (user && user.language == 'ar') {
-                        notifiController.pushNotification(user.id, 'PROMOCODE', promocode._id, desc.ar);
-                    } else {
-                        notifiController.pushNotification(user.id, 'PROMOCODE', promocode._id, desc.en);
-                    }
+                    if (user) {
+                        notifiController.pushNotification(user.id, 'PROMOCODE', promocode._id, desc);
+                    } 
                     notifiController.create(req.user.id, user.id, desc, promocode._id, "PROMOCODE")
                     notificationNSP.to('room-' + users[index].id).emit(socketEvents.NewUser, { user: users[index] });
 
