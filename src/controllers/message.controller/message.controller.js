@@ -352,9 +352,10 @@ export default {
             createdMessage = await Message.populate(createdMessage, popQuery);
             res.status(200).send(createdMessage);
             if ((req.user.type == 'ADMIN') || (req.user.type == 'SUB_ADMIN')) {
-                chatNSP.to('room-admin').emit(SocketEvents.NewMessage, { createdMessage });
-            } else {
                 handelNewMessageSocket(createdMessage);
+            } else {
+                chatNSP.to('room-admin').emit(SocketEvents.NewMessage, { createdMessage });
+
             }
             await countUnseenSupportChatForAdmin();
         } catch (error) {
