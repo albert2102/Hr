@@ -260,7 +260,7 @@ const orderService = async (order) => {
 const findDriver = async (order) => {
     try {
         
-        let busyDrivers = await Order.find({ deleted: false, status: { $in: ['ACCEPTED', 'DRIVER_ACCEPTED', 'SHIPPED'], } }).distinct('driver');
+        //let busyDrivers = await Order.find({ deleted: false, status: { $in: ['ACCEPTED', 'DRIVER_ACCEPTED', 'SHIPPED'], } }).distinct('driver');
         let userQuery = {
             deleted: false,
             online: true,
@@ -273,17 +273,17 @@ const findDriver = async (order) => {
             stopReceiveOrders: false,
             openLocation: true
         };
-        console.log("busyDrivers === ",busyDrivers)
         console.log("rejectedDrivers === ",order.rejectedDrivers)
 
-        if(busyDrivers.length > 0 && order.rejectedDrivers.length > 0){
-            let busyIds = busyDrivers.concat(order.rejectedDrivers);
-            if(busyIds.length >0) userQuery._id = {$nin: busyIds};
+        // if(busyDrivers.length > 0 && order.rejectedDrivers.length > 0){
+        //     let busyIds = busyDrivers.concat(order.rejectedDrivers);
+        //     if(busyIds.length >0) userQuery._id = {$nin: busyIds};
 
-        }else if(busyDrivers.length > 0 && order.rejectedDrivers.length == 0){
-            userQuery._id = {$nin: busyDrivers};
+        // }else if(busyDrivers.length > 0 && order.rejectedDrivers.length == 0){
+        //     userQuery._id = {$nin: busyDrivers};
 
-        }else if(busyDrivers.length == 0 && order.rejectedDrivers.length > 0){
+        // }else
+         if(order.rejectedDrivers.length > 0){
             userQuery._id = {$nin: order.rejectedDrivers};
         }
 
