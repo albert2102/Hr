@@ -161,7 +161,8 @@ export default {
             if (user.type != 'ADMIN' && user.type != 'SUB_ADMIN') {
                 return next(new ApiError(403, ('admin.auth')));
             }
-            const url = req.protocol + '://' + req.get('host'); //+ '/';
+            // const url = req.protocol + '://' + req.get('host'); //+ '/';
+            const url = config.backend_endpoint + '/';
             let validatedBody = checkValidations(req);
             if (req.file) {
                 let image = await handleImg(req, { attributeName: 'image', isUpdate: false });
@@ -226,7 +227,8 @@ export default {
                 let image = await handleImg(req, { attributeName: 'image', isUpdate: false });
                 validatedBody.image = image;
             }
-            const url = req.protocol + '://' + req.get('host'); //+ '/';
+            // const url = req.protocol + '://' + req.get('host'); //+ '/';
+            const url = config.backend_endpoint + '/';
 
             let notifiObj = {titleOfNotification :validatedBody.titleOfNotification, resource: req.user.id, type: "USERS", subjectType: "ADMIN", description: validatedBody.text, users: validatedBody.users };
             if(validatedBody.image) notifiObj.image = validatedBody.image
