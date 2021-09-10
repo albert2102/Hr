@@ -13,7 +13,7 @@ export async function sendPushNotification(notifi) {
     try {
         
         for (let index = 0; index < notifi.targetUser.tokens.length; index++) {
-		//   console.log(notifi)
+		  console.log(notifi)
             var userToken = notifi.targetUser.tokens[index].token;
             if (notifi.targetUser.tokens[index].type == 'android') {
                 var payload = { token: userToken};

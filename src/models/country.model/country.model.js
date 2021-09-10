@@ -14,6 +14,56 @@ const CountrySchema = new Schema({
     deleted:{
         type:Boolean,
         default:false
+    },
+    responsible:{
+        type:Number,
+        ref:'user'
+    },
+    currency:{
+        type:String,
+        i18n:true
+    },
+    deliveryUnit:{
+        type:String,
+        enum:['KM','MILE']
+    },
+    deliveryRanges:[{start:Number,end:Number,cost:Number}],
+    treatedAs:{
+        type:String,
+        enum:['EGYPT','AMRICA']
+    },
+    countryCode:{
+        type:String,
+        default:'20'
+    },
+    countryKey:{
+        type:String,
+        default:'EG'
+    },
+    logo:{
+        type:String
+    },
+    helpReasons:{
+        type:[{ ar: { type: String }, en: { type: String }}]
+    },
+    driverHelpReasons:{
+        type:[{ ar: { type: String }, en: { type: String }}]
+    },
+    driverPrivacy:{
+        type:String,
+        i18n:true
+    },
+    storePrivacy:{
+        type:String,
+        i18n:true
+    },
+    driverTermsAndCondition:{
+        type:String,
+        i18n:true
+    },
+    storeTermsAndCondition:{
+        type:String,
+        i18n:true
     }
        
 }, { timestamps: true });
