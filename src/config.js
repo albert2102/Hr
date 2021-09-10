@@ -8,7 +8,7 @@ config.GoogleApiKey = 'AIzaSyBFJpu6GVFQrjbVOfaZLXcdLO1-A8GQae0';
 config.twilioAccountSID = 'AC34189f894302e23d3911b811cd33e3b2';
 config.twilioAuthToken = '78596a652f83ccaa89996ad7b44c037e';
 config.twilioServiceSID = 'VA366c058a3677e33792b5d7d4871f8e5d';
-config.backend_endpoint = 'https://www.catchit.sa/Catchit-Backend';
+config.backend_endpoint = 'https://www.ajamadmin.com/Ajam-Backend';
 
 
 config.notificationTitle = {
