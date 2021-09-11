@@ -34,6 +34,9 @@ const CountrySchema = new Schema({
     logo:{
         type:String
     },
+    searchDistance:{
+        type: Number, // meter
+    }
        
 }, { timestamps: true });
 

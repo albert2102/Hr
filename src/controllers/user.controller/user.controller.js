@@ -19,6 +19,7 @@ import Address from '../../models/address.model/address.model';
 import Product from '../../models/product.model/product.model';
 import AdminController from '../admin.controller/admin.controller';
 import Category from '../../models/category.model/category.model';
+import Country from "../../models/country.model/country.model";
 
 const checkUserExistByEmail = async (email) => {
     let user = await User.findOne({ email, deleted: false });
@@ -29,7 +30,7 @@ const checkUserExistByEmail = async (email) => {
 let populateQuery = [
     { path: 'rules', model: 'assignRule' },
     { path: 'category', model: 'category' },
-    // { path: 'city', model: 'city', populate: [{ path: 'country', model: 'country' }] },
+    { path: 'country', model: 'country' }
 ];
 
 export default {
@@ -51,10 +52,7 @@ export default {
             if (activated) query.activated = activated;
             if (countryKey) query.countryKey = countryKey;
             if (countryCode) query.countryCode = countryCode;
-            if (country) {
-                let userCountries = await Address.find({ deleted: false, country: country }).distinct('user');
-                query._id = { $in: userCountries }
-            }
+            if (country) query.country = country;
             if (category) query.category = category;
 
             if (fromDate && toDate) {
@@ -182,7 +180,11 @@ export default {
             }),
             body('countryCode').not().isEmpty().withMessage(() => { return i18n.__('countryCodeRequired') }),
             body('countryKey').not().isEmpty().withMessage(() => { return i18n.__('countryKeyRequired') }),
-
+            body('country').optional().not().isEmpty().withMessage(() => { return i18n.__('countryRequired') })
+                .custom(async (value, { req }) => {
+                    await checkExistThenGet(value, Country, { deleted: false })
+                    return true;
+                }),
         ];
         return validations;
     },
@@ -269,6 +271,11 @@ export default {
             body('location').optional().not().isEmpty().withMessage(() => { return i18n.__('locationRequired') }),
             body('location.long').optional().not().isEmpty().withMessage(() => { return i18n.__('longitudeRequired') }),
             body('location.lat').optional().not().isEmpty().withMessage(() => { return i18n.__('latitudeRequired') }),
+            body('country').optional().not().isEmpty().withMessage(() => { return i18n.__('countryRequired') })
+                .custom(async (value, { req }) => {
+                    await checkExistThenGet(value, Country, { deleted: false })
+                    return true;
+                }),
         ];  
 
         return validations;
@@ -719,10 +726,11 @@ export default {
         try {
             let page = +req.query.page || 1,
                 limit = +req.query.limit || 20;
-            var { text, hasOffer, open, long, lat, category, highestRated } = req.query;
+            var { text, hasOffer, open, long, lat, category, highestRated,country} = req.query;
 
             let query = { deleted: false, type: 'INSTITUTION',activated: true };
             let sortQuery = { createdAt: -1 };
+            if  (country) query.country = country;
             if (open) query.institutionStatus = 'OPEN'; // مفتوح
             if (highestRated) sortQuery = { totalRate: -1 }; //الاعلي تقييما
             if (category) {
@@ -814,7 +822,11 @@ export default {
 
             body('online').optional().not().isEmpty().withMessage(() => { return i18n.__('openChatRequired') }).isBoolean().withMessage('must be boolean'),
             body('openLocation').optional().not().isEmpty().withMessage(() => { return i18n.__('openChatRequired') }).isBoolean().withMessage('must be boolean'),
-            
+            body('country').optional().not().isEmpty().withMessage(() => { return i18n.__('countryRequired') })
+                .custom(async (value, { req }) => {
+                    await checkExistThenGet(value, Country, { deleted: false })
+                    return true;
+                }),
         ];
 
         return validations;
@@ -869,7 +881,11 @@ export default {
 
             body('openChat').optional().not().isEmpty().withMessage(() => { return i18n.__('openChatRequired') }).isBoolean().withMessage('must be boolean'),
             body('bank').optional().not().isEmpty().withMessage(() => { return i18n.__('bankRequired') }),
-
+            body('country').optional().not().isEmpty().withMessage(() => { return i18n.__('countryRequired') })
+                .custom(async (value, { req }) => {
+                    await checkExistThenGet(value, Country, { deleted: false })
+                    return true;
+                }),
         ];
 
         return validations;
@@ -918,7 +934,11 @@ export default {
             body('ibanNumber').not().isEmpty().withMessage(() => { return i18n.__('ibanNumberRequired') }),
             body('coverImage').optional().not().isEmpty().withMessage(() => { return i18n.__('coverImageRequired') }),
 
-
+            body('country').not().isEmpty().withMessage(() => { return i18n.__('countryRequired') })
+                .custom(async (value, { req }) => {
+                    await checkExistThenGet(value, Country, { deleted: false })
+                    return true;
+                }),
         ];
 
         return validations;
@@ -989,8 +1009,12 @@ export default {
             body('productsIncludeTaxes').optional().not().isEmpty().withMessage(() => { return i18n.__('productsIncludeTaxesRequired') }).isBoolean().withMessage('must be boolean'),
             body('institutionStatus').optional().not().isEmpty().withMessage(() => { return i18n.__('institutionStatusRequired') }).isIn(['OPEN', 'BUSY', 'CLOSED']).withMessage(() => { return i18n.__('userTypeWrong') }),
             body('openChat').optional().not().isEmpty().withMessage(() => { return i18n.__('openChatRequired') }).isBoolean().withMessage('must be boolean'),
-            body('bank').optional().not().isEmpty().withMessage(() => { return i18n.__('bankRequired') })
-
+            body('bank').optional().not().isEmpty().withMessage(() => { return i18n.__('bankRequired') }),
+            body('country').optional().not().isEmpty().withMessage(() => { return i18n.__('countryRequired') })
+                .custom(async (value, { req }) => {
+                    await checkExistThenGet(value, Country, { deleted: false })
+                    return true;
+                }),
         ];
         return validations;
     },
