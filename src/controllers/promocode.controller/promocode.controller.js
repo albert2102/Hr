@@ -128,6 +128,9 @@ export default {
             if (!data.code) {
                 data.code = generateVerifyCode();
             }
+            data.startDate = new Date(data.startDate);
+            data.endDate = new Date(data.endDate);
+            
             data.startDate = new Date(moment(data.startDate).startOf('day'));
             data.endDate = new Date(moment(data.endDate).endOf('day'));
 
