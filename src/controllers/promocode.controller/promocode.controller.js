@@ -128,8 +128,8 @@ export default {
             if (!data.code) {
                 data.code = generateVerifyCode();
             }
-            data.startDate = moment(data.startDate).startOf('day');
-            data.endDate = moment(data.endDate).endOf('day');
+            data.startDate = new Date(moment(data.startDate).startOf('day'));
+            data.endDate = new Date(moment(data.endDate).endOf('day'));
 
             let promocode = await Promocode.create(data);
             var desc = {
