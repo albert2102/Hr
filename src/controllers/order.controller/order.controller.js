@@ -859,6 +859,7 @@ export default {
 
             } else {
                 validatedBody['$addToSet'] = { rejectedDrivers: req.user.id };
+                validatedBody['$unset'] = { driver: 1 }
                 delete validatedBody.status;
                 updatedOrder = await Order.findByIdAndUpdate(orderId, validatedBody, { new: true }).populate(populateQuery);
                 

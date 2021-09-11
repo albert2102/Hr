@@ -89,10 +89,6 @@ const userSchema = new Schema({
         type: Number,
         ref: 'country'
     },
-    city:{
-        type: Number,
-        ref: 'city'
-    },
     activeChatHead:{
         type: Boolean,
         default: false

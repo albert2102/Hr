@@ -7,7 +7,7 @@ import { multerSaveTo } from "../../services/multer-service";
 import {requireAuth} from '../../services/passport';
 
 
-let parseArray = ['name','currency' , 'deliveryRanges','helpReasons','driverHelpReasons','driverPrivacy','storePrivacy', 'storeTermsAndCondition','driverTermsAndCondition']
+let parseArray = ['name','currency']
 
 router.route('/')
     .get(countryController.findAll)
