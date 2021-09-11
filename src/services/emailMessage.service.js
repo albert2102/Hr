@@ -28,17 +28,18 @@ let transporter = nodemailer.createTransport({
     //     rejectUnauthorized: false
     // }
     /////////////////////////////////////////////
-    tls: {
-        rejectUnauthorized: false
-    },
+    // tls: {
+    //     rejectUnauthorized: false
+    // },
 
     host: 'smtp.office365.com',
     port: 587,
-    secure: false, // true for 465, false for other ports
+    secureConnection: false, // true for 465, false for other ports
     auth: {
       user: 'ajam@ajaminfo.com', // your domain email address
       pass: 'Ajam20201.ajam' // your password
-    }
+    },
+    tls: { ciphers: 'SSLv3' }
 
 
 });
