@@ -235,5 +235,6 @@
 	"invalidCard": "رقم الكارت غير صحيح",
 	"carFormImageRequired": "carFormImageRequired",
 	"ibanNumberRequired": "ibanNumberRequired",
-	"cardAlreadyUsed": "هذا الكارت مستخدم بالفعل"
+	"cardAlreadyUsed": "هذا الكارت مستخدم بالفعل",
+	"invalidUserType": "invalidUserType"
 }
