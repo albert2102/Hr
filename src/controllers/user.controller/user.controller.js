@@ -459,7 +459,11 @@ export default {
             var user = await User.findOne({ phone: phone, deleted: false, type: validatedBody.type, countryCode: validatedBody.countryCode });
             if (!user)
                 return next(new ApiError(403, i18n.__('userNotFound')));
-            twilioSend('+2' + phone, user.language || 'ar');
+                let countryCode = '+2';
+                if (user.countryCode != '20') {
+                    countryCode = '+' + user.countryCode;
+                }
+                twilioSend(countryCode + phone, user.language || 'ar');
             res.status(200).send(i18n.__('checkYourPhone'));
         } catch (err) {
             next(err);
