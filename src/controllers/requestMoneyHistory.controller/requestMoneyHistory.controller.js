@@ -49,6 +49,8 @@ export default {
             var { driver, trader, payedDate, month, year, order,name,email,phone,type } = req.query;
             let query = { deleted: false };
 
+            if(type && type == 'DRIVER') {query.driver = {$ne: null}}
+            if(type && type == 'TRADER') query.trader = {$ne: null};
             if (driver) query.driver = driver;
             if (trader) query.trader = trader;
             if (order) query.orders = order;
@@ -71,8 +73,8 @@ export default {
                 query.$or = [{driver:{$in:usersId}},{trader:{$in:usersId}}]
             }
 
-            if(type && type == 'DRIVER') query.driver = {$ne: null};
-            if(type && type == 'TRADER') query.trader = {$ne: null};
+            console.log(query)
+            
             let date = new Date();
             if (month && year) {
                 month = month - 1;
