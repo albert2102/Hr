@@ -10,11 +10,12 @@ import socketEvents from '../../socketEvents';
 import ConfirmationCode from '../../models/confirmationsCodes.model/confirmationscodes.model'
 import notificationController from '../notif.controller/notif.controller';
 import Category from '../../models/category.model/category.model';
+import Country from "../../models/country.model/country.model";
 import config from '../../config'
 let populateQuery = [
     { path: 'rules', model: 'assignRule' },
     { path: 'category', model: 'category' },
-    // { path: 'city', model: 'city', populate: [{ path: 'country', model: 'country' }] },
+    { path: 'country', model: 'country' },
 ];
 
 let count = async (type) => {
@@ -61,7 +62,8 @@ export default {
                     }),
                 body('language').optional().not().isEmpty().withMessage(() => { return i18n.__('languageRequired') }),
                 body('countryCode').not().isEmpty().withMessage(() => { return i18n.__('countryCodeRequired') }),
-                body('countryKey').not().isEmpty().withMessage(() => { return i18n.__('countryKeyRequired') })
+                body('countryKey').not().isEmpty().withMessage(() => { return i18n.__('countryKeyRequired') }),
+                
             ];
         } else {
             validations = [
@@ -91,7 +93,8 @@ export default {
                 body('newPassword').optional().not().isEmpty().withMessage(() => { return i18n.__('newPasswordRequired') }),
                 body('currentPassword').optional().not().isEmpty().withMessage(() => { return i18n.__('CurrentPasswordRequired') }),
                 body('countryCode').optional().not().isEmpty().withMessage(() => { return i18n.__('countryCodeRequired') }),
-                body('countryKey').optional().not().isEmpty().withMessage(() => { return i18n.__('countryKeyRequired') })
+                body('countryKey').optional().not().isEmpty().withMessage(() => { return i18n.__('countryKeyRequired') }),
+                
             ];
         }
         return validations;
@@ -219,7 +222,12 @@ export default {
             body('type').not().isEmpty().withMessage(() => { return i18n.__('typeIsRequired') })
                 .isIn(['ADMIN', 'SUB_ADMIN', 'CLIENT']).withMessage(() => { return i18n.__('userTypeWrong') }),
             body('countryCode').not().isEmpty().withMessage(() => { return i18n.__('countryCodeRequired') }),
-            body('countryKey').not().isEmpty().withMessage(() => { return i18n.__('countryKeyRequired') })
+            body('countryKey').not().isEmpty().withMessage(() => { return i18n.__('countryKeyRequired') }),
+            body('country').not().isEmpty().withMessage(() => { return i18n.__('countryRequired') })
+                .custom(async (value, { req }) => {
+                    await checkExistThenGet(value, Country, { deleted: false })
+                    return true;
+                }),
         ];
         return validations;
     },
@@ -253,6 +261,11 @@ export default {
             body('notification').optional().not().isEmpty().withMessage(() => { return i18n.__('notificationRequired') }),
             body('countryCode').optional().not().isEmpty().withMessage(() => { return i18n.__('countryCodeRequired') }),
             body('countryKey').optional().not().isEmpty().withMessage(() => { return i18n.__('countryKeyRequired') }),
+            body('country').optional().not().isEmpty().withMessage(() => { return i18n.__('countryRequired') })
+                .custom(async (value, { req }) => {
+                    await checkExistThenGet(value, Country, { deleted: false })
+                    return true;
+                }),
         ];
 
         return validations;

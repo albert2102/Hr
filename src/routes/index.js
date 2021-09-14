@@ -26,6 +26,7 @@ import dashBoardRouter from './dashboard.route/dashboard.route';
 import requestMoneyRouter from './requestMoneyHistory.route/requestMoneyHistory.route';
 import zoneRouter from './zone.route/zone.route';
 import paymentRouter from './payment.route/payment.route';
+import countryRoute from './country.route/country.route';
 
 router.use('/',userRoute);
 router.use('/admin',adminRoute);
@@ -52,5 +53,5 @@ router.use('/dashboard',dashBoardRouter);
 router.use('/requestMoney',requestMoneyRouter);
 router.use('/zone',zoneRouter);
 router.use('/payment',paymentRouter);
-
+router.use('/country',countryRoute)
 export default router;

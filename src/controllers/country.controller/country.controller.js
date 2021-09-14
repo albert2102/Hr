@@ -17,17 +17,15 @@ export default {
         let validations
         if (!isUpdate) {
             validations = [
+                body('searchDistance').not().isEmpty().withMessage(() => { return i18n.__('searchDistanceRequired') }),
+
                 body('countryCode').not().isEmpty().withMessage(() => { return i18n.__('countryCodeRequired') }),
                 body('countryKey').not().isEmpty().withMessage(() => { return i18n.__('countryKeyRequired') }),
 
                 body('currency').not().isEmpty().withMessage(() => { return i18n.__('currencyRequired') }),
                 body('currency.ar').not().isEmpty().withMessage(() => { return i18n.__('currencyRequired') }),
                 body('currency.en').not().isEmpty().withMessage(() => { return i18n.__('currencyRequired') }),
-                body('responsible').not().isEmpty().withMessage(() => { return i18n.__('responsibleRequired') })
-                    .custom(async (val, { req }) => {
-                        await checkExistThenGet(val, User, { deleted: false });
-                        return true;
-                    }),
+
                 body('name.ar').not().isEmpty().withMessage(() => { return i18n.__('arabicName') })
                     .custom(async (val, { req }) => {
 
@@ -50,17 +48,13 @@ export default {
         }
         else {
             validations = [
+                body('searchDistance').optional().not().isEmpty().withMessage(() => { return i18n.__('searchDistanceRequired') }),
                 body('countryCode').optional().not().isEmpty().withMessage(() => { return i18n.__('countryCodeRequired') }),
                 body('countryKey').optional().not().isEmpty().withMessage(() => { return i18n.__('countryKeyRequired') }),
                 body('currency').optional().not().isEmpty().withMessage(() => { return i18n.__('currencyRequired') }),
                 body('currency.ar').optional().not().isEmpty().withMessage(() => { return i18n.__('currencyRequired') }),
                 body('currency.en').optional().not().isEmpty().withMessage(() => { return i18n.__('currencyRequired') }),
-                body('responsible').optional().not().isEmpty().withMessage(() => { return i18n.__('responsibleRequired') })
-                    .custom(async (val, { req }) => {
-                        await checkExistThenGet(val, User, { deleted: false });
-                        return true;
-                    }),
-
+            
                 body('name.ar').optional().not().isEmpty().withMessage(() => { return i18n.__('arabicName') })
                     .custom(async (val, { req }) => {
 
@@ -87,10 +81,9 @@ export default {
 
     async findAll(req, res, next) {
         try {
-            var { name, month, year, removeLanguage, responsible, currency, countryCode, countryKey } = req.query;
+            var { name, month, year, removeLanguage, currency, countryCode, countryKey } = req.query;
             let query = { deleted: false };
 
-            if (responsible) query.responsible = responsible;
             if (currency) query.currency = currency;
             if (countryCode) query.countryCode = countryCode;
             if (countryKey) query.countryKey = countryKey;
@@ -131,10 +124,11 @@ export default {
             if (user.type != 'ADMIN' && user.type != 'SUB_ADMIN') {
                 return next(new ApiError(403, ('admin.auth')));
             }
+            let validatedBody = checkValidations(req);
+
             if (req.file) {
                 validatedBody.logo = await handleImg(req, { attributeName: 'logo', isUpdate: false });
             }
-            let validatedBody = checkValidations(req);
             let country = await Country.create(validatedBody);
             country = Country.schema.methods.toJSONLocalizedOnly(country, i18n.getLocale());
             res.status(200).send(country);
@@ -153,7 +147,9 @@ export default {
             }
             await checkExist(countryId, Country, { deleted: false });
             let validatedBody = checkValidations(req);
-
+            if (req.file) {
+                validatedBody.logo = await handleImg(req, { attributeName: 'logo', isUpdate: false });
+            }
             validatedBody = dotObject.dot(validatedBody);
             let updatedCountry = await Country.findByIdAndUpdate(countryId, { ...validatedBody, ...data }, { new: true });
             if (!removeLanguage)
@@ -190,9 +186,6 @@ export default {
             country.deleted = true;
             await country.save();
             res.status(200).send("Deleted Successfully");
-            // let allCities = await City.find({deleted: false,country:countryId}).distinct('_id');
-            // await City.updateMany({deleted: false,country:countryId},{deleted: true})
-            // await Region.updateMany({deleted: false,city:{$in:allCities}},{deleted: true})
         }
         catch (err) {
             next(err);

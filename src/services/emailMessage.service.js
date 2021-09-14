@@ -16,30 +16,29 @@ var readHTMLFile = function (path, callback) {
 };
 
 let transporter = nodemailer.createTransport({
-    // pool: true,
-    // host: 'smtp.gmail.com',
-    // port: 465,
-    // secure: true, 
-    // auth: {
-    //     user: 'ajamapp2021@gmail.com',
-    //     pass: 'Tech4life'
-    // },
-    // tls: {
-    //     rejectUnauthorized: false
-    // }
+    pool: true,
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true, 
+    auth: {
+        user: 'ajamapp2021@gmail.com',
+        pass: 'Tech4life'
+    },
+    tls: {
+        rejectUnauthorized: false
+    }
     /////////////////////////////////////////////
     // tls: {
     //     rejectUnauthorized: false
     // },
 
-    host: 'smtp.office365.com',
-    port: 587,
-    secureConnection: false, // true for 465, false for other ports
-    auth: {
-      user: 'ajam@ajaminfo.com', // your domain email address
-      pass: 'Ajam20201.ajam' // your password
-    },
-    tls: { ciphers: 'SSLv3' }
+    // host: 'smtp.office365.com',
+    // port: 587,
+    // secure: false, // true for 465, false for other ports
+    // auth: {
+    //   user: 'ajam@ajaminfo.com', // your domain email address
+    //   pass: 'Ajam20201.ajam' // your password
+    // }
 
 
 });
