@@ -411,7 +411,7 @@ const getCheckoutId = async (request, response, next, order, paymentBrand) => {
             cardEntityId = config.payment.Entity_ID_Card;
         }
         let address = 'From Store';
-        if (order.orderType != 'FROM_STORE') {
+        if (order.orderType == 'DELIVERY' && request.address) {
             address = request.address.addressName;
         }
 
