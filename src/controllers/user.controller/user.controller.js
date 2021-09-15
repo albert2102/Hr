@@ -123,7 +123,7 @@ export default {
     async signIn(req, res, next) {
         try {
             const validatedBody = checkValidations(req);
-            var query = { deleted: false, type: validatedBody.type,activated:true,socialMediaType:'NORMAL' };
+            var query = { deleted: false, type: validatedBody.type,socialMediaType:'NORMAL' };
             // if (validatedBody.type != 'CLIENT') query.status = 'ACCEPTED';
             if (validatedBody.countryCode) query.countryCode = validatedBody.countryCode;
             query.phone = validatedBody.phone.trim();

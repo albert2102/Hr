@@ -236,5 +236,6 @@
 	"carFormImageRequired": "carFormImageRequired",
 	"ibanNumberRequired": "ibanNumberRequired",
 	"cardAlreadyUsed": "هذا الكارت مستخدم بالفعل",
+	"invalidUserType": "invalidUserType",
 	"searchDistanceRequired": "searchDistanceRequired"
 }

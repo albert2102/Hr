@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 import RequestMoney from "../../models/requestMoneyHistory.model/requestMoneyHistory.model";
 import User from "../../models/user.model/user.model";
 import Order from "../../models/order.model/order.model";
@@ -61,18 +62,18 @@ export default {
             }
             let usersId
             if(name){
-                usersId = await User.find({deleted: false,name:{ '$regex': name, '$options': 'i' }}).distinct('_id');
+                usersId = await User.find({name:{ '$regex': name, '$options': 'i' }}).distinct('_id');
                 query.$or = [{driver:{$in:usersId}},{trader:{$in:usersId}}]
             }
             if(phone){
-                usersId = await User.find({deleted: false,phone:{ '$regex': phone, '$options': 'i' }}).distinct('_id');
+                usersId = await User.find({phone:{ '$regex': phone, '$options': 'i' }}).distinct('_id');
                 query.$or = [{driver:{$in:usersId}},{trader:{$in:usersId}}]
             }
             if(email){
-                usersId = await User.find({deleted: false,email:{ '$regex': email, '$options': 'i' }}).distinct('_id');
+                usersId = await User.find({email:{ '$regex': email, '$options': 'i' }}).distinct('_id');
                 query.$or = [{driver:{$in:usersId}},{trader:{$in:usersId}}]
             }
-
+	    console.log(query)
             
             let date = new Date();
             if (month && year) {
