@@ -57,6 +57,7 @@ module.exports = {
             let id = socket.handshake.query.id;
             let roomName = 'room-admin';
             let user = await User.findById(id);
+	    socket.join(roomName);
             if (user) roomName = 'room-' + id;
             if (user) {
                 socket.join(roomName);
