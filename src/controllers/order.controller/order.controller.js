@@ -34,7 +34,7 @@ let populateQuery = [
     { path: 'promoCode', model: 'promocode' },
 ];
 
-const cancelJob = (jobName)=>{
+const cancelJob = (jobName) => {
     try {
         let job = schedule.scheduledJobs[jobName];
         console.log('============== job ======================');
@@ -44,7 +44,7 @@ const cancelJob = (jobName)=>{
             job.cancel();
         }
     } catch (error) {
-        throw error ;
+        throw error;
     }
 }
 
@@ -59,7 +59,7 @@ let TraderNotResponseCount = async () => {
 }
 let DriverNotResponseCount = async () => {
     try {
-        let count = await Order.count({ deleted: false, status: 'NOT_ASSIGN',$or: [{ paymentMethod: 'DIGITAL', paymentStatus: 'SUCCESSED' }, { paymentMethod: { $in: ['CASH', 'WALLET'] } }] });
+        let count = await Order.count({ deleted: false, status: 'NOT_ASSIGN', $or: [{ paymentMethod: 'DIGITAL', paymentStatus: 'SUCCESSED' }, { paymentMethod: { $in: ['CASH', 'WALLET'] } }] });
         adminNSP.emit(socketEvents.DriverNotResponseCount, { count: count });
 
     } catch (error) {
@@ -68,9 +68,9 @@ let DriverNotResponseCount = async () => {
 }
 let traderOrdersCount = async (userId) => {
     try {
-        let newOrdersQuery = { deleted: false, status: 'WAITING', trader: userId, traderNotResponse: false,$or: [{ paymentMethod: 'DIGITAL', paymentStatus: 'SUCCESSED' }, { paymentMethod: { $in: ['CASH', 'WALLET'] } }] };
-        let currentOrdersQuery = { deleted: false, trader: userId, status: { $in:  ['ACCEPTED', 'DRIVER_ACCEPTED', 'SHIPPED','NOT_ASSIGN'] },$or: [{ paymentMethod: 'DIGITAL', paymentStatus: 'SUCCESSED' }, { paymentMethod: { $in: ['CASH', 'WALLET'] } }] };
-        let finishedOrdersQuery = { deleted: false, trader: userId, status: { $in: ['DELIVERED'] },$or: [{ paymentMethod: 'DIGITAL', paymentStatus: 'SUCCESSED' }, { paymentMethod: { $in: ['CASH', 'WALLET'] } }] };
+        let newOrdersQuery = { deleted: false, status: 'WAITING', trader: userId, traderNotResponse: false, $or: [{ paymentMethod: 'DIGITAL', paymentStatus: 'SUCCESSED' }, { paymentMethod: { $in: ['CASH', 'WALLET'] } }] };
+        let currentOrdersQuery = { deleted: false, trader: userId, status: { $in: ['ACCEPTED', 'DRIVER_ACCEPTED', 'SHIPPED', 'NOT_ASSIGN'] }, $or: [{ paymentMethod: 'DIGITAL', paymentStatus: 'SUCCESSED' }, { paymentMethod: { $in: ['CASH', 'WALLET'] } }] };
+        let finishedOrdersQuery = { deleted: false, trader: userId, status: { $in: ['DELIVERED'] }, $or: [{ paymentMethod: 'DIGITAL', paymentStatus: 'SUCCESSED' }, { paymentMethod: { $in: ['CASH', 'WALLET'] } }] };
 
         let promiseData = [
             Order.count(newOrdersQuery), Order.count(currentOrdersQuery), Order.count(finishedOrdersQuery)
@@ -90,8 +90,8 @@ let traderOrdersCount = async (userId) => {
 let driverOrdersCount = async (userId) => {
     try {
         // console.log("driverOrdersCount ", userId)
-        let currentOrdersQuery = { deleted: false, driver: userId, status: { $in: ['DRIVER_ACCEPTED', 'SHIPPED'] },$or: [{ paymentMethod: 'DIGITAL', paymentStatus: 'SUCCESSED' }, { paymentMethod: { $in: ['CASH', 'WALLET'] } }] };
-        let finishedOrdersQuery = { deleted: false, driver: userId, status: { $in: ['DELIVERED'] },$or: [{ paymentMethod: 'DIGITAL', paymentStatus: 'SUCCESSED' }, { paymentMethod: { $in: ['CASH', 'WALLET'] } }]};
+        let currentOrdersQuery = { deleted: false, driver: userId, status: { $in: ['DRIVER_ACCEPTED', 'SHIPPED'] }, $or: [{ paymentMethod: 'DIGITAL', paymentStatus: 'SUCCESSED' }, { paymentMethod: { $in: ['CASH', 'WALLET'] } }] };
+        let finishedOrdersQuery = { deleted: false, driver: userId, status: { $in: ['DELIVERED'] }, $or: [{ paymentMethod: 'DIGITAL', paymentStatus: 'SUCCESSED' }, { paymentMethod: { $in: ['CASH', 'WALLET'] } }] };
 
         let promiseData = [
             Order.count(currentOrdersQuery), Order.count(finishedOrdersQuery)
@@ -241,9 +241,9 @@ const orderService = async (order) => {
             try {
                 console.log(jobName, ' fire date ', fireDate);
                 currentOrder = await Order.findById(order.id);
-                console.log("currentOrder ",currentOrder)
+                console.log("currentOrder ", currentOrder)
                 if (currentOrder.status == 'ACCEPTED') {
-                    let validatedBody = { $addToSet: { rejectedDrivers: currentOrder.driver }, $unset: { driver: 1 },lastActionDate: new Date() };
+                    let validatedBody = { $addToSet: { rejectedDrivers: currentOrder.driver }, $unset: { driver: 1 }, lastActionDate: new Date() };
                     let updatedOrder = await Order.findByIdAndUpdate(order.id, validatedBody, { new: true }).populate(populateQuery);
                     notificationNSP.to('room-' + currentOrder.driver).emit(socketEvents.OrderExpired, { order: updatedOrder });
                     findDriver(updatedOrder);
@@ -259,7 +259,7 @@ const orderService = async (order) => {
 
 const findDriver = async (order) => {
     try {
-        
+
         //let busyDrivers = await Order.find({ deleted: false, status: { $in: ['ACCEPTED', 'DRIVER_ACCEPTED', 'SHIPPED'], } }).distinct('driver');
         let userQuery = {
             deleted: false,
@@ -273,7 +273,7 @@ const findDriver = async (order) => {
             stopReceiveOrders: false,
             openLocation: true
         };
-        console.log("rejectedDrivers === ",order.rejectedDrivers)
+        console.log("rejectedDrivers === ", order.rejectedDrivers)
 
         // if(busyDrivers.length > 0 && order.rejectedDrivers.length > 0){
         //     let busyIds = busyDrivers.concat(order.rejectedDrivers);
@@ -283,8 +283,8 @@ const findDriver = async (order) => {
         //     userQuery._id = {$nin: busyDrivers};
 
         // }else
-         if(order.rejectedDrivers.length > 0){
-            userQuery._id = {$nin: order.rejectedDrivers};
+        if (order.rejectedDrivers.length > 0) {
+            userQuery._id = { $nin: order.rejectedDrivers };
         }
 
         let driver;
@@ -320,11 +320,11 @@ const findDriver = async (order) => {
 
         let ids = [...pluck(zones, 'user')];
         console.log("zones ====== ", ids)
-        
+
         if (userQuery._id) {
             let ninDrivers = userQuery._id.$nin;
             ids = ids.filter(x => !ninDrivers.includes(x));
-        } 
+        }
         console.log("zones ====== ", ids)
 
         userQuery._id = { $in: ids };
@@ -332,10 +332,10 @@ const findDriver = async (order) => {
         console.log(userQuery)
         let drivers = await User.find(userQuery);
 
-        if(order.paymentMethod != 'CASH'){
+        if (order.paymentMethod != 'CASH') {
             userQuery.stopReceiveOrders = true;
             let stopDriversForCreditOnly = await User.find(userQuery);
-            if(stopDriversForCreditOnly.length > 0) drivers = drivers.concat(stopDriversForCreditOnly);
+            if (stopDriversForCreditOnly.length > 0) drivers = drivers.concat(stopDriversForCreditOnly);
 
         }
 
@@ -412,7 +412,7 @@ const getCheckoutId = async (request, response, next, order, paymentBrand) => {
         }
         let address = 'From Store';
         if (order.orderType != 'FROM_STORE') {
-            address = request.address.address;
+            address = request.address.addressName;
         }
 
         let body = {
@@ -472,7 +472,7 @@ export default {
             let page = +req.query.page || 1, limit = +req.query.limit || 20;
             let { user, status, paymentMethod, month, year, fromDate, toDate, type,
                 userName, price, orderDate, totalPrice, promoCode, orderType, driver,
-                orderNumber, numberOfProducts, waitingOrders, currentOrders, finishedOrders, traderNotResponse, trader,defaultOrders
+                orderNumber, numberOfProducts, waitingOrders, currentOrders, finishedOrders, traderNotResponse, trader, defaultOrders
             } = req.query;
             let query = { deleted: false, $or: [{ paymentMethod: 'DIGITAL', paymentStatus: 'SUCCESSED' }, { paymentMethod: { $in: ['CASH', 'WALLET'] } }] };
             if (trader) query.trader = trader;
@@ -482,7 +482,7 @@ export default {
             if (req.user.type == 'CLIENT') {
                 query.user = req.user.id;
                 if (currentOrders) {
-                    query.status = { $in: ['WAITING', 'ACCEPTED', 'DRIVER_ACCEPTED', 'SHIPPED','NOT_ASSIGN'] }
+                    query.status = { $in: ['WAITING', 'ACCEPTED', 'DRIVER_ACCEPTED', 'SHIPPED', 'NOT_ASSIGN'] }
                 } else if (finishedOrders) {
                     query.status = { $in: ['DELIVERED', 'CANCELED', 'REJECTED'] }
 
@@ -495,7 +495,7 @@ export default {
                     query.traderNotResponse = false;
 
                 } else if (currentOrders) {
-                    query.status = { $in: ['ACCEPTED', 'DRIVER_ACCEPTED', 'SHIPPED','NOT_ASSIGN'] }
+                    query.status = { $in: ['ACCEPTED', 'DRIVER_ACCEPTED', 'SHIPPED', 'NOT_ASSIGN'] }
 
                 } else if (finishedOrders) {
                     query.status = { $in: ['DELIVERED'] }
@@ -507,7 +507,7 @@ export default {
                 query.driver = req.user.id;
                 query.orderType = 'DELIVERY';
                 if (waitingOrders) {
-                    query.status ='ACCEPTED';
+                    query.status = 'ACCEPTED';
                 }
                 else if (currentOrders) {
                     query.status = { $in: ['DRIVER_ACCEPTED', 'SHIPPED'] }
@@ -517,8 +517,8 @@ export default {
                 }
             }
             //////admin tab///////
-            if(defaultOrders){
-                query.status = {$in:['WAITING','ACCEPTED','DRIVER_ACCEPTED','REJECTED', 'CANCELED', 'SHIPPED', 'DELIVERED']}
+            if (defaultOrders) {
+                query.status = { $in: ['WAITING', 'ACCEPTED', 'DRIVER_ACCEPTED', 'REJECTED', 'CANCELED', 'SHIPPED', 'DELIVERED'] }
             }
             let date = new Date();
             if (traderNotResponse) {
@@ -766,7 +766,7 @@ export default {
             await order.save();
             res.status(200).send("Deleted Successfully");
             clientOrdersCount(order.user);
-            await Notification.updateMany({deleted: false,subject:orderId,subjectType:{$in:['ORDER','CHANGE_ORDER_STATUS']}})
+            await Notification.updateMany({ deleted: false, subject: orderId, subjectType: { $in: ['ORDER', 'CHANGE_ORDER_STATUS'] } })
 
         }
         catch (err) {
@@ -812,10 +812,10 @@ export default {
                 ////////////////////////////////////////////////////
                 description = { en: 'Your Order Has Been Approved', ar: ' جاري تجهيز طلبك' };
             } else {
-                description = { en: 'Your Order Has Been Rejected ' + validatedBody.rejectReason, ar: ' نأسف لعدم اتمام طلبك من ' +  updatedOrder.trader.name+ ' بسبب '+ validatedBody.rejectReason };
+                description = { en: 'Your Order Has Been Rejected ' + validatedBody.rejectReason, ar: ' نأسف لعدم اتمام طلبك من ' + updatedOrder.trader.name + ' بسبب ' + validatedBody.rejectReason };
             }
 
-            await notifyController.create(req.user.id, updatedOrder.user.id, description, updatedOrder.id, 'CHANGE_ORDER_STATUS', updatedOrder.id,updatedOrder.status);
+            await notifyController.create(req.user.id, updatedOrder.user.id, description, updatedOrder.id, 'CHANGE_ORDER_STATUS', updatedOrder.id, updatedOrder.status);
             notifyController.pushNotification(updatedOrder.user.id, 'CHANGE_ORDER_STATUS', updatedOrder.id, description);
 
             notificationNSP.to('room-' + updatedOrder.user.id).emit(socketEvents.ChangeOrderStatus, { order: updatedOrder });
@@ -862,7 +862,7 @@ export default {
                 validatedBody['$unset'] = { driver: 1 }
                 delete validatedBody.status;
                 updatedOrder = await Order.findByIdAndUpdate(orderId, validatedBody, { new: true }).populate(populateQuery);
-                
+
                 let jobName = 'order-' + updatedOrder.id;
                 cancelJob(jobName);
                 await findDriver(updatedOrder);
@@ -888,12 +888,12 @@ export default {
 
             let description = { ar: ' تم تغير حالة الطلب الي تم الشحن ', en: 'Order Status Changed To Order Shipped' };
 
-            await notifyController.create(req.user.id, updatedOrder.user.id, description, updatedOrder.id, 'CHANGE_ORDER_STATUS', updatedOrder.id,updatedOrder.status);
+            await notifyController.create(req.user.id, updatedOrder.user.id, description, updatedOrder.id, 'CHANGE_ORDER_STATUS', updatedOrder.id, updatedOrder.status);
             notifyController.pushNotification(updatedOrder.user.id, 'CHANGE_ORDER_STATUS', updatedOrder.id, description);
 
             notificationNSP.to('room-' + updatedOrder.user.id).emit(socketEvents.ChangeOrderStatus, { order: updatedOrder });
-            
-            if(order.orderType == 'DELIVERY')
+
+            if (order.orderType == 'DELIVERY')
                 notificationNSP.to('room-' + updatedOrder.driver.id).emit(socketEvents.ChangeOrderStatus, { order: updatedOrder });
 
             if (updatedOrder.user.language == "ar") {
@@ -925,7 +925,7 @@ export default {
 
             let description = { ar: ' تم تغير حالة الطلب الي تم التسليم ', en: 'Order Status Changed To Delivered' };
 
-            await notifyController.create(req.user.id, updatedOrder.user.id, description, updatedOrder.id, 'CHANGE_ORDER_STATUS', updatedOrder.id,updatedOrder.status);
+            await notifyController.create(req.user.id, updatedOrder.user.id, description, updatedOrder.id, 'CHANGE_ORDER_STATUS', updatedOrder.id, updatedOrder.status);
             notifyController.pushNotification(updatedOrder.user.id, 'CHANGE_ORDER_STATUS', updatedOrder.id, description);
 
             notificationNSP.to('room-' + updatedOrder.user.id).emit(socketEvents.ChangeOrderStatus, { order: updatedOrder });
@@ -966,13 +966,13 @@ export default {
             res.status(200).send(order);
             let description = { ar: 'تم الغاء هذا الطلب ', en: ' Order Canceled' };
 
-            await notifyController.create(req.user.id, order.trader.id, description, order.id, 'CHANGE_ORDER_STATUS', order.id,order.status);
+            await notifyController.create(req.user.id, order.trader.id, description, order.id, 'CHANGE_ORDER_STATUS', order.id, order.status);
             notifyController.pushNotification(order.trader.id, 'CHANGE_ORDER_STATUS', order.id, description);
             notificationNSP.to('room-' + order.trader.id).emit(socketEvents.ChangeOrderStatus, { order: order });
 
             if (user.type == 'ADMIN' || user.type == 'SUB_ADMIN') {
-                description = {ar:'نأسف لم نتمكن من تلبيه طلبك الان وسيتم استرداد المدفوعات',en:'We are sorry that we are unable to fulfill your order now and the payment is being refunded'}
-                await notifyController.create(req.user.id, order.user.id, description, order.id, 'CHANGE_ORDER_STATUS', order.id,order.status);
+                description = { ar: 'نأسف لم نتمكن من تلبيه طلبك الان وسيتم استرداد المدفوعات', en: 'We are sorry that we are unable to fulfill your order now and the payment is being refunded' }
+                await notifyController.create(req.user.id, order.user.id, description, order.id, 'CHANGE_ORDER_STATUS', order.id, order.status);
                 notifyController.pushNotification(order.user.id, 'CHANGE_ORDER_STATUS', order.id, description);
                 notificationNSP.to('room-' + order.user.id).emit(socketEvents.ChangeOrderStatus, { order: order });
 
@@ -1216,7 +1216,7 @@ export default {
             let validatedBody = checkValidations(req);
             await Order.updateMany({ _id: { $in: validatedBody.ids }, deleted: false }, { deleted: true, deletedDate: new Date() })
             res.status(200).send("Deleted Successfully");
-            await Notification.updateMany({deleted: false,subject:{ $in: validatedBody.ids },subjectType:{$in:['ORDER','CHANGE_ORDER_STATUS']}})
+            await Notification.updateMany({ deleted: false, subject: { $in: validatedBody.ids }, subjectType: { $in: ['ORDER', 'CHANGE_ORDER_STATUS'] } })
 
         }
         catch (err) {
