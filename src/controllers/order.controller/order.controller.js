@@ -740,7 +740,7 @@ export default {
             ////////////////////////////////////////////////////////////////////////////////////////////
             clientOrdersCount(req.user.id);
             ////////////////////////////////////////////////////////////////////////////////////////////
-            await sendHtmlEmail(req.user.email, order.orderNumber, order.products.length, order.price, order.transportPrice, order.taxes, order.address.address, order.address.addressName, order.address.buildingNumber, order.address.flatNumber, order.totalPrice);
+            await sendHtmlEmail(req.user.email, order.orderNumber, order.products.length, order.price, order.transportPrice, order.taxes, order.address.address || '', order.address.addressName || '', order.address.buildingNumber || '', order.address.flatNumber || '', order.totalPrice);
 
         } catch (err) {
             next(err);
