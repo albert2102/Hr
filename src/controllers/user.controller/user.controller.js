@@ -728,7 +728,7 @@ export default {
                 limit = +req.query.limit || 20;
             var { text, hasOffer, open, long, lat, category, highestRated,country} = req.query;
 
-            let query = { deleted: false, type: 'INSTITUTION',activated: true };
+            let query = { deleted: false, type: 'INSTITUTION',activated: true,status:'ACCEPTED'};
             let sortQuery = { createdAt: -1 };
             if  (country) query.country = country;
             if (open) query.institutionStatus = 'OPEN'; // مفتوح
