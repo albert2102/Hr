@@ -1112,6 +1112,7 @@ export default {
                     totalDues: { $sum: { $cond: [{ $and: [{ $eq: ["$traderPayoffDues", false] }, { $eq: ["$orderType", 'DELIVERY'] }] }, '$traderDues', 0] } },
                     orders: { $push: '$$ROOT' }
                 })
+		.sort({_id:-1})
             let total = 0;
             for (let index = 0; index < results.length; index++) {
                 total += results[index].totalDues;
@@ -1174,6 +1175,7 @@ export default {
                     count: { $sum: 1 },
                     orders: { $push: '$$ROOT' }
                 })
+		.sort({_id:-1})
 
             let totalCash = 0;
             let totalNotCash = 0;

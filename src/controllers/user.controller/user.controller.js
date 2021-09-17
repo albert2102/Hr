@@ -934,7 +934,7 @@ export default {
             body('ibanNumber').not().isEmpty().withMessage(() => { return i18n.__('ibanNumberRequired') }),
             body('coverImage').optional().not().isEmpty().withMessage(() => { return i18n.__('coverImageRequired') }),
 
-            body('country').not().isEmpty().withMessage(() => { return i18n.__('countryRequired') })
+            body('country').optional().not().isEmpty().withMessage(() => { return i18n.__('countryRequired') })
                 .custom(async (value, { req }) => {
                     await checkExistThenGet(value, Country, { deleted: false })
                     return true;

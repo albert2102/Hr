@@ -223,7 +223,7 @@ export default {
                 .isIn(['ADMIN', 'SUB_ADMIN', 'CLIENT']).withMessage(() => { return i18n.__('userTypeWrong') }),
             body('countryCode').not().isEmpty().withMessage(() => { return i18n.__('countryCodeRequired') }),
             body('countryKey').not().isEmpty().withMessage(() => { return i18n.__('countryKeyRequired') }),
-            body('country').not().isEmpty().withMessage(() => { return i18n.__('countryRequired') })
+            body('country').optional().not().isEmpty().withMessage(() => { return i18n.__('countryRequired') })
                 .custom(async (value, { req }) => {
                     await checkExistThenGet(value, Country, { deleted: false })
                     return true;
