@@ -7,6 +7,7 @@ import { checkExistThenGet, checkExist } from "../../helpers/CheckMethods";
 import { body } from 'express-validator/check';
 import { checkValidations } from "../shared.controller/shared.controller";
 import i18n from 'i18n';
+import countryModel from "../../models/country.model/country.model";
 
 let populateQuery = [
     {
@@ -64,6 +65,15 @@ export default {
                     }
                 },
                 { $unwind: '$_id.trader' },
+                {
+                    $lookup: {
+                        from: countryModel.collection.name,
+                        localField: "_id.trader.country",
+                        foreignField: "_id",
+                        as: "_id.trader.country"
+                    }
+                },
+                { $unwind: '$_id.country' },
                 { $limit: limit },
                 { $skip: (page - 1) * limit }
             ]
