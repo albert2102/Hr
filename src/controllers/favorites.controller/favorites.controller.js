@@ -13,7 +13,13 @@ let populateQuery = [
         path: 'product', model: 'product',
         populate: [{ path: 'trader', model: 'user' }, { path: 'productCategory', model: 'productCategory' }]
     },
-    { path: 'user', model: 'user' }
+    {
+        path: 'user', model: 'user', populate: [
+            { path: 'country', model: 'country' },
+            { path: 'city', model: 'city', populate: { path: 'country', model: 'country' } },
+            { path: 'region', model: 'region', populate: [{ path: 'city', model: 'city', populate: { path: 'country', model: 'country' } }] }
+        ]
+    }
 ];
 
 
@@ -48,7 +54,7 @@ export default {
                 },
                 { $unwind: '$product' },
 
-                { $group: { _id: { trader: '$product.trader' },favorites:{$push:'$$ROOT'} } },
+                { $group: { _id: { trader: '$product.trader' }, favorites: { $push: '$$ROOT' } } },
                 {
                     $lookup: {
                         from: User.collection.name,
