@@ -71,7 +71,7 @@ export default {
             let favs = [];
             if (!admin) {
                 favs = await Favorites.aggregate(aggregateQuery)
-                favs = await Favorites.populate(favs,{path:'_id.trader.country',model:'country'})
+                favs = await Favorites.populate(favs,[{path:'_id.trader.country',model:'country'},{path:'_id.trader.city',model:'city'},{path:'_id.trader.region',model:'region'}])
             }
             else {
                 favs = await Favorites.find(query)
