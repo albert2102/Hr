@@ -21,7 +21,8 @@ let countNew = async () => {
     }
 } 
 const populateQuery = [
-    {path:'user',model:'user'}
+    {path:'user',model:'user'},
+    {path:'country',model:'country'},
 ]
 
 const advertismentJob = async () => {
@@ -48,7 +49,7 @@ export default {
             
             let page = +req.query.page || 1, limit = +req.query.limit || 20;
 
-            let { includeIssuesCount , status, address, description, phone, whatsappNumber, contactBy, price, lat, long, user,archive} = req.query
+            let { country,includeIssuesCount , status, address, description, phone, whatsappNumber, contactBy, price, lat, long, user,archive} = req.query
 
             let query = { deleted: false,status:{$nin:['DELETED','STOPED']} };
             if (archive) query.deleted = true;
@@ -60,6 +61,7 @@ export default {
             if (whatsappNumber) query.whatsappNumber = { '$regex': whatsappNumber, '$options': 'i' };
             if (contactBy) query.contactBy = contactBy;
             if (price) query.price = +price;
+            if (country) query.country = +country;
 
             let aggregateQuery = [
                 { $match: query },
@@ -145,9 +147,10 @@ export default {
             res.status(200).send(advertisment);
             await countNew();
             ////////////////////////////////////////////////////////////////////////////////////////////
-            console.log(req.user)
-            console.log(req.user.AdvertismentCount)
-            await User.findByIdAndUpdate(req.user.id,{AdvertismentCount:(req.user.AdvertismentCount + 1)});
+            
+            let newUser = await User.findByIdAndUpdate(req.user.id,{AdvertismentCount:(req.user.AdvertismentCount + 1)});
+            advertisment.country = newUser.country;
+            await advertisment.save();
 
         } catch (error) {
             next(error)
