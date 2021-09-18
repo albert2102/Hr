@@ -85,10 +85,6 @@ const userSchema = new Schema({
         enum: ['NORMAL','FACEBOOK','TWITTER','INSTAGRAM','GOOGLE','APPLE'],
         default:'NORMAL'
     },
-    country:{
-        type: Number,
-        ref: 'country'
-    },
     activeChatHead:{
         type: Boolean,
         default: false
@@ -251,7 +247,19 @@ const userSchema = new Schema({
     openLocation:{
         type: Boolean,
         default: false
-    }
+    },
+    country:{
+        type: Number,
+        ref: 'country'
+    },
+    city:{
+        type: Number,
+        ref: 'city'
+    },
+    region:{
+        type: Number,
+        ref: 'region'
+    },
 }, { timestamps: true });
 
 

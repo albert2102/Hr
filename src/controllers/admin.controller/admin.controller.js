@@ -11,11 +11,16 @@ import ConfirmationCode from '../../models/confirmationsCodes.model/confirmation
 import notificationController from '../notif.controller/notif.controller';
 import Category from '../../models/category.model/category.model';
 import Country from "../../models/country.model/country.model";
+import City from "../../models/city.model/city.model";
+import Region from "../../models/region.model/region.model";
 import config from '../../config'
 let populateQuery = [
     { path: 'rules', model: 'assignRule' },
     { path: 'category', model: 'category' },
     { path: 'country', model: 'country' },
+    { path: 'city', model: 'city', populate: { path: 'country', model: 'country' } },
+    { path: 'region', model: 'region', populate: [{ path: 'city', model: 'city', populate: { path: 'country', model: 'country' } }] }
+
 ];
 
 let count = async (type) => {
@@ -63,7 +68,7 @@ export default {
                 body('language').optional().not().isEmpty().withMessage(() => { return i18n.__('languageRequired') }),
                 body('countryCode').not().isEmpty().withMessage(() => { return i18n.__('countryCodeRequired') }),
                 body('countryKey').not().isEmpty().withMessage(() => { return i18n.__('countryKeyRequired') }),
-                
+
             ];
         } else {
             validations = [
@@ -94,7 +99,7 @@ export default {
                 body('currentPassword').optional().not().isEmpty().withMessage(() => { return i18n.__('CurrentPasswordRequired') }),
                 body('countryCode').optional().not().isEmpty().withMessage(() => { return i18n.__('countryCodeRequired') }),
                 body('countryKey').optional().not().isEmpty().withMessage(() => { return i18n.__('countryKeyRequired') }),
-                
+
             ];
         }
         return validations;
@@ -203,7 +208,7 @@ export default {
                 .isEmail().withMessage(() => { return i18n.__('EmailNotValid') })
                 .custom(async (value, { req }) => {
                     value = (value.trim()).toLowerCase();
-                    let userQuery = { email: value, deleted: false,type:'CLIENT' };
+                    let userQuery = { email: value, deleted: false, type: 'CLIENT' };
                     if (await User.findOne(userQuery))
                         throw new Error(i18n.__('emailDuplicated'));
                     else
@@ -213,7 +218,7 @@ export default {
             body('phone').not().isEmpty().withMessage(() => { return i18n.__('PhoneIsRequired') })
                 .custom(async (value, { req }) => {
                     value = (value.trim()).toLowerCase();
-                    let userQuery = { phone: value, deleted: false,type:'CLIENT' };
+                    let userQuery = { phone: value, deleted: false, type: 'CLIENT' };
                     if (await User.findOne(userQuery))
                         throw new Error(i18n.__('phoneIsDuplicated'));
                     else
@@ -223,9 +228,19 @@ export default {
                 .isIn(['ADMIN', 'SUB_ADMIN', 'CLIENT']).withMessage(() => { return i18n.__('userTypeWrong') }),
             body('countryCode').not().isEmpty().withMessage(() => { return i18n.__('countryCodeRequired') }),
             body('countryKey').not().isEmpty().withMessage(() => { return i18n.__('countryKeyRequired') }),
-            body('country').not().isEmpty().withMessage(() => { return i18n.__('countryRequired') })
+            body('country').optional().not().isEmpty().withMessage(() => { return i18n.__('countryRequired') })
                 .custom(async (value, { req }) => {
                     await checkExistThenGet(value, Country, { deleted: false })
+                    return true;
+                }),
+            body('city').optional().not().isEmpty().withMessage(() => { return i18n.__('cityRequired') })
+                .custom(async (value, { req }) => {
+                    await checkExistThenGet(value, City, { deleted: false })
+                    return true;
+                }),
+            body('region').optional().not().isEmpty().withMessage(() => { return i18n.__('regionRequired') })
+                .custom(async (value, { req }) => {
+                    await checkExistThenGet(value, Region, { deleted: false })
                     return true;
                 }),
         ];
@@ -264,6 +279,16 @@ export default {
             body('country').optional().not().isEmpty().withMessage(() => { return i18n.__('countryRequired') })
                 .custom(async (value, { req }) => {
                     await checkExistThenGet(value, Country, { deleted: false })
+                    return true;
+                }),
+            body('city').optional().not().isEmpty().withMessage(() => { return i18n.__('cityRequired') })
+                .custom(async (value, { req }) => {
+                    await checkExistThenGet(value, City, { deleted: false })
+                    return true;
+                }),
+            body('region').optional().not().isEmpty().withMessage(() => { return i18n.__('regionRequired') })
+                .custom(async (value, { req }) => {
+                    await checkExistThenGet(value, Region, { deleted: false })
                     return true;
                 }),
         ];
@@ -416,7 +441,7 @@ export default {
                 .isEmail().withMessage(() => { return i18n.__('EmailNotValid') })
                 .custom(async (value, { req }) => {
                     value = (value.trim()).toLowerCase();
-                    let userQuery = { email: value, deleted: false,type:'DRIVER' };
+                    let userQuery = { email: value, deleted: false, type: 'DRIVER' };
                     if (await User.findOne(userQuery))
                         throw new Error(i18n.__('emailDuplicated'));
                     else
@@ -426,7 +451,7 @@ export default {
             body('phone').not().isEmpty().withMessage(() => { return i18n.__('PhoneIsRequired') })
                 .custom(async (value, { req }) => {
                     value = (value.trim()).toLowerCase();
-                    let userQuery = { phone: value, deleted: false,type:'DRIVER' };
+                    let userQuery = { phone: value, deleted: false, type: 'DRIVER' };
                     if (await User.findOne(userQuery))
                         throw new Error(i18n.__('phoneIsDuplicated'));
                     else
@@ -453,7 +478,22 @@ export default {
             body('coverImage').optional().not().isEmpty().withMessage(() => { return i18n.__('coverImageRequired') }),
 
             body('ajamTaxes').not().isEmpty().withMessage(() => { return i18n.__('taxesRequired') }).isInt({ min: 0, max: 100 }),
-
+            
+            body('country').optional().not().isEmpty().withMessage(() => { return i18n.__('countryRequired') })
+                .custom(async (value, { req }) => {
+                    await checkExistThenGet(value, Country, { deleted: false })
+                    return true;
+                }),
+            body('city').optional().not().isEmpty().withMessage(() => { return i18n.__('cityRequired') })
+                .custom(async (value, { req }) => {
+                    await checkExistThenGet(value, City, { deleted: false })
+                    return true;
+                }),
+            body('region').optional().not().isEmpty().withMessage(() => { return i18n.__('regionRequired') })
+                .custom(async (value, { req }) => {
+                    await checkExistThenGet(value, Region, { deleted: false })
+                    return true;
+                }),
         ];
         return validations;
     },
@@ -466,7 +506,7 @@ export default {
                 .isEmail().withMessage(() => { return i18n.__('EmailNotValid') })
                 .custom(async (value, { req }) => {
                     value = (value.trim()).toLowerCase();
-                    let userQuery = { email: value, deleted: false, _id: { $ne: req.body.userId },type:'DRIVER' };
+                    let userQuery = { email: value, deleted: false, _id: { $ne: req.body.userId }, type: 'DRIVER' };
                     if (await User.findOne(userQuery))
                         throw new Error(i18n.__('emailDuplicated'));
                     else
@@ -476,7 +516,7 @@ export default {
             body('phone').optional().not().isEmpty().withMessage(() => { return i18n.__('PhoneIsRequired') })
                 .custom(async (value, { req }) => {
                     value = (value.trim()).toLowerCase();
-                    let userQuery = { phone: value, deleted: false, _id: { $ne: req.body.userId },type:'DRIVER' };
+                    let userQuery = { phone: value, deleted: false, _id: { $ne: req.body.userId }, type: 'DRIVER' };
 
                     if (await User.findOne(userQuery))
                         throw new Error(i18n.__('phoneIsDuplicated'));
@@ -505,7 +545,22 @@ export default {
             body('coverImage').optional().not().isEmpty().withMessage(() => { return i18n.__('coverImageRequired') }),
 
             body('ajamTaxes').optional().not().isEmpty().withMessage(() => { return i18n.__('taxesRequired') }).isInt({ min: 0, max: 100 }),
-
+            
+            body('country').optional().not().isEmpty().withMessage(() => { return i18n.__('countryRequired') })
+                .custom(async (value, { req }) => {
+                    await checkExistThenGet(value, Country, { deleted: false })
+                    return true;
+                }),
+            body('city').optional().not().isEmpty().withMessage(() => { return i18n.__('cityRequired') })
+                .custom(async (value, { req }) => {
+                    await checkExistThenGet(value, City, { deleted: false })
+                    return true;
+                }),
+            body('region').optional().not().isEmpty().withMessage(() => { return i18n.__('regionRequired') })
+                .custom(async (value, { req }) => {
+                    await checkExistThenGet(value, Region, { deleted: false })
+                    return true;
+                }),
         ];
 
         return validations;
@@ -542,7 +597,7 @@ export default {
                 .isEmail().withMessage(() => { return i18n.__('EmailNotValid') })
                 .custom(async (value, { req }) => {
                     value = (value.trim()).toLowerCase();
-                    let userQuery = { email: value, deleted: false,type:'INSTITUTION' };
+                    let userQuery = { email: value, deleted: false, type: 'INSTITUTION' };
                     if (await User.findOne(userQuery))
                         throw new Error(i18n.__('emailDuplicated'));
                     else
@@ -552,7 +607,7 @@ export default {
             body('phone').not().isEmpty().withMessage(() => { return i18n.__('PhoneIsRequired') })
                 .custom(async (value, { req }) => {
                     value = (value.trim()).toLowerCase();
-                    let userQuery = { phone: value, deleted: false,type:'INSTITUTION' };
+                    let userQuery = { phone: value, deleted: false, type: 'INSTITUTION' };
                     if (await User.findOne(userQuery))
                         throw new Error(i18n.__('phoneIsDuplicated'));
                     else
@@ -582,6 +637,22 @@ export default {
 
             body('deliveryPricePerSecond').not().isEmpty().withMessage(() => { return i18n.__('deliveryPricePerSecondRequired') }),
             body('minDeliveryPrice').not().isEmpty().withMessage(() => { return i18n.__('minDeliveryPriceRequired') }),
+
+            body('country').optional().not().isEmpty().withMessage(() => { return i18n.__('countryRequired') })
+                .custom(async (value, { req }) => {
+                    await checkExistThenGet(value, Country, { deleted: false })
+                    return true;
+                }),
+            body('city').optional().not().isEmpty().withMessage(() => { return i18n.__('cityRequired') })
+                .custom(async (value, { req }) => {
+                    await checkExistThenGet(value, City, { deleted: false })
+                    return true;
+                }),
+            body('region').optional().not().isEmpty().withMessage(() => { return i18n.__('regionRequired') })
+                .custom(async (value, { req }) => {
+                    await checkExistThenGet(value, Region, { deleted: false })
+                    return true;
+                }),
         ];
         return validations;
     },
@@ -593,8 +664,9 @@ export default {
             body('email').optional().trim().not().isEmpty().withMessage(() => { return i18n.__('emailRequired') })
                 .isEmail().withMessage(() => { return i18n.__('EmailNotValid') })
                 .custom(async (value, { req }) => {
+                   
                     value = (value.trim()).toLowerCase();
-                    let userQuery = { email: value, deleted: false, _id: { $ne: req.body.userId },type:'INSTITUTION' };
+                    let userQuery = { email: value, deleted: false, _id: { $ne: req.body.userId }, type: 'INSTITUTION' };
                     if (await User.findOne(userQuery))
                         throw new Error(i18n.__('emailDuplicated'));
                     else
@@ -604,7 +676,7 @@ export default {
             body('phone').optional().not().isEmpty().withMessage(() => { return i18n.__('PhoneIsRequired') })
                 .custom(async (value, { req }) => {
                     value = (value.trim()).toLowerCase();
-                    let userQuery = { phone: value, deleted: false, _id: { $ne: req.body.userId },type:'INSTITUTION' };
+                    let userQuery = { phone: value, deleted: false, _id: { $ne: req.body.userId }, type: 'INSTITUTION' };
 
                     if (await User.findOne(userQuery))
                         throw new Error(i18n.__('phoneIsDuplicated'));
@@ -637,6 +709,21 @@ export default {
             body('deliveryPricePerSecond').optional().not().isEmpty().withMessage(() => { return i18n.__('deliveryPricePerSecondRequired') }),
             body('minDeliveryPrice').optional().not().isEmpty().withMessage(() => { return i18n.__('minDeliveryPriceRequired') }),
 
+            body('country').optional().not().isEmpty().withMessage(() => { return i18n.__('countryRequired') })
+                .custom(async (value, { req }) => {
+                    await checkExistThenGet(value, Country, { deleted: false })
+                    return true;
+                }),
+            body('city').optional().not().isEmpty().withMessage(() => { return i18n.__('cityRequired') })
+                .custom(async (value, { req }) => {
+                    await checkExistThenGet(value, City, { deleted: false })
+                    return true;
+                }),
+            body('region').optional().not().isEmpty().withMessage(() => { return i18n.__('regionRequired') })
+                .custom(async (value, { req }) => {
+                    await checkExistThenGet(value, Region, { deleted: false })
+                    return true;
+                }),
         ];
 
         return validations;
@@ -681,41 +768,41 @@ export default {
     count,
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-    validateChangeStatus(){
+    validateChangeStatus() {
         let validation = [
-            body('status').not().isEmpty().withMessage(() => { return i18n.__('statusRequired') }).isIn(['ACCEPTED','REJECTED']),
+            body('status').not().isEmpty().withMessage(() => { return i18n.__('statusRequired') }).isIn(['ACCEPTED', 'REJECTED']),
             body('userId').not().isEmpty().withMessage(() => { return i18n.__('userIdRequired') })
         ];
-        return validation ;
+        return validation;
     },
 
-    async changeStatus(req, res, next){
+    async changeStatus(req, res, next) {
         try {
             let user = req.user;
             if ((user.type != 'ADMIN') && (user.type != 'SUB_ADMIN')) {
                 return next(new ApiError(403, i18n.__('unauth')));
             }
             let validatedBody = checkValidations(req);
-            let verifyUser = await checkExistThenGet(validatedBody.userId, User, { deleted: false,status:'WAITING',type:{$in:['INSTITUTION','DRIVER']} });
+            let verifyUser = await checkExistThenGet(validatedBody.userId, User, { deleted: false, status: 'WAITING', type: { $in: ['INSTITUTION', 'DRIVER'] } });
             validatedBody.updatedStatusDate = new Date();
-            verifyUser = await User.findByIdAndUpdate(validatedBody.userId , validatedBody,{new: true});
+            verifyUser = await User.findByIdAndUpdate(validatedBody.userId, validatedBody, { new: true });
             res.status(200).send(verifyUser)
             await count(verifyUser.type);
 
-            let description ;
-            
+            let description;
+
             if (verifyUser.type == 'DRIVER') {
                 if (validatedBody.status == 'ACCEPTED') {
-                    description = {en:"You are now a captain in the Agam team",ar:"انت الآن  كابتن لدي فريق أجَمْ"}
-                }else{
-                    description = {en:"You request to join Ajam has been rejected",ar:"تم رفض طلبك لمشاركة أجَمْ ككابتن"}
+                    description = { en: "You are now a captain in the Agam team", ar: "انت الآن  كابتن لدي فريق أجَمْ" }
+                } else {
+                    description = { en: "You request to join Ajam has been rejected", ar: "تم رفض طلبك لمشاركة أجَمْ ككابتن" }
                 }
-                
-            }else{
+
+            } else {
                 if (validatedBody.status == 'ACCEPTED') {
-                    description = {en:"You are now an instituation in the Agam team",ar:"انت الآن  متجر لدي فريق أجَمْ"}
-                }else{
-                    description = {en:"You request to join Ajam has been rejected",ar:"تم رفض طلبك لمشاركة أجَمْ كمتجر"}
+                    description = { en: "You are now an instituation in the Agam team", ar: "انت الآن  متجر لدي فريق أجَمْ" }
+                } else {
+                    description = { en: "You request to join Ajam has been rejected", ar: "تم رفض طلبك لمشاركة أجَمْ كمتجر" }
                 }
             }
             await notificationController.create(req.user.id, validatedBody.userId, description, validatedBody.userId, 'JOIN_STATUS');
@@ -730,15 +817,15 @@ export default {
     /////////////////////////////reports//////////////////////////////////////////////
     async reportsByCategory(req, res, next) {
         try {
-            let { fromDate, toDate,category } = req.query;
-            let query = { deleted: false,type:'INSTITUTION'};
-            
+            let { fromDate, toDate, category } = req.query;
+            let query = { deleted: false, type: 'INSTITUTION' };
+
             if (fromDate && !toDate) query.createdAt = { $gte: new Date(moment(fromDate).startOf('day')) };
             if (toDate && !fromDate) query.createdAt = { $lt: new Date(moment(toDate).endOf('day')) };
             if (fromDate && toDate) query.createdAt = { $gte: new Date(moment(fromDate).startOf('day')), $lt: new Date(moment(toDate).endOf('day')) };
 
-            if(category) query.category = +category;
-            
+            if (category) query.category = +category;
+
             let results = await User.aggregate()
                 .match(query)
                 .group({
@@ -746,7 +833,7 @@ export default {
                     count: { $sum: 1 },
                     traders: { $push: '$$ROOT' },
                 })
-            results = await User.populate(results,{path:'_id',model:'category'})
+            results = await User.populate(results, { path: '_id', model: 'category' })
             res.send({ data: results });
         } catch (err) {
             next(err);
