@@ -14,44 +14,44 @@ import schedule from 'node-schedule'
 import User from '../../models/user.model/user.model'
 let countNew = async () => {
     try {
-        let count = await Advertisments.count({ deleted: false, status: {$in:['WAITING','UPDATED']} });
+        let count = await Advertisments.count({ deleted: false, status: { $in: ['WAITING', 'UPDATED'] } });
         adminNSP.emit(socketEvents.WaitingAdvCount, { count: count });
     } catch (error) {
         throw error;
     }
-} 
+}
 const populateQuery = [
-    {path:'user',model:'user'},
-    {path:'country',model:'country'},
+    { path: 'user', model: 'user' },
+    { path: 'country', model: 'country' },
 ]
 
 const advertismentJob = async () => {
-    
+
     var j = schedule.scheduleJob('*/1 * * * *', async function (fireDate) {
         var date = new Date();
-        let advertisments = await Advertisments.find({deleted:false , endedDate : {$lte:date},status:{$nin:['REJECTED','DELETED','ENDED','UPDATED']} });
-        let desc={
-            ar : 'لقد انتهى عرض اعلانك في التطبيق ,يمكنك إعادة نشره مرة أخري',
-            en :"Your advertisment has expired in the app, you can re-post it again."
+        let advertisments = await Advertisments.find({ deleted: false, endedDate: { $lte: date }, status: { $nin: ['REJECTED', 'DELETED', 'ENDED', 'UPDATED'] } });
+        let desc = {
+            ar: 'لقد انتهى عرض اعلانك في التطبيق ,يمكنك إعادة نشره مرة أخري',
+            en: "Your advertisment has expired in the app, you can re-post it again."
         };
         for (let index = 0; index < advertisments.length; index++) {
-            await notifyController.create(advertisments[index].user, advertisments[index].user,desc, 1, 'ADVERTISMENT');
+            await notifyController.create(advertisments[index].user, advertisments[index].user, desc, 1, 'ADVERTISMENT');
             notifyController.pushNotification(advertisments[index].user, 'ADVERTISMENT', advertisments[index].id, desc);
             notificationNSP.to('room-' + advertisments[index].user).emit(socketEvents.ChangeAdvertismentStatus, { advertisment: advertisments[index] });
         }
-        await Advertisments.updateMany({_id:{$in:advertisments}} , {status:'ENDED'} );
+        await Advertisments.updateMany({ _id: { $in: advertisments } }, { status: 'ENDED' });
     })
 }
 export default {
 
     async find(req, res, next) {
         try {
-            
+
             let page = +req.query.page || 1, limit = +req.query.limit || 20;
 
-            let { country,includeIssuesCount , status, address, description, phone, whatsappNumber, contactBy, price, lat, long, user,archive} = req.query
+            let { country, includeIssuesCount, status, address, description, phone, whatsappNumber, contactBy, price, lat, long, user, archive } = req.query
 
-            let query = { deleted: false,status:{$nin:['DELETED','STOPED']} };
+            let query = { deleted: false, status: { $nin: ['DELETED', 'STOPED'] } };
             if (archive) query.deleted = true;
             if (user) query.user = +user;
             if (status) query.status = status;
@@ -65,20 +65,20 @@ export default {
 
             let aggregateQuery = [
                 { $match: query },
-                { $sort:{ createdAt: -1 }},
+                { $sort: { createdAt: -1 } },
                 { $limit: limit },
                 { $skip: (page - 1) * limit }];
 
             if (includeIssuesCount) {
                 aggregateQuery.push({
                     $lookup:
-                      {
+                    {
                         from: 'issues',
                         localField: '_id',
                         foreignField: 'advertisment',
                         as: 'issues'
-                      }
-                 });
+                    }
+                });
             }
 
             if (lat && long) {
@@ -86,7 +86,7 @@ export default {
             }
             //console.log(aggregateQuery)
             let advertisment = await Advertisments.aggregate(aggregateQuery)
-            advertisment = await Advertisments.populate(advertisment,populateQuery)
+            advertisment = await Advertisments.populate(advertisment, populateQuery)
             const advertismentCount = await Advertisments.count(query);
             const pageCount = Math.ceil(advertismentCount / limit);
             res.status(200).send(new ApiResponse(advertisment, page, pageCount, limit, advertismentCount, req));
@@ -104,7 +104,7 @@ export default {
                 body('phone').not().isEmpty().withMessage(() => { return i18n.__('phoneRequired') }),
                 body('whatsappNumber').optional().not().isEmpty().withMessage(() => { return i18n.__('whatsappNumberRequired') }),
                 body('contactBy').not().isEmpty().withMessage(() => { return i18n.__('contactByRequired') })
-                .isArray().withMessage('must be array').isIn(['PHONE', 'CONVERSATION']).withMessage(() => { return i18n.__('invalidType') }),
+                    .isArray().withMessage('must be array').isIn(['PHONE', 'CONVERSATION']).withMessage(() => { return i18n.__('invalidType') }),
                 body('long').not().isEmpty().withMessage(() => { return i18n.__('longRequired') }),
                 body('lat').not().isEmpty().withMessage(() => { return i18n.__('latRequired') }),
                 body('price').not().isEmpty().withMessage(() => { return i18n.__('priceRequired') }),
@@ -118,7 +118,7 @@ export default {
                 body('phone').optional().not().isEmpty().withMessage(() => { return i18n.__('phoneRequired') }),
                 body('whatsappNumber').optional().not().isEmpty().withMessage(() => { return i18n.__('whatsappNumberRequired') }),
                 body('contactBy').optional().not().isEmpty().withMessage(() => { return i18n.__('contactByRequired') })
-                .isArray().withMessage('must be array').isIn(['PHONE', 'CONVERSATION']).withMessage(() => { return i18n.__('invalidType') }),
+                    .isArray().withMessage('must be array').isIn(['PHONE', 'CONVERSATION']).withMessage(() => { return i18n.__('invalidType') }),
                 body('long').optional().not().isEmpty().withMessage(() => { return i18n.__('longRequired') }),
                 body('lat').optional().not().isEmpty().withMessage(() => { return i18n.__('latRequired') }),
                 body('price').optional().not().isEmpty().withMessage(() => { return i18n.__('priceRequired') }),
@@ -131,7 +131,7 @@ export default {
     async create(req, res, next) {
         try {
             let validatedBody = checkValidations(req);
-            if(! validatedBody.user) validatedBody.user = req.user.id;
+            if (!validatedBody.user) validatedBody.user = req.user.id;
             if (req.files && req.files.length > 0) {
                 validatedBody.images = await handleImgs(req, { attributeName: 'images' });
             } else {
@@ -141,16 +141,18 @@ export default {
                 validatedBody.geoLocation = { type: 'Point', coordinates: [validatedBody.long, validatedBody.lat] }
             }
             let currDate = moment();
-            let endedDate = moment(currDate).add(1,'M');
+            let endedDate = moment(currDate).add(1, 'M');
             validatedBody.endedDate = endedDate;
             let advertisment = await Advertisments.create(validatedBody);
             res.status(200).send(advertisment);
             await countNew();
             ////////////////////////////////////////////////////////////////////////////////////////////
-            
-            let newUser = await User.findByIdAndUpdate(req.user.id,{AdvertismentCount:(req.user.AdvertismentCount + 1)});
-            advertisment.country = newUser.country;
-            await advertisment.save();
+
+            let newUser = await User.findByIdAndUpdate(req.user.id, { AdvertismentCount: (req.user.AdvertismentCount + 1) });
+            if (user.country) {
+                advertisment.country = newUser.country;
+                await advertisment.save();
+            }
 
         } catch (error) {
             next(error)
@@ -162,14 +164,14 @@ export default {
             let user = req.user;
             let validatedBody = checkValidations(req);
             let { AdvertismentsId } = req.params;
-            let advertisment = await checkExistThenGet(AdvertismentsId, Advertisments, { deleted: false,populate:populateQuery });
+            let advertisment = await checkExistThenGet(AdvertismentsId, Advertisments, { deleted: false, populate: populateQuery });
             if (req.files && req.files.length > 0) {
                 validatedBody.images = await handleImgs(req, { attributeName: 'images' });
             }
             if (validatedBody.lat && validatedBody.long) {
                 validatedBody.geoLocation = { type: 'Point', coordinates: [validatedBody.long, validatedBody.lat] }
             }
-            if(user.type == 'CLIENT') validatedBody.status = 'UPDATED';
+            if (user.type == 'CLIENT') validatedBody.status = 'UPDATED';
             advertisment = await Advertisments.findByIdAndUpdate(AdvertismentsId, validatedBody, { new: true });
             res.status(200).send(advertisment);
         } catch (error) {
@@ -180,7 +182,7 @@ export default {
     async findById(req, res, next) {
         try {
             let { AdvertismentsId } = req.params;
-            let advertisment = await checkExistThenGet(AdvertismentsId, Advertisments, { deleted: false,populate:populateQuery});
+            let advertisment = await checkExistThenGet(AdvertismentsId, Advertisments, { deleted: false, populate: populateQuery });
             res.status(200).send(advertisment);
         }
         catch (err) {
@@ -192,15 +194,15 @@ export default {
         try {
             let user = req.user
             let { AdvertismentsId } = req.params;
-            let advertisment = await checkExistThenGet(AdvertismentsId, Advertisments, { deleted: false,populate:populateQuery });
-            if(user.type == 'ADMIN' && user.type == 'SUB_ADMIN'){
+            let advertisment = await checkExistThenGet(AdvertismentsId, Advertisments, { deleted: false, populate: populateQuery });
+            if (user.type == 'ADMIN' && user.type == 'SUB_ADMIN') {
                 advertisment.deleted = true;
-            }else{
+            } else {
                 advertisment.status = 'DELETED';
             }
             await advertisment.save();
             res.status(200).send("Deleted Successfully");
-            await User.findByIdAndUpdate(req.user.id,{AdvertismentCount:(advertisment.user.AdvertismentCount + 1)});
+            await User.findByIdAndUpdate(req.user.id, { AdvertismentCount: (advertisment.user.AdvertismentCount + 1) });
 
         }
         catch (err) {
@@ -224,23 +226,25 @@ export default {
                 return next(new ApiError(401, 'غير مسموح'))
             }
             let validatedBody = checkValidations(req);
-            if ((validatedBody.status =='ACCEPTED')&& (!validatedBody.commetion)) {
-                return next(new ApiError(404,i18n.__('commetionRequired')));
+            if ((validatedBody.status == 'ACCEPTED') && (!validatedBody.commetion)) {
+                return next(new ApiError(404, i18n.__('commetionRequired')));
             }
-            if ((validatedBody.status =='REJECTED')&& (!validatedBody.rejectedReason)) {
-                return next(new ApiError(404,i18n.__('rejectedReasonRequired')));
+            if ((validatedBody.status == 'REJECTED') && (!validatedBody.rejectedReason)) {
+                return next(new ApiError(404, i18n.__('rejectedReasonRequired')));
             }
             let { AdvertismentsId } = req.params;
             let advertisment = await checkExistThenGet(AdvertismentsId, Advertisments, { deleted: false });
             advertisment = await Advertisments.findByIdAndUpdate(AdvertismentsId, validatedBody, { new: true });
             res.status(200).send(advertisment);
-            let description  = {en:``,ar:``};
+            let description = { en: ``, ar: `` };
 
             if (validatedBody.status == 'ACCEPTED') {
-                description  = {en:`You advertisment has been accepted in ajam and the commetion for this is ${validatedBody.commetion} %`,
-                ar:` تم قبول اعلانك في أجَمْ و يرجي دفع عموله بقيمة ${validatedBody.commetion} %`};
+                description = {
+                    en: `You advertisment has been accepted in ajam and the commetion for this is ${validatedBody.commetion} %`,
+                    ar: ` تم قبول اعلانك في أجَمْ و يرجي دفع عموله بقيمة ${validatedBody.commetion} %`
+                };
             } else {
-                description  = {en:`Your advertisment has been rejected in Ajam as ${validatedBody.rejectedReason}`,ar:` تم رفض اعلانك في أجَمْ بسبب ${validatedBody.rejectedReason}`};
+                description = { en: `Your advertisment has been rejected in Ajam as ${validatedBody.rejectedReason}`, ar: ` تم رفض اعلانك في أجَمْ بسبب ${validatedBody.rejectedReason}` };
             }
 
 
@@ -269,11 +273,11 @@ export default {
     },
     countNew,
 
-    validateRepublish(){
-        return[
+    validateRepublish() {
+        return [
             body('advertisment').not().isEmpty().withMessage(() => { return i18n.__('advertismentRequired') })
                 .custom(async (val, { req }) => {
-                    req.advertisment = await checkExistThenGet(val, Advertisments, { deleted: false,status:'ENDED' });
+                    req.advertisment = await checkExistThenGet(val, Advertisments, { deleted: false, status: 'ENDED' });
                     return true;
                 }),
         ]
@@ -293,12 +297,13 @@ export default {
             validatedBody.description = advertisment.description;
             validatedBody.phone = advertisment.phone;
             validatedBody.user = advertisment.user;
-            if(advertisment.whatsappNumber) validatedBody.whatsappNumber = advertisment.whatsappNumber;
+            if (advertisment.country) validatedBody.country = advertisment.country;
+            if (advertisment.whatsappNumber) validatedBody.whatsappNumber = advertisment.whatsappNumber;
             let currDate = moment();
-            let endedDate = moment(currDate).add(1,'M');
+            let endedDate = moment(currDate).add(1, 'M');
             validatedBody.endedDate = endedDate;
-            
-            if(user.id != advertisment.user){
+
+            if (user.id != advertisment.user) {
                 return next(new ApiError(401, 'غير مسموح'));
             }
             advertisment = await Advertisments.create(validatedBody);
@@ -311,8 +316,8 @@ export default {
 
     advertismentJob,
 
-    validateStopAdvertisment(){
-        return[
+    validateStopAdvertisment() {
+        return [
             body('advertisment').not().isEmpty().withMessage(() => { return i18n.__('advertismentRequired') })
                 .custom(async (val, { req }) => {
                     req.advertisment = await checkExistThenGet(val, Advertisments, { deleted: false });
@@ -321,7 +326,7 @@ export default {
         ]
     },
 
-    async stopAdvertisment(req, res, next){
+    async stopAdvertisment(req, res, next) {
         try {
             let user = req.user;
             if (user.type != 'ADMIN' && user.type != 'SUB_ADMIN') {
@@ -329,12 +334,12 @@ export default {
             }
             let validatedBody = checkValidations(req);
             let addvertis = req.advertisment;
-            addvertis = await Advertisments.findByIdAndUpdate(addvertis.id,{status:'STOPED'},{new:true});
+            addvertis = await Advertisments.findByIdAndUpdate(addvertis.id, { status: 'STOPED' }, { new: true });
 
-            let description = {en:"Admin stop your advertisment.",ar:"قام الادمن بوقف اعلانك"};
-            await notifyController.create(req.user.id, addvertis.user, description,  addvertis.user, 'ADDVERTISMENT_STOPED');
-            notifyController.pushNotification( addvertis.user, 'ADDVERTISMENT_STOPED',  addvertis.user, description);
-            res.status(200).send({advertisment:addvertis});
+            let description = { en: "Admin stop your advertisment.", ar: "قام الادمن بوقف اعلانك" };
+            await notifyController.create(req.user.id, addvertis.user, description, addvertis.user, 'ADDVERTISMENT_STOPED');
+            notifyController.pushNotification(addvertis.user, 'ADDVERTISMENT_STOPED', addvertis.user, description);
+            res.status(200).send({ advertisment: addvertis });
         } catch (error) {
             next(error);
         }
