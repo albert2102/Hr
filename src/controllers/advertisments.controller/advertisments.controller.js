@@ -11,7 +11,8 @@ import notifyController from '../notif.controller/notif.controller';
 import config from "../../config";
 import moment from 'moment';
 import schedule from 'node-schedule'
-import User from '../../models/user.model/user.model'
+import User from '../../models/user.model/user.model';
+import Country from '../../models/country.model/country.model';
 let countNew = async () => {
     try {
         let count = await Advertisments.count({ deleted: false, status: { $in: ['WAITING', 'UPDATED'] } });
@@ -109,6 +110,11 @@ export default {
                 body('lat').not().isEmpty().withMessage(() => { return i18n.__('latRequired') }),
                 body('price').not().isEmpty().withMessage(() => { return i18n.__('priceRequired') }),
                 body('user').optional().not().isEmpty().withMessage(() => { return i18n.__('userRequired') }),
+                body('country').optional().not().isEmpty().withMessage(() => { return i18n.__('countryRequired') })
+                .custom(async (value, { req }) => {
+                    await checkExistThenGet(value, Country, { deleted: false })
+                    return true;
+                }),
 
             ];
         } else {
@@ -122,6 +128,11 @@ export default {
                 body('long').optional().not().isEmpty().withMessage(() => { return i18n.__('longRequired') }),
                 body('lat').optional().not().isEmpty().withMessage(() => { return i18n.__('latRequired') }),
                 body('price').optional().not().isEmpty().withMessage(() => { return i18n.__('priceRequired') }),
+                body('country').optional().not().isEmpty().withMessage(() => { return i18n.__('countryRequired') })
+                .custom(async (value, { req }) => {
+                    await checkExistThenGet(value, Country, { deleted: false })
+                    return true;
+                }),
             ]
         }
 
@@ -149,10 +160,10 @@ export default {
             ////////////////////////////////////////////////////////////////////////////////////////////
 
             let newUser = await User.findByIdAndUpdate(req.user.id, { AdvertismentCount: (req.user.AdvertismentCount + 1) });
-            if (user.country) {
-                advertisment.country = newUser.country;
-                await advertisment.save();
-            }
+            // if (user.country) {
+            //     advertisment.country = newUser.country;
+            //     await advertisment.save();
+            // }
 
         } catch (error) {
             next(error)
