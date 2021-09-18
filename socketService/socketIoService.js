@@ -11,6 +11,12 @@ import orderController from '../src/controllers/order.controller/order.controlle
 import Order from "../src/models/order.model/order.model";
 import requestMoneyHistoryController from "../src/controllers/requestMoneyHistory.controller/requestMoneyHistory.controller"
 
+let populateQuery = [
+    { path: 'country', model: 'country' },
+    { path: 'city', model: 'city', populate: { path: 'country', model: 'country' } },
+    { path: 'region', model: 'region', populate: [{ path: 'city', model: 'city', populate: { path: 'country', model: 'country' } }] }
+
+];
 let orderPopulateQuery = [
     { path: 'user', model: 'user' },
     { path: 'driver', model: 'user' },
@@ -26,6 +32,7 @@ module.exports = {
         notificationNSP.on('connection', async function (socket) {
             var id = socket.handshake.query.id;
             let user = await User.findById(id);
+            user = await User.populate(user,populateQuery);
             let company = await Company.findOne({ deleted: false });
             if (user) {
                 var roomName = 'room-' + id;

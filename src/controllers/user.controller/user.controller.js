@@ -216,6 +216,7 @@ export default {
             }
 
             let createdUser = await User.create(validatedBody);
+            createdUser = await User.populate(createdUser,populateQuery);
             res.status(200).send({ user: createdUser, token: generateToken(createdUser.id) })
             adminNSP.to('room-admin').emit(socketEvents.NewSignup, { user: createdUser });
 
@@ -1016,6 +1017,7 @@ export default {
             validatedBody.type = 'DRIVER';
             validatedBody.status = 'WAITING';
             let createdUser = await User.create(validatedBody);
+            createdUser = await User.populate(createdUser,populateQuery);
             res.status(200).send({ user: createdUser, token: generateToken(createdUser.id) });
             await AdminController.count(validatedBody.type);
 
@@ -1103,6 +1105,7 @@ export default {
             if (!validatedBody.password)
                 validatedBody.password = '12345678';
             let createdUser = await User.create(validatedBody);
+            createdUser = await User.populate(createdUser,populateQuery);
             res.status(200).send({ user: createdUser });
             await AdminController.count(validatedBody.type);
 

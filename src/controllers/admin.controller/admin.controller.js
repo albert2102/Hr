@@ -351,7 +351,7 @@ export default {
             if (validatedBody.location && validatedBody.location.lat && validatedBody.location.lat) {
                 validatedBody.geoLocation = { type: 'Point', coordinates: [validatedBody.location.long, validatedBody.location.lat] }
             }
-            user = await User.findOneAndUpdate({ deleted: false, _id: validatedBody.userId }, validatedBody, { new: true })
+            user = await User.findOneAndUpdate({ deleted: false, _id: validatedBody.userId }, validatedBody, { new: true }).populate(populateQuery)
             user = await User.schema.methods.toJSONLocalizedOnly(user, i18n.getLocale());
             res.status(200).send(user);
             if (user.type == 'INSTITUTION') {
