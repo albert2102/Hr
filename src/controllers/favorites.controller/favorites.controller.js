@@ -65,21 +65,13 @@ export default {
                     }
                 },
                 { $unwind: '$_id.trader' },
-                {
-                    $lookup: {
-                        from: countryModel.collection.name,
-                        localField: "_id.trader.country",
-                        foreignField: "_id",
-                        as: "_id.trader.country"
-                    }
-                },
-                { $unwind: '$_id.country' },
                 { $limit: limit },
                 { $skip: (page - 1) * limit }
             ]
             let favs = [];
             if (!admin) {
                 favs = await Favorites.aggregate(aggregateQuery)
+                favs = await Favorites.populate(favs,{path:'_id.trader.country',model:'country'})
             }
             else {
                 favs = await Favorites.find(query)
