@@ -760,7 +760,7 @@ export default {
 
             let query = { deleted: false, type: 'INSTITUTION', activated: true };
             let sortQuery = { createdAt: -1 };
-            if (country) query.country = country;
+            if (country) query.country = +country;
             if (open) query.institutionStatus = 'OPEN'; // مفتوح
             if (highestRated) sortQuery = { totalRate: -1 }; //الاعلي تقييما
             if (category) {
