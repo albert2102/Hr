@@ -151,7 +151,7 @@ export default {
                 validatedBody.logo = await handleImg(req, { attributeName: 'logo', isUpdate: false });
             }
             validatedBody = dotObject.dot(validatedBody);
-            let updatedCountry = await Country.findByIdAndUpdate(countryId, { ...validatedBody, ...data }, { new: true });
+            let updatedCountry = await Country.findByIdAndUpdate(countryId, { ...validatedBody}, { new: true });
             if (!removeLanguage)
                 updatedCountry = Country.schema.methods.toJSONLocalizedOnly(updatedCountry, i18n.getLocale());
             res.status(200).send(updatedCountry);
