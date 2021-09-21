@@ -610,11 +610,14 @@ export default {
             else {
                 return next(new ApiError(404, i18n.__('targetRequired')));
             }
-            console.log(query.$or)
+            // console.log(query.$or)
             let chats = await Message.find(query).populate(popQuery).sort({ _id: -1 }).limit(limit).skip((page - 1) * limit);
             const chatCount = await Message.count(query);
             const pageCount = Math.ceil(chatCount / limit);
             res.send(new ApiResponse(chats, page, pageCount, limit, chatCount, req));
+            if(complaint){
+                await Complaint.updateMany({ deleted: false, adminInformed: false,_id:+complaint }, { $set: { adminInformed: true } });
+            }
 
         } catch (error) {
             next(error);
