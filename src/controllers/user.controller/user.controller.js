@@ -795,6 +795,7 @@ export default {
                     country = await Country.findById(country);
                     maxDistance = country.searchDistance;
                 }
+                console.log(maxDistance)
                 aggregateQuery.unshift({ $geoNear: { near: { type: "Point", coordinates: [+long, +lat] }, distanceField: "dist.calculated", maxDistance: maxDistance } })
             }
             let users = await User.aggregate(aggregateQuery)
