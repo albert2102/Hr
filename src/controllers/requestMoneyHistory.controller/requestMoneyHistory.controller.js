@@ -46,7 +46,7 @@ export default {
     async findAll(req, res, next) {
         try {
             let page = +req.query.page || 1, limit = +req.query.limit || 20;
-            var { driver, trader, payedDate, month, year, order,name,email,phone,type } = req.query;
+            var { driver, trader, payedDate, month, year, order,name,email,phone,type,country } = req.query;
             let query = { deleted: false };
 
             if(type && type == 'DRIVER') {query.driver = {$ne: null}}
@@ -72,7 +72,10 @@ export default {
                 usersId = await User.find({deleted: false,email:{ '$regex': email, '$options': 'i' }}).distinct('_id');
                 query.$or = [{driver:{$in:usersId}},{trader:{$in:usersId}}]
             }
-
+            if(country){
+                usersId = await User.find({deleted: false,country:country,type:{$in:['INSTITUTION','DRIVER']}}).distinct('_id');
+                query.$or = [{driver:{$in:usersId}},{trader:{$in:usersId}}];
+            }
             console.log(query)
             
             let date = new Date();
