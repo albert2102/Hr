@@ -124,7 +124,10 @@ export default {
         try {
             let user = req.user;
             let validatedBody = checkValidations(req);
-            if (user.type != 'ADMIN' && user.type != 'SUB_ADMIN' && validatedBody.trader) {
+            if ((user.type == 'ADMIN' || user.type == 'SUB_ADMIN') && !validatedBody.trader) {
+                return next(new ApiError(404, i18n.__('traderRequired')));
+            }
+            if (validatedBody.trader) {
                 validatedBody.createdBy = user.id;
                 validatedBody.user = validatedBody.trader;
             } else {
