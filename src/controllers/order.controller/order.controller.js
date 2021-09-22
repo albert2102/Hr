@@ -29,7 +29,7 @@ let populateQuery = [
     { path: 'user', model: 'user' },
     { path: 'driver', model: 'user' },
     { path: 'trader', model: 'user' },
-    { path: 'products.product', model: 'product', populate: [{ path: 'trader', model: 'user' }, { path: 'productCategory', model: 'productCategory' }] },
+    { path: 'products.product', model: 'product', populate: [{ path: 'trader', model: 'user',populate:[{path:'country',model:'country'}] }, { path: 'productCategory', model: 'productCategory' }] },
     { path: 'address', model: 'address', populate: [{ path: 'city', model: 'city', populate: [{ path: 'country', model: 'country' }] }] },
     { path: 'promoCode', model: 'promocode' },
 ];
@@ -296,7 +296,8 @@ const findDriver = async (order) => {
                         type: "Point",
                         coordinates: [+order.trader.geoLocation.coordinates[0], +order.trader.geoLocation.coordinates[1]]
                     },
-                    distanceField: "dist.calculated"
+                    distanceField: "dist.calculated",
+                    maxDistance: order.trader.country.searchDistance,
                 }
             },
             {
@@ -317,7 +318,7 @@ const findDriver = async (order) => {
             }
 
         ]);
-
+        
         let ids = [...pluck(zones, 'user')];
         console.log("zones ====== ", ids)
         

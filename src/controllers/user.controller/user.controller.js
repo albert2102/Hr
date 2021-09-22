@@ -790,7 +790,12 @@ export default {
                 { $skip: (page - 1) * limit }];
 
             if (lat && long) { // الاقرب والابعد
-                aggregateQuery.unshift({ $geoNear: { near: { type: "Point", coordinates: [+long, +lat] }, distanceField: "dist.calculated", maxDistance: 10000 } })
+                let maxDistance = 10000;
+                if(country){
+                    country = await Country.findById(country);
+                    maxDistance = country.searchDistance;
+                }
+                aggregateQuery.unshift({ $geoNear: { near: { type: "Point", coordinates: [+long, +lat] }, distanceField: "dist.calculated", maxDistance: maxDistance } })
             }
             let users = await User.aggregate(aggregateQuery)
             let pageCount;
