@@ -69,7 +69,7 @@ let DriverNotResponseCount = async () => {
 let traderOrdersCount = async (userId) => {
     try {
         let newOrdersQuery = { deleted: false, status: 'WAITING', trader: userId, traderNotResponse: false,$or: [{ paymentMethod: 'DIGITAL', paymentStatus: 'SUCCESSED' }, { paymentMethod: { $in: ['CASH', 'WALLET'] } }] };
-        let currentOrdersQuery = { deleted: false, trader: userId, status: { $in:  ['ACCEPTED', 'DRIVER_ACCEPTED', 'SHIPPED','NOT_ASSIGN'] },$or: [{ paymentMethod: 'DIGITAL', paymentStatus: 'SUCCESSED' }, { paymentMethod: { $in: ['CASH', 'WALLET'] } }] };
+        let currentOrdersQuery = { deleted: false, trader: userId, status: { $in:  ['ACCEPTED', 'DRIVER_ACCEPTED', 'SHIPPED','NOT_ASSIGN','DRIVER_SHIPPED'] },$or: [{ paymentMethod: 'DIGITAL', paymentStatus: 'SUCCESSED' }, { paymentMethod: { $in: ['CASH', 'WALLET'] } }] };
         let finishedOrdersQuery = { deleted: false, trader: userId, status: { $in: ['DELIVERED'] },$or: [{ paymentMethod: 'DIGITAL', paymentStatus: 'SUCCESSED' }, { paymentMethod: { $in: ['CASH', 'WALLET'] } }] };
 
         let promiseData = [
@@ -90,7 +90,7 @@ let traderOrdersCount = async (userId) => {
 let driverOrdersCount = async (userId) => {
     try {
         // console.log("driverOrdersCount ", userId)
-        let currentOrdersQuery = { deleted: false, driver: userId, status: { $in: ['DRIVER_ACCEPTED', 'SHIPPED'] },$or: [{ paymentMethod: 'DIGITAL', paymentStatus: 'SUCCESSED' }, { paymentMethod: { $in: ['CASH', 'WALLET'] } }] };
+        let currentOrdersQuery = { deleted: false, driver: userId, status: { $in: ['DRIVER_ACCEPTED', 'SHIPPED','DRIVER_SHIPPED'] },$or: [{ paymentMethod: 'DIGITAL', paymentStatus: 'SUCCESSED' }, { paymentMethod: { $in: ['CASH', 'WALLET'] } }] };
         let finishedOrdersQuery = { deleted: false, driver: userId, status: { $in: ['DELIVERED'] },$or: [{ paymentMethod: 'DIGITAL', paymentStatus: 'SUCCESSED' }, { paymentMethod: { $in: ['CASH', 'WALLET'] } }]};
 
         let promiseData = [
@@ -260,7 +260,7 @@ const orderService = async (order) => {
 const findDriver = async (order) => {
     try {
         
-        //let busyDrivers = await Order.find({ deleted: false, status: { $in: ['ACCEPTED', 'DRIVER_ACCEPTED', 'SHIPPED'], } }).distinct('driver');
+        //let busyDrivers = await Order.find({ deleted: false, status: { $in: ['ACCEPTED', 'DRIVER_ACCEPTED', 'SHIPPED','DRIVER_SHIPPED'], } }).distinct('driver');
         let userQuery = {
             deleted: false,
             online: true,
@@ -483,7 +483,7 @@ export default {
             if (req.user.type == 'CLIENT') {
                 query.user = req.user.id;
                 if (currentOrders) {
-                    query.status = { $in: ['WAITING', 'ACCEPTED', 'DRIVER_ACCEPTED', 'SHIPPED','NOT_ASSIGN'] }
+                    query.status = { $in: ['WAITING', 'ACCEPTED', 'DRIVER_ACCEPTED', 'SHIPPED','NOT_ASSIGN','DRIVER_SHIPPED'] }
                 } else if (finishedOrders) {
                     query.status = { $in: ['DELIVERED', 'CANCELED', 'REJECTED'] }
 
@@ -496,7 +496,7 @@ export default {
                     query.traderNotResponse = false;
 
                 } else if (currentOrders) {
-                    query.status = { $in: ['ACCEPTED', 'DRIVER_ACCEPTED', 'SHIPPED','NOT_ASSIGN'] }
+                    query.status = { $in: ['ACCEPTED', 'DRIVER_ACCEPTED', 'SHIPPED','NOT_ASSIGN','DRIVER_SHIPPED'] }
 
                 } else if (finishedOrders) {
                     query.status = { $in: ['DELIVERED'] }
@@ -511,7 +511,7 @@ export default {
                     query.status ='ACCEPTED';
                 }
                 else if (currentOrders) {
-                    query.status = { $in: ['DRIVER_ACCEPTED', 'SHIPPED'] }
+                    query.status = { $in: ['DRIVER_ACCEPTED', 'SHIPPED','DRIVER_SHIPPED'] }
 
                 } else if (finishedOrders) {
                     query.status = { $in: ['DELIVERED'] }
@@ -519,7 +519,7 @@ export default {
             }
             //////admin tab///////
             if(defaultOrders){
-                query.status = {$in:['WAITING','ACCEPTED','DRIVER_ACCEPTED','REJECTED', 'CANCELED', 'SHIPPED', 'DELIVERED']}
+                query.status = {$in:['WAITING','ACCEPTED','DRIVER_ACCEPTED','REJECTED', 'CANCELED', 'SHIPPED', 'DELIVERED','DRIVER_SHIPPED']}
             }
             let date = new Date();
             if (traderNotResponse) {
@@ -821,12 +821,12 @@ export default {
 
             notificationNSP.to('room-' + updatedOrder.user.id).emit(socketEvents.ChangeOrderStatus, { order: updatedOrder });
 
-            if (updatedOrder.user.language == "ar") {
-                await sendChangeOrderEmail(updatedOrder.user.email, description.ar + ' رقم ' + ' : ' + updatedOrder.orderNumber)
-            }
-            else {
-                await sendChangeOrderEmail(updatedOrder.user.email, description.en + ' : ' + updatedOrder.orderNumber)
-            }
+            // if (updatedOrder.user.language == "ar") {
+            //     await sendChangeOrderEmail(updatedOrder.user.email, description.ar + ' رقم ' + ' : ' + updatedOrder.orderNumber)
+            // }
+            // else {
+            //     await sendChangeOrderEmail(updatedOrder.user.email, description.en + ' : ' + updatedOrder.orderNumber)
+            // }
             await traderOrdersCount(updatedOrder.trader.id)
         } catch (err) {
             // console.log(err);
