@@ -52,7 +52,7 @@ const orderSchema = new Schema({
     },
     status: {
         type: String,
-        enum: ['WAITING','ACCEPTED','DRIVER_ACCEPTED','REJECTED', 'CANCELED', 'SHIPPED', 'DELIVERED','NOT_ASSIGN'],
+        enum: ['WAITING','ACCEPTED','DRIVER_ACCEPTED','REJECTED', 'CANCELED','DRIVER_SHIPPED' ,'SHIPPED', 'DELIVERED','NOT_ASSIGN'],
         default: 'WAITING'
     },
     price: {
@@ -158,6 +158,9 @@ const orderSchema = new Schema({
         type: Date
     },
     cancelledDate:{
+        type: Date
+    },
+    driverShippedDate:{
         type: Date
     },
     shippedDate:{

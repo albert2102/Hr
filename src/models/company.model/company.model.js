@@ -144,7 +144,15 @@ const CompanySchema = new Schema({
     iosVersion:{
         type: String,
         default: '1.0.0'
-    }
+    },
+    notifyTraderTime:{ //in millisecond وقت اللي هبعت في اشعار للمتجر انى الكابتن علي وشك الوصول
+        type: Number,
+        default: 180000
+    },
+    notifyClientTime:{ //in millisecond وقت اللي هبعت في اشعار للعميل انى الكابتن علي وشك الوصول
+        type: Number,
+        default: 180000
+    },
 }, { timestamps: true });
 
 CompanySchema.set('toJSON', {

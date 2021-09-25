@@ -876,13 +876,51 @@ export default {
         }
     },
 
+    /**************************Update add new status  DRIVER_SHIPPED 20210925**********************************/
+    async driverShipped(req, res, next) {
+        try {
+            let { orderId } = req.params;
+            let order = await checkExistThenGet(orderId, Order, { deleted: false, status: "DRIVER_ACCEPTED", orderType: "DELIVERY" });
+            let updatedQuery = { status: 'DRIVER_SHIPPED', driverShippedDate: new Date() };
+            
+            let updatedOrder = await Order.findByIdAndUpdate(orderId, updatedQuery, { new: true }).populate(populateQuery);
+            updatedOrder = Order.schema.methods.toJSONLocalizedOnly(updatedOrder, i18n.getLocale());
+            res.status(200).send(updatedOrder);
+
+            let description = { ar: 'الكابتن علي وشك االوصول اليك لقد استلام الطلب ن المتجر', en: 'Captian has been shipped your order from store.' };
+
+            await notifyController.create(req.user.id, updatedOrder.user.id, description, updatedOrder.id, 'CHANGE_ORDER_STATUS', updatedOrder.id,updatedOrder.status);
+            notifyController.pushNotification(updatedOrder.user.id, 'CHANGE_ORDER_STATUS', updatedOrder.id, description);
+
+            notificationNSP.to('room-' + updatedOrder.user.id).emit(socketEvents.ChangeOrderStatus, { order: updatedOrder });
+            notificationNSP.to('room-' + updatedOrder.trader.id).emit(socketEvents.ChangeOrderStatus, { order: updatedOrder });
+
+            if (updatedOrder.user.language == "ar") {
+                await sendChangeOrderEmail(updatedOrder.user.email, description.ar + ' : ' + updatedOrder.orderNumber)
+            }
+            else {
+                await sendChangeOrderEmail(updatedOrder.user.email, description.en + ' : ' + updatedOrder.orderNumber)
+            }
+
+            ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            traderOrdersCount(updatedOrder.trader.id);
+            if (updatedOrder.orderType == 'DELIVERY') {
+                driverOrdersCount(updatedOrder.driver.id);
+            }
+
+        } catch (err) {
+            next(err);
+        }
+    },
+
+    /*********************************************************************************/
     async shipped(req, res, next) {
         try {
             if (req.user.type != 'ADMIN' && req.user.type != 'SUB_ADMIN' && req.user.type != 'INSTITUTION')
                 return next(new ApiError(403, ('admin.auth')));
 
             let { orderId } = req.params;
-            await checkExist(orderId, Order, { deleted: false, $or: [{ status: "ACCEPTED", orderType: "FROM_STORE" }, { status: "DRIVER_ACCEPTED", orderType: "DELIVERY" }] });
+            await checkExist(orderId, Order, { deleted: false, $or: [{ status: "ACCEPTED", orderType: "FROM_STORE" }, { status: "DRIVER_SHIPPED", orderType: "DELIVERY" }] });
             let updatedOrder = await Order.findByIdAndUpdate(orderId, { status: 'SHIPPED', shippedDate: new Date() }, { new: true }).populate(populateQuery);
             updatedOrder = Order.schema.methods.toJSONLocalizedOnly(updatedOrder, i18n.getLocale());
             res.status(200).send(updatedOrder);
@@ -1266,4 +1304,41 @@ export default {
         }
     },
     DriverNotResponseCount,
+
+
+    async notifyTrader(req, res, next) { // هبعت اشعار للمتجر من الكابتن لما يوصل علي بعد معين 
+        try {
+            let user = req.user;
+            let { orderId } = req.params;
+            let order = await checkExistThenGet(orderId, Order, { deleted: false, populate: populateQuery });
+            res.status(200).send(order);
+            let description = { ar: 'الكابتن علي وشك الوصول اليك', en: 'Captian is about to reach you.' };
+
+            await notifyController.create(req.user.id, order.trader.id, description, order.id, 'CHANGE_ORDER_STATUS', order.id,order.status);
+            notifyController.pushNotification(order.trader.id, 'CHANGE_ORDER_STATUS', order.id, description);
+            // notificationNSP.to('room-' + order.trader.id).emit(socketEvents.ChangeOrderStatus, { order: order })
+
+            
+        } catch (err) {
+            next(err);
+        }
+    },
+
+    async notifyClient(req, res, next) { //  هبعت اشعار للعميل  من الكابتن لما يوصل علي بعد معين 
+        try {
+            let user = req.user;
+            let { orderId } = req.params;
+            let order = await checkExistThenGet(orderId, Order, { deleted: false, populate: populateQuery });
+            res.status(200).send(order);
+            let description = { ar: ' جهز نفسك,الكابتن علي وشك الوصول اليك', en: 'Captian is about to reach you.' };
+
+            await notifyController.create(req.user.id, order.user.id, description, order.id, 'CHANGE_ORDER_STATUS', order.id,order.status);
+            notifyController.pushNotification(order.user.id, 'CHANGE_ORDER_STATUS', order.id, description);
+            // notificationNSP.to('room-' + order.user.id).emit(socketEvents.ChangeOrderStatus, { order: order })
+
+            
+        } catch (err) {
+            next(err);
+        }
+    },
 }

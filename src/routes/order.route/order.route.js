@@ -4,6 +4,10 @@ import orderController from "../../controllers/order.controller/order.controller
 import { requireAuth } from '../../services/passport';
 import { multerSaveTo } from '../../services/multer-service';
 
+
+router.route('/:orderId/notifyTrader').post(requireAuth,orderController.notifyTrader)
+router.route('/:orderId/notifyClient').post(requireAuth,orderController.notifyClient)
+
 ///////////////////////////////////////////////////////////////////////////////////////////////////////
 router.route('/traderSales').get(requireAuth, orderController.traderGetSales)
 router.route('/driverSales').get(requireAuth, orderController.driverGetSales)
