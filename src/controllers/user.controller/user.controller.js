@@ -481,7 +481,8 @@ export default {
         try {
             let validatedBody = checkValidations(req);
             var phone = validatedBody.phone;
-            phone = phone.trim()
+            phone = phone.trim();
+            console.log(validatedBody)
             var user = await User.findOne({ phone: phone, deleted: false, type: validatedBody.type, countryCode: validatedBody.countryCode });
             if (!user)
                 return next(new ApiError(403, i18n.__('userNotFound')));
