@@ -64,10 +64,10 @@ export default {
             let totalCount = await Complaint.count(query);
             let pageCount = Math.ceil(totalCount / limit);
             res.send(new ApiResponse(allDocs, page, pageCount, limit, totalCount, req));
-            if ((req.user.type == 'ADMIN') || (req.user.type == 'SUB_ADMIN')) {
-                await Complaint.updateMany({ deleted: false, adminInformed: false }, { $set: { adminInformed: true } });
-                adminNSP.emit(socketEvents.ComplaintCount, { count: 0 });
-            }
+            // if ((req.user.type == 'ADMIN') || (req.user.type == 'SUB_ADMIN')) {
+            //     await Complaint.updateMany({ deleted: false, adminInformed: false }, { $set: { adminInformed: true } });
+            //     adminNSP.emit(socketEvents.ComplaintCount, { count: 0 });
+            // }
         } catch (error) {
             next(error)
         }

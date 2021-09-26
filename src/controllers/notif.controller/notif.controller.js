@@ -260,9 +260,10 @@ export default {
     async findAll(req, res, next) {
         try {
             let page = +req.query.page || 1, limit = +req.query.limit || 20;
-            let { resource, admin ,removeLanguage} = req.query;
+            let { resource, admin ,removeLanguage,userType} = req.query;
             let query = { deleted: false, subjectType: "ADMIN", type: { $ne: null } };
             if (resource) query.resource = resource;
+	    if (userType) query.userType = userType;
             var notifs = await Notif.find(query).populate(populateQuery)
                 .sort({ _id: -1 })
                 .limit(limit)

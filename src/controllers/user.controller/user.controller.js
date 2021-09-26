@@ -128,7 +128,7 @@ export default {
     async signIn(req, res, next) {
         try {
             const validatedBody = checkValidations(req);
-            var query = { deleted: false, type: validatedBody.type, activated: true, socialMediaType: 'NORMAL' };
+            var query = { deleted: false, type: validatedBody.type,socialMediaType:'NORMAL' };
             // if (validatedBody.type != 'CLIENT') query.status = 'ACCEPTED';
             if (validatedBody.countryCode) query.countryCode = validatedBody.countryCode;
             query.phone = validatedBody.phone.trim();
@@ -758,7 +758,7 @@ export default {
                 limit = +req.query.limit || 20;
             var { text, hasOffer, open, long, lat, category, highestRated, country } = req.query;
 
-            let query = { deleted: false, type: 'INSTITUTION', activated: true };
+            let query = { deleted: false, type: 'INSTITUTION',activated: true,status:'ACCEPTED'};
             let sortQuery = { createdAt: -1 };
             if (country) query.country = +country;
             if (open) query.institutionStatus = 'OPEN'; // مفتوح
