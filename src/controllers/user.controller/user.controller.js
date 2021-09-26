@@ -486,8 +486,8 @@ export default {
             if (!user)
                 return next(new ApiError(403, i18n.__('userNotFound')));
             let countryCode = '+2';
-            if (user.countryCode !== '20') {
-                countryCode = '+' + user.countryCode;
+            if (user.validatedBody !== '20') {
+                countryCode = '+' + validatedBody.countryCode;
             }
             twilioSend(countryCode + phone, user.language || 'ar');
             res.status(200).send(i18n.__('checkYourPhone'));
