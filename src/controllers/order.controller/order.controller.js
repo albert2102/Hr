@@ -29,7 +29,7 @@ let populateQuery = [
     { path: 'user', model: 'user' },
     { path: 'driver', model: 'user' },
     { path: 'trader', model: 'user' },
-    { path: 'products.product', model: 'product', populate: [{ path: 'trader', model: 'user' }, { path: 'productCategory', model: 'productCategory' }] },
+    { path: 'products.product', model: 'product', populate: [{ path: 'trader', model: 'user',populate:[{path:'country',model:'country'}] }, { path: 'productCategory', model: 'productCategory' }] },
     { path: 'address', model: 'address', populate: [{ path: 'city', model: 'city', populate: [{ path: 'country', model: 'country' }] }] },
     { path: 'promoCode', model: 'promocode' },
 ];
@@ -68,9 +68,9 @@ let DriverNotResponseCount = async () => {
 }
 let traderOrdersCount = async (userId) => {
     try {
-        let newOrdersQuery = { deleted: false, status: 'WAITING', trader: userId, traderNotResponse: false, $or: [{ paymentMethod: 'DIGITAL', paymentStatus: 'SUCCESSED' }, { paymentMethod: { $in: ['CASH', 'WALLET'] } }] };
-        let currentOrdersQuery = { deleted: false, trader: userId, status: { $in: ['ACCEPTED', 'DRIVER_ACCEPTED', 'SHIPPED', 'NOT_ASSIGN'] }, $or: [{ paymentMethod: 'DIGITAL', paymentStatus: 'SUCCESSED' }, { paymentMethod: { $in: ['CASH', 'WALLET'] } }] };
-        let finishedOrdersQuery = { deleted: false, trader: userId, status: { $in: ['DELIVERED'] }, $or: [{ paymentMethod: 'DIGITAL', paymentStatus: 'SUCCESSED' }, { paymentMethod: { $in: ['CASH', 'WALLET'] } }] };
+        let newOrdersQuery = { deleted: false, status: 'WAITING', trader: userId, traderNotResponse: false,$or: [{ paymentMethod: 'DIGITAL', paymentStatus: 'SUCCESSED' }, { paymentMethod: { $in: ['CASH', 'WALLET'] } }] };
+        let currentOrdersQuery = { deleted: false, trader: userId, status: { $in:  ['ACCEPTED', 'DRIVER_ACCEPTED', 'SHIPPED','NOT_ASSIGN','DRIVER_SHIPPED'] },$or: [{ paymentMethod: 'DIGITAL', paymentStatus: 'SUCCESSED' }, { paymentMethod: { $in: ['CASH', 'WALLET'] } }] };
+        let finishedOrdersQuery = { deleted: false, trader: userId, status: { $in: ['DELIVERED'] },$or: [{ paymentMethod: 'DIGITAL', paymentStatus: 'SUCCESSED' }, { paymentMethod: { $in: ['CASH', 'WALLET'] } }] };
 
         let promiseData = [
             Order.count(newOrdersQuery), Order.count(currentOrdersQuery), Order.count(finishedOrdersQuery)
@@ -90,8 +90,8 @@ let traderOrdersCount = async (userId) => {
 let driverOrdersCount = async (userId) => {
     try {
         // console.log("driverOrdersCount ", userId)
-        let currentOrdersQuery = { deleted: false, driver: userId, status: { $in: ['DRIVER_ACCEPTED', 'SHIPPED'] }, $or: [{ paymentMethod: 'DIGITAL', paymentStatus: 'SUCCESSED' }, { paymentMethod: { $in: ['CASH', 'WALLET'] } }] };
-        let finishedOrdersQuery = { deleted: false, driver: userId, status: { $in: ['DELIVERED'] }, $or: [{ paymentMethod: 'DIGITAL', paymentStatus: 'SUCCESSED' }, { paymentMethod: { $in: ['CASH', 'WALLET'] } }] };
+        let currentOrdersQuery = { deleted: false, driver: userId, status: { $in: ['DRIVER_ACCEPTED', 'SHIPPED','DRIVER_SHIPPED'] },$or: [{ paymentMethod: 'DIGITAL', paymentStatus: 'SUCCESSED' }, { paymentMethod: { $in: ['CASH', 'WALLET'] } }] };
+        let finishedOrdersQuery = { deleted: false, driver: userId, status: { $in: ['DELIVERED'] },$or: [{ paymentMethod: 'DIGITAL', paymentStatus: 'SUCCESSED' }, { paymentMethod: { $in: ['CASH', 'WALLET'] } }]};
 
         let promiseData = [
             Order.count(currentOrdersQuery), Order.count(finishedOrdersQuery)
@@ -259,8 +259,8 @@ const orderService = async (order) => {
 
 const findDriver = async (order) => {
     try {
-
-        //let busyDrivers = await Order.find({ deleted: false, status: { $in: ['ACCEPTED', 'DRIVER_ACCEPTED', 'SHIPPED'], } }).distinct('driver');
+        
+        //let busyDrivers = await Order.find({ deleted: false, status: { $in: ['ACCEPTED', 'DRIVER_ACCEPTED', 'SHIPPED','DRIVER_SHIPPED'], } }).distinct('driver');
         let userQuery = {
             deleted: false,
             online: true,
@@ -296,7 +296,8 @@ const findDriver = async (order) => {
                         type: "Point",
                         coordinates: [+order.trader.geoLocation.coordinates[0], +order.trader.geoLocation.coordinates[1]]
                     },
-                    distanceField: "dist.calculated"
+                    distanceField: "dist.calculated",
+                    maxDistance: order.trader.country.searchDistance,
                 }
             },
             {
@@ -317,7 +318,7 @@ const findDriver = async (order) => {
             }
 
         ]);
-
+        
         let ids = [...pluck(zones, 'user')];
         console.log("zones ====== ", ids)
 
@@ -483,7 +484,7 @@ export default {
             if (req.user.type == 'CLIENT') {
                 query.user = req.user.id;
                 if (currentOrders) {
-                    query.status = { $in: ['WAITING', 'ACCEPTED', 'DRIVER_ACCEPTED', 'SHIPPED', 'NOT_ASSIGN'] }
+                    query.status = { $in: ['WAITING', 'ACCEPTED', 'DRIVER_ACCEPTED', 'SHIPPED','NOT_ASSIGN','DRIVER_SHIPPED'] }
                 } else if (finishedOrders) {
                     query.status = { $in: ['DELIVERED', 'CANCELED', 'REJECTED'] }
 
@@ -496,7 +497,7 @@ export default {
                     query.traderNotResponse = false;
 
                 } else if (currentOrders) {
-                    query.status = { $in: ['ACCEPTED', 'DRIVER_ACCEPTED', 'SHIPPED', 'NOT_ASSIGN'] }
+                    query.status = { $in: ['ACCEPTED', 'DRIVER_ACCEPTED', 'SHIPPED','NOT_ASSIGN','DRIVER_SHIPPED'] }
 
                 } else if (finishedOrders) {
                     query.status = { $in: ['DELIVERED'] }
@@ -511,15 +512,15 @@ export default {
                     query.status = 'ACCEPTED';
                 }
                 else if (currentOrders) {
-                    query.status = { $in: ['DRIVER_ACCEPTED', 'SHIPPED'] }
+                    query.status = { $in: ['DRIVER_ACCEPTED', 'SHIPPED','DRIVER_SHIPPED'] }
 
                 } else if (finishedOrders) {
                     query.status = { $in: ['DELIVERED'] }
                 }
             }
             //////admin tab///////
-            if (defaultOrders) {
-                query.status = { $in: ['WAITING', 'ACCEPTED', 'DRIVER_ACCEPTED', 'REJECTED', 'CANCELED', 'SHIPPED', 'DELIVERED'] }
+            if(defaultOrders){
+                query.status = {$in:['WAITING','ACCEPTED','DRIVER_ACCEPTED','REJECTED', 'CANCELED', 'SHIPPED', 'DELIVERED','DRIVER_SHIPPED']}
             }
             let date = new Date();
             if (traderNotResponse) {
@@ -821,12 +822,12 @@ export default {
 
             notificationNSP.to('room-' + updatedOrder.user.id).emit(socketEvents.ChangeOrderStatus, { order: updatedOrder });
 
-            if (updatedOrder.user.language == "ar") {
-                await sendChangeOrderEmail(updatedOrder.user.email, description.ar + ' رقم ' + ' : ' + updatedOrder.orderNumber)
-            }
-            else {
-                await sendChangeOrderEmail(updatedOrder.user.email, description.en + ' : ' + updatedOrder.orderNumber)
-            }
+            // if (updatedOrder.user.language == "ar") {
+            //     await sendChangeOrderEmail(updatedOrder.user.email, description.ar + ' رقم ' + ' : ' + updatedOrder.orderNumber)
+            // }
+            // else {
+            //     await sendChangeOrderEmail(updatedOrder.user.email, description.en + ' : ' + updatedOrder.orderNumber)
+            // }
             await traderOrdersCount(updatedOrder.trader.id)
         } catch (err) {
             // console.log(err);
@@ -876,13 +877,51 @@ export default {
         }
     },
 
+    /**************************Update add new status  DRIVER_SHIPPED 20210925**********************************/
+    async driverShipped(req, res, next) {
+        try {
+            let { orderId } = req.params;
+            let order = await checkExistThenGet(orderId, Order, { deleted: false, status: "DRIVER_ACCEPTED", orderType: "DELIVERY" });
+            let updatedQuery = { status: 'DRIVER_SHIPPED', driverShippedDate: new Date() };
+            
+            let updatedOrder = await Order.findByIdAndUpdate(orderId, updatedQuery, { new: true }).populate(populateQuery);
+            updatedOrder = Order.schema.methods.toJSONLocalizedOnly(updatedOrder, i18n.getLocale());
+            res.status(200).send(updatedOrder);
+
+            let description = { ar: 'الكابتن علي وشك االوصول اليك لقد استلام الطلب ن المتجر', en: 'Captian has been shipped your order from store.' };
+
+            await notifyController.create(req.user.id, updatedOrder.user.id, description, updatedOrder.id, 'CHANGE_ORDER_STATUS', updatedOrder.id,updatedOrder.status);
+            notifyController.pushNotification(updatedOrder.user.id, 'CHANGE_ORDER_STATUS', updatedOrder.id, description);
+
+            notificationNSP.to('room-' + updatedOrder.user.id).emit(socketEvents.ChangeOrderStatus, { order: updatedOrder });
+            notificationNSP.to('room-' + updatedOrder.trader.id).emit(socketEvents.ChangeOrderStatus, { order: updatedOrder });
+
+            if (updatedOrder.user.language == "ar") {
+                await sendChangeOrderEmail(updatedOrder.user.email, description.ar + ' : ' + updatedOrder.orderNumber)
+            }
+            else {
+                await sendChangeOrderEmail(updatedOrder.user.email, description.en + ' : ' + updatedOrder.orderNumber)
+            }
+
+            ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+            traderOrdersCount(updatedOrder.trader.id);
+            if (updatedOrder.orderType == 'DELIVERY') {
+                driverOrdersCount(updatedOrder.driver.id);
+            }
+
+        } catch (err) {
+            next(err);
+        }
+    },
+
+    /*********************************************************************************/
     async shipped(req, res, next) {
         try {
             if (req.user.type != 'ADMIN' && req.user.type != 'SUB_ADMIN' && req.user.type != 'INSTITUTION')
                 return next(new ApiError(403, ('admin.auth')));
 
             let { orderId } = req.params;
-            await checkExist(orderId, Order, { deleted: false, $or: [{ status: "ACCEPTED", orderType: "FROM_STORE" }, { status: "DRIVER_ACCEPTED", orderType: "DELIVERY" }] });
+            await checkExist(orderId, Order, { deleted: false, $or: [{ status: "ACCEPTED", orderType: "FROM_STORE" }, { status: "DRIVER_SHIPPED", orderType: "DELIVERY" }] });
             let updatedOrder = await Order.findByIdAndUpdate(orderId, { status: 'SHIPPED', shippedDate: new Date() }, { new: true }).populate(populateQuery);
             updatedOrder = Order.schema.methods.toJSONLocalizedOnly(updatedOrder, i18n.getLocale());
             res.status(200).send(updatedOrder);
@@ -1268,4 +1307,41 @@ export default {
         }
     },
     DriverNotResponseCount,
+
+
+    async notifyTrader(req, res, next) { // هبعت اشعار للمتجر من الكابتن لما يوصل علي بعد معين 
+        try {
+            let user = req.user;
+            let { orderId } = req.params;
+            let order = await checkExistThenGet(orderId, Order, { deleted: false, populate: populateQuery });
+            res.status(200).send(order);
+            let description = { ar: 'الكابتن علي وشك الوصول اليك', en: 'Captian is about to reach you.' };
+
+            await notifyController.create(req.user.id, order.trader.id, description, order.id, 'CHANGE_ORDER_STATUS', order.id,order.status);
+            notifyController.pushNotification(order.trader.id, 'CHANGE_ORDER_STATUS', order.id, description);
+            // notificationNSP.to('room-' + order.trader.id).emit(socketEvents.ChangeOrderStatus, { order: order })
+
+            
+        } catch (err) {
+            next(err);
+        }
+    },
+
+    async notifyClient(req, res, next) { //  هبعت اشعار للعميل  من الكابتن لما يوصل علي بعد معين 
+        try {
+            let user = req.user;
+            let { orderId } = req.params;
+            let order = await checkExistThenGet(orderId, Order, { deleted: false, populate: populateQuery });
+            res.status(200).send(order);
+            let description = { ar: ' جهز نفسك,الكابتن علي وشك الوصول اليك', en: 'Captian is about to reach you.' };
+
+            await notifyController.create(req.user.id, order.user.id, description, order.id, 'CHANGE_ORDER_STATUS', order.id,order.status);
+            notifyController.pushNotification(order.user.id, 'CHANGE_ORDER_STATUS', order.id, description);
+            // notificationNSP.to('room-' + order.user.id).emit(socketEvents.ChangeOrderStatus, { order: order })
+
+            
+        } catch (err) {
+            next(err);
+        }
+    },
 }

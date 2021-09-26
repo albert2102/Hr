@@ -20,6 +20,8 @@ import Product from '../../models/product.model/product.model';
 import AdminController from '../admin.controller/admin.controller';
 import Category from '../../models/category.model/category.model';
 import Country from "../../models/country.model/country.model";
+import City from "../../models/city.model/city.model";
+import Region from "../../models/region.model/region.model";
 
 const checkUserExistByEmail = async (email) => {
     let user = await User.findOne({ email, deleted: false });
@@ -30,7 +32,10 @@ const checkUserExistByEmail = async (email) => {
 let populateQuery = [
     { path: 'rules', model: 'assignRule' },
     { path: 'category', model: 'category' },
-    { path: 'country', model: 'country' }
+    { path: 'country', model: 'country' },
+    { path: 'city', model: 'city', populate: { path: 'country', model: 'country' } },
+    { path: 'region', model: 'region', populate: [{ path: 'city', model: 'city', populate: { path: 'country', model: 'country' } }] }
+
 ];
 
 export default {
@@ -165,7 +170,7 @@ export default {
                 .isEmail().withMessage(() => { return i18n.__('EmailNotValid') })
                 .custom(async (value, { req }) => {
                     value = (value.trim()).toLowerCase();
-                    let userQuery = { email: value, deleted: false,type:'CLIENT' };
+                    let userQuery = { email: value, deleted: false, type: 'CLIENT' };
                     if (await User.findOne(userQuery))
                         throw new Error(i18n.__('emailDuplicated'));
                     return true;
@@ -173,7 +178,7 @@ export default {
             body('password').not().isEmpty().withMessage(() => { return i18n.__('passwordRequired') }),
             body('phone').not().isEmpty().withMessage(() => { return i18n.__('PhoneIsRequired') }).custom(async (value, { req }) => {
                 value = (value.trim()).toLowerCase();
-                let userQuery = { phone: value, deleted: false,type:'CLIENT' };
+                let userQuery = { phone: value, deleted: false, type: 'CLIENT' };
                 if (await User.findOne(userQuery))
                     throw new Error(i18n.__('phoneDuplicated'));
                 return true;
@@ -183,6 +188,16 @@ export default {
             body('country').optional().not().isEmpty().withMessage(() => { return i18n.__('countryRequired') })
                 .custom(async (value, { req }) => {
                     await checkExistThenGet(value, Country, { deleted: false })
+                    return true;
+                }),
+            body('city').optional().not().isEmpty().withMessage(() => { return i18n.__('cityRequired') })
+                .custom(async (value, { req }) => {
+                    await checkExistThenGet(value, City, { deleted: false })
+                    return true;
+                }),
+            body('region').optional().not().isEmpty().withMessage(() => { return i18n.__('regionRequired') })
+                .custom(async (value, { req }) => {
+                    await checkExistThenGet(value, Region, { deleted: false })
                     return true;
                 }),
         ];
@@ -201,6 +216,7 @@ export default {
             }
 
             let createdUser = await User.create(validatedBody);
+            createdUser = await User.populate(createdUser,populateQuery);
             res.status(200).send({ user: createdUser, token: generateToken(createdUser.id) })
             adminNSP.to('room-admin').emit(socketEvents.NewSignup, { user: createdUser });
 
@@ -246,7 +262,7 @@ export default {
                 .isEmail().withMessage(() => { return i18n.__('Email Not Valid') })
                 .custom(async (value, { req }) => {
                     value = (value.trim()).toLowerCase();
-                    let userQuery = { _id: { $ne: req.user.id }, email: value, deleted: false,type:'CLIENT' };
+                    let userQuery = { _id: { $ne: req.user.id }, email: value, deleted: false, type: 'CLIENT' };
                     if (await User.findOne(userQuery))
                         throw new Error(i18n.__('emailDuplicated'));
                     else
@@ -255,7 +271,7 @@ export default {
             body('phone').optional().not().isEmpty().withMessage(() => { return i18n.__('PhoneIsRequired') })
                 .custom(async (value, { req }) => {
                     value = (value.trim()).toLowerCase();
-                    let userQuery = { _id: { $ne: req.user.id }, phone: value, deleted: false,type:'CLIENT' };
+                    let userQuery = { _id: { $ne: req.user.id }, phone: value, deleted: false, type: 'CLIENT' };
                     if (await User.findOne(userQuery))
                         throw new Error(i18n.__('phoneDuplicated'));
                     else
@@ -276,7 +292,17 @@ export default {
                     await checkExistThenGet(value, Country, { deleted: false })
                     return true;
                 }),
-        ];  
+            body('city').optional().not().isEmpty().withMessage(() => { return i18n.__('cityRequired') })
+                .custom(async (value, { req }) => {
+                    await checkExistThenGet(value, City, { deleted: false })
+                    return true;
+                }),
+            body('region').optional().not().isEmpty().withMessage(() => { return i18n.__('regionRequired') })
+                .custom(async (value, { req }) => {
+                    await checkExistThenGet(value, Region, { deleted: false })
+                    return true;
+                }),
+        ];
 
         return validations;
     },
@@ -459,7 +485,11 @@ export default {
             var user = await User.findOne({ phone: phone, deleted: false, type: validatedBody.type, countryCode: validatedBody.countryCode });
             if (!user)
                 return next(new ApiError(403, i18n.__('userNotFound')));
-            twilioSend('+2' + phone, user.language || 'ar');
+            let countryCode = '+2';
+            if (user.countryCode != '20') {
+                countryCode = '+' + user.countryCode;
+            }
+            twilioSend(countryCode + phone, user.language || 'ar');
             res.status(200).send(i18n.__('checkYourPhone'));
         } catch (err) {
             next(err);
@@ -700,8 +730,8 @@ export default {
             if (user) {
                 if (!user.activated) {
                     return next(new ApiError(403, i18n.__('accountStop')));
-                }else{
-                res.status(200).send({ user, token: generateToken(user.id) });
+                } else {
+                    res.status(200).send({ user, token: generateToken(user.id) });
                 }
             }
             else {
@@ -726,11 +756,11 @@ export default {
         try {
             let page = +req.query.page || 1,
                 limit = +req.query.limit || 20;
-            var { text, hasOffer, open, long, lat, category, highestRated,country} = req.query;
+            var { text, hasOffer, open, long, lat, category, highestRated, country } = req.query;
 
             let query = { deleted: false, type: 'INSTITUTION',activated: true,status:'ACCEPTED'};
             let sortQuery = { createdAt: -1 };
-            if  (country) query.country = country;
+            if (country) query.country = +country;
             if (open) query.institutionStatus = 'OPEN'; // مفتوح
             if (highestRated) sortQuery = { totalRate: -1 }; //الاعلي تقييما
             if (category) {
@@ -750,7 +780,7 @@ export default {
                 let traders = await Product.find({ deleted: false, $or: [{ 'name.en': { '$regex': text, '$options': 'i' } }, { 'name.ar': { '$regex': text, '$options': 'i' } }] }).distinct('trader')
                 query.$or = [{ name: { '$regex': text, '$options': 'i' } }, { _id: { $in: traders } }];
             }
-            if (lat && long) { 
+            if (lat && long) {
                 limit = 10;
             }
             let aggregateQuery = [
@@ -760,7 +790,13 @@ export default {
                 { $skip: (page - 1) * limit }];
 
             if (lat && long) { // الاقرب والابعد
-                aggregateQuery.unshift({ $geoNear: { near: { type: "Point", coordinates: [+long, +lat] }, distanceField: "dist.calculated" ,maxDistance:10000} })
+                let maxDistance = 10000;
+                if(country){
+                    country = await Country.findById(country);
+                    maxDistance = country.searchDistance;
+                }
+                console.log(maxDistance)
+                aggregateQuery.unshift({ $geoNear: { near: { type: "Point", coordinates: [+long, +lat] }, distanceField: "dist.calculated", maxDistance: maxDistance } })
             }
             let users = await User.aggregate(aggregateQuery)
             let pageCount;
@@ -827,6 +863,16 @@ export default {
                     await checkExistThenGet(value, Country, { deleted: false })
                     return true;
                 }),
+            body('city').optional().not().isEmpty().withMessage(() => { return i18n.__('cityRequired') })
+                .custom(async (value, { req }) => {
+                    await checkExistThenGet(value, City, { deleted: false })
+                    return true;
+                }),
+            body('region').optional().not().isEmpty().withMessage(() => { return i18n.__('regionRequired') })
+                .custom(async (value, { req }) => {
+                    await checkExistThenGet(value, Region, { deleted: false })
+                    return true;
+                }),
         ];
 
         return validations;
@@ -840,7 +886,7 @@ export default {
                 .isEmail().withMessage(() => { return i18n.__('EmailNotValid') })
                 .custom(async (value, { req }) => {
                     value = (value.trim()).toLowerCase();
-                    let userQuery = { email: value, deleted: false, _id: { $ne: req.body.userId },type:'INSTITUTION' };
+                    let userQuery = { email: value, deleted: false, _id: { $ne: req.body.userId }, type: 'INSTITUTION' };
                     if (await User.findOne(userQuery))
                         throw new Error(i18n.__('emailDuplicated'));
                     else
@@ -850,7 +896,7 @@ export default {
             body('phone').optional().not().isEmpty().withMessage(() => { return i18n.__('PhoneIsRequired') })
                 .custom(async (value, { req }) => {
                     value = (value.trim()).toLowerCase();
-                    let userQuery = { phone: value, deleted: false, _id: { $ne: req.body.userId },type:'INSTITUTION'  };
+                    let userQuery = { phone: value, deleted: false, _id: { $ne: req.body.userId }, type: 'INSTITUTION' };
 
                     if (await User.findOne(userQuery))
                         throw new Error(i18n.__('phoneIsDuplicated'));
@@ -884,6 +930,16 @@ export default {
             body('country').optional().not().isEmpty().withMessage(() => { return i18n.__('countryRequired') })
                 .custom(async (value, { req }) => {
                     await checkExistThenGet(value, Country, { deleted: false })
+                    return true;
+                }),
+            body('city').optional().not().isEmpty().withMessage(() => { return i18n.__('cityRequired') })
+                .custom(async (value, { req }) => {
+                    await checkExistThenGet(value, City, { deleted: false })
+                    return true;
+                }),
+            body('region').optional().not().isEmpty().withMessage(() => { return i18n.__('regionRequired') })
+                .custom(async (value, { req }) => {
+                    await checkExistThenGet(value, Region, { deleted: false })
                     return true;
                 }),
         ];
@@ -939,6 +995,16 @@ export default {
                     await checkExistThenGet(value, Country, { deleted: false })
                     return true;
                 }),
+            body('city').optional().not().isEmpty().withMessage(() => { return i18n.__('cityRequired') })
+                .custom(async (value, { req }) => {
+                    await checkExistThenGet(value, City, { deleted: false })
+                    return true;
+                }),
+            body('region').optional().not().isEmpty().withMessage(() => { return i18n.__('regionRequired') })
+                .custom(async (value, { req }) => {
+                    await checkExistThenGet(value, Region, { deleted: false })
+                    return true;
+                }),
         ];
 
         return validations;
@@ -957,6 +1023,7 @@ export default {
             validatedBody.type = 'DRIVER';
             validatedBody.status = 'WAITING';
             let createdUser = await User.create(validatedBody);
+            createdUser = await User.populate(createdUser,populateQuery);
             res.status(200).send({ user: createdUser, token: generateToken(createdUser.id) });
             await AdminController.count(validatedBody.type);
 
@@ -983,7 +1050,7 @@ export default {
             body('phone').not().isEmpty().withMessage(() => { return i18n.__('PhoneIsRequired') })
                 .custom(async (value, { req }) => {
                     value = (value.trim()).toLowerCase();
-                    let userQuery = { phone: value, deleted: false, type: 'INSTITUTION'  };
+                    let userQuery = { phone: value, deleted: false, type: 'INSTITUTION' };
                     if (await User.findOne(userQuery))
                         throw new Error(i18n.__('phoneIsDuplicated'));
                     else
@@ -1015,6 +1082,16 @@ export default {
                     await checkExistThenGet(value, Country, { deleted: false })
                     return true;
                 }),
+            body('city').optional().not().isEmpty().withMessage(() => { return i18n.__('cityRequired') })
+                .custom(async (value, { req }) => {
+                    await checkExistThenGet(value, City, { deleted: false })
+                    return true;
+                }),
+            body('region').optional().not().isEmpty().withMessage(() => { return i18n.__('regionRequired') })
+                .custom(async (value, { req }) => {
+                    await checkExistThenGet(value, Region, { deleted: false })
+                    return true;
+                }),
         ];
         return validations;
     },
@@ -1034,6 +1111,7 @@ export default {
             if (!validatedBody.password)
                 validatedBody.password = '12345678';
             let createdUser = await User.create(validatedBody);
+            createdUser = await User.populate(createdUser,populateQuery);
             res.status(200).send({ user: createdUser });
             await AdminController.count(validatedBody.type);
 

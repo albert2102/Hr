@@ -168,6 +168,8 @@ export default {
                 body('allowFixedCategory').optional().not().isEmpty().withMessage(() => { return i18n.__('allowFixedCategoryRequired') }).isBoolean().withMessage('must be boolean'),
                 body('driverDuesToStop').optional().not().isEmpty().withMessage(() => { return i18n.__('driverDuesToStopRequired') }),
                 body('iosVersion').optional().not().isEmpty().withMessage(() => { return i18n.__('iosVersionRequired') }),
+                body('notifyTraderTime').optional().not().isEmpty().withMessage(() => { return i18n.__('notifyTraderTimeRequired') }),
+                body('notifyClientTime').optional().not().isEmpty().withMessage(() => { return i18n.__('notifyClientTimeRequired') }),
                 
 
             ];

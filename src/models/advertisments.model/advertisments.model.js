@@ -71,7 +71,11 @@ const advertismentsSchema = new Schema({
     issuesCount:{
         type: Number,
         default: 0
-    }
+    },
+    country:{
+        type: Number,
+        ref: 'country'
+    },
 }, { timestamps: true });
 
 advertismentsSchema.set('toJSON', {

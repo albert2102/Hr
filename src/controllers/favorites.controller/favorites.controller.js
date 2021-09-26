@@ -7,13 +7,20 @@ import { checkExistThenGet, checkExist } from "../../helpers/CheckMethods";
 import { body } from 'express-validator/check';
 import { checkValidations } from "../shared.controller/shared.controller";
 import i18n from 'i18n';
+import countryModel from "../../models/country.model/country.model";
 
 let populateQuery = [
     {
         path: 'product', model: 'product',
         populate: [{ path: 'trader', model: 'user' }, { path: 'productCategory', model: 'productCategory' }]
     },
-    { path: 'user', model: 'user' }
+    {
+        path: 'user', model: 'user', populate: [
+            { path: 'country', model: 'country' },
+            { path: 'city', model: 'city', populate: { path: 'country', model: 'country' } },
+            { path: 'region', model: 'region', populate: [{ path: 'city', model: 'city', populate: { path: 'country', model: 'country' } }] }
+        ]
+    }
 ];
 
 
@@ -48,7 +55,7 @@ export default {
                 },
                 { $unwind: '$product' },
 
-                { $group: { _id: { trader: '$product.trader' },favorites:{$push:'$$ROOT'} } },
+                { $group: { _id: { trader: '$product.trader' }, favorites: { $push: '$$ROOT' } } },
                 {
                     $lookup: {
                         from: User.collection.name,
@@ -64,6 +71,7 @@ export default {
             let favs = [];
             if (!admin) {
                 favs = await Favorites.aggregate(aggregateQuery)
+                favs = await Favorites.populate(favs,[{path:'_id.trader.country',model:'country'},{path:'_id.trader.city',model:'city'},{path:'_id.trader.region',model:'region'}])
             }
             else {
                 favs = await Favorites.find(query)
