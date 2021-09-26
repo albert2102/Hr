@@ -921,7 +921,7 @@ export default {
                 return next(new ApiError(403, ('admin.auth')));
 
             let { orderId } = req.params;
-            await checkExist(orderId, Order, { deleted: false, $or: [{ status: "ACCEPTED", orderType: "FROM_STORE" }, { status: "DRIVER_SHIPPED", orderType: "DELIVERY" }] });
+            await checkExist(orderId, Order, { deleted: false, $or: [{ status: "ACCEPTED", orderType: "FROM_STORE" }, {/* status: "DRIVER_SHIPPED",*/ orderType: "DELIVERY" }] });
             let updatedOrder = await Order.findByIdAndUpdate(orderId, { status: 'SHIPPED', shippedDate: new Date() }, { new: true }).populate(populateQuery);
             updatedOrder = Order.schema.methods.toJSONLocalizedOnly(updatedOrder, i18n.getLocale());
             res.status(200).send(updatedOrder);
