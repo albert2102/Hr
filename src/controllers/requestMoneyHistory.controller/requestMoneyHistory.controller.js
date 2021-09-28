@@ -46,7 +46,7 @@ export default {
     async findAll(req, res, next) {
         try {
             let page = +req.query.page || 1, limit = +req.query.limit || 20;
-            var { driver, trader, payedDate, month, year, order,name,email,phone,type } = req.query;
+            var { driver, trader, payedDate, month, year, order,name,email,phone,type,country,city,region } = req.query;
             let query = { deleted: false };
 
             if(type && type == 'DRIVER') query.driver = {$ne: null};
@@ -70,6 +70,18 @@ export default {
             }
             if(email){
                 usersId = await User.find({email:{ '$regex': email, '$options': 'i' }}).distinct('_id');
+                query.$or = [{driver:{$in:usersId}},{trader:{$in:usersId}}]
+            }
+            if(country){
+                usersId = await User.find({country:country}).distinct('_id');
+                query.$or = [{driver:{$in:usersId}},{trader:{$in:usersId}}]
+            }
+            if(city){
+                usersId = await User.find({city:city}).distinct('_id');
+                query.$or = [{driver:{$in:usersId}},{trader:{$in:usersId}}]
+            }
+            if(region){
+                usersId = await User.find({region:region}).distinct('_id');
                 query.$or = [{driver:{$in:usersId}},{trader:{$in:usersId}}]
             }
 	    console.log(query)
