@@ -43,12 +43,6 @@ export default {
 
     async findAll(req, res, next) {
         try {
-            let inst = await User.find({deleted:false,type:'INSTITUTION'})
-            for (let index = 0; index < inst.length; index++) {
-                inst[index].numberOfProducts = await ProductCategory.count({deleted: false,user:inst[index].id});
-                await inst[index].save();
-                
-            }
             let page = +req.query.page || 1,
                 limit = +req.query.limit || 20;
             var { all, name, type, fromDate, toDate, phone, email, activated, countryKey, countryCode,
