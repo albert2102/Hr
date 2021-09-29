@@ -8,7 +8,8 @@ import { body } from 'express-validator/check';
 import ApiError from "../../helpers/ApiError";
 import i18n from 'i18n';
 import socketEvents from '../../socketEvents';
-import config from '../../config'
+import config from '../../config';
+import Country from '../../models/country.model/country.model';
 const populateQuery = [
     { path: 'resource', model: 'user' },
     { path: 'target', model: 'user' },
@@ -151,6 +152,11 @@ export default {
             body('text.en').not().isEmpty().withMessage(()=>i18n.__('englishTextRequired')),
             body('userType').optional().not().isEmpty().withMessage(()=>i18n.__('userTypeRequired'))
             .isIn(['CLIENT', 'INSTITUTION', 'DRIVER']).withMessage(()=>i18n.__('invalidUserType')),
+            body('country').optional().not().isEmpty().withMessage(() => { return i18n.__('countryRequired') })
+                .custom(async (value, { req }) => {
+                    await checkExistThenGet(value, Country, { deleted: false })
+                    return true;
+                }),
         ];
         return validations;
     },
@@ -176,7 +182,7 @@ export default {
                 notifiObj.userType = validatedBody.userType; 
                 userQuery.type =  validatedBody.userType;
             }
-
+            if(validatedBody.country) userQuery.country = validatedBody.country;
             await Notif.create(notifiObj)
 
             var allUsers = await User.find(userQuery);

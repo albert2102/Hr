@@ -12,6 +12,7 @@ import notifiController from '../notif.controller/notif.controller';
 import Order from '../../models/order.model/order.model';
 import socketEvents from '../../socketEvents'
 import config from '../../config';
+import Country from '../../models/country.model/country.model';
 
 const populateQuery = [
     { path: 'users', model: 'user' }
@@ -117,7 +118,11 @@ export default {
             }),
             body('promoCodeOn').not().isEmpty().withMessage(() => { return i18n.__('promoCodeTypeRequired') }).isIn(['TRANSPORTATION', 'PRODUCTS','ALL']).withMessage(() => { return i18n.__('invalidType') }),
             body('maxAmount').optional().not().isEmpty().withMessage(() => { return i18n.__('maxAmountRequired') }),
-
+            body('country').optional().not().isEmpty().withMessage(() => { return i18n.__('countryRequired') })
+                .custom(async (value, { req }) => {
+                    await checkExistThenGet(value, Country, { deleted: false })
+                    return true;
+                }),
         ]
         return validations;
     },
@@ -141,7 +146,9 @@ export default {
             }
 
             if (promocode.usersType === 'ALL') {
-                let users = await User.find({ type: 'CLIENT', deleted: false })
+                let userQuery = { type: 'CLIENT', deleted: false };
+                if(data.country) userQuery.country = data.country;
+                let users = await User.find(userQuery);
                 for (let index = 0; index < users.length; index++) {
                    notifiController.pushNotification(users[index]._id, 'PROMOCODE', promocode._id, desc);
                     
