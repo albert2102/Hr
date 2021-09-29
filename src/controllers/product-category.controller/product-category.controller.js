@@ -142,6 +142,9 @@ export default {
             let createdproductCategory = await ProductCategory.create(validatedBody);
             createdproductCategory = ProductCategory.schema.methods.toJSONLocalizedOnly(createdproductCategory, i18n.getLocale());
             res.status(200).send({ category: createdproductCategory });
+            user = await User.findById(validatedBody.user);
+            user.numberOfProducts = await ProductCategory.count({deleted: false,user:user.id});
+            await user.save();
         } catch (err) {
             next(err);
         }
@@ -195,7 +198,9 @@ export default {
             productCategory.deleted = true;
             await productCategory.save();
             res.status(200).send('Deleted Successfully');
-            await Product.updateMany({deleted: false,productCategory:productCategoryId},{deleted: true})
+            user = await User.findById(productCategory.user);
+            user.numberOfProducts = await ProductCategory.count({deleted: false,user:user.id});
+            await user.save();
         }
         catch (err) {
             next(err);

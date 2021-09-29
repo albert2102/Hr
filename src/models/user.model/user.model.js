@@ -260,6 +260,10 @@ const userSchema = new Schema({
         type: Number,
         ref: 'region'
     },
+    numberOfProducts:{
+        type: Number,
+        default: 0
+    }
 }, { timestamps: true });
 
 

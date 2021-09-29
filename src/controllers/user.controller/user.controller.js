@@ -22,6 +22,7 @@ import Category from '../../models/category.model/category.model';
 import Country from "../../models/country.model/country.model";
 import City from "../../models/city.model/city.model";
 import Region from "../../models/region.model/region.model";
+import ProductCategory from "../../models/product-category.model/product-category.model";
 
 const checkUserExistByEmail = async (email) => {
     let user = await User.findOne({ email, deleted: false });
@@ -42,6 +43,12 @@ export default {
 
     async findAll(req, res, next) {
         try {
+            let inst = await User.find({deleted:false,type:'INSTITUTION'})
+            for (let index = 0; index < inst.length; index++) {
+                inst[index].numberOfProducts = await ProductCategory.count({deleted: false,user:inst[index].id});
+                await inst[index].save();
+                
+            }
             let page = +req.query.page || 1,
                 limit = +req.query.limit || 20;
             var { all, name, type, fromDate, toDate, phone, email, activated, countryKey, countryCode,
