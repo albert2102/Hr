@@ -46,7 +46,7 @@ export default {
             let page = +req.query.page || 1,
                 limit = +req.query.limit || 20;
             var { all, name, type, fromDate, toDate, phone, email, activated, countryKey, countryCode,
-                month, year, day, archive, country, category, status } = req.query;
+                month, year, day, archive, country, category, status,city,region } = req.query;
 
             var query = { deleted: false, status: { $nin: ['WAITING', 'REJECTED'] } };
             if (archive) query.deleted = true;
@@ -59,6 +59,8 @@ export default {
             if (countryKey) query.countryKey = countryKey;
             if (countryCode) query.countryCode = countryCode;
             if (country) query.country = country;
+            if (city) query.city = city;
+            if (region) query.region = region;
             if (category) query.category = category;
 
             if (fromDate && toDate) {
