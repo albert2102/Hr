@@ -28,7 +28,7 @@ import pluck from 'arr-pluck';
 let populateQuery = [
     { path: 'user', model: 'user' },
     { path: 'driver', model: 'user' },
-    { path: 'trader', model: 'user' },
+    { path: 'trader', model: 'user',populate: [{ path: 'country', model: 'country' }] },
     { path: 'products.product', model: 'product', populate: [{ path: 'trader', model: 'user',populate:[{path:'country',model:'country'}] }, { path: 'productCategory', model: 'productCategory' }] },
     { path: 'address', model: 'address', populate: [{ path: 'city', model: 'city', populate: [{ path: 'country', model: 'country' }] }] },
     { path: 'promoCode', model: 'promocode' },
