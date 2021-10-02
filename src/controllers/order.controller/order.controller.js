@@ -679,8 +679,8 @@ export default {
             validatedBody.price = await calculatePrice(validatedBody.products)
             validatedBody = await getFinalPrice(validatedBody)
 
-            console.log('validatedBody.totalPrice ',validatedBody.totalPrice);
-            validatedBody.totalPrice = validatedBody.totalPrice + ((validatedBody.totalPrice / 100) * Number(validatedBody.taxes));
+            console.log('validatedBody.totalPrice ',validatedBody.totalPrice); 
+            validatedBody.totalPrice = validatedBody.totalPrice + ((validatedBody.price / 100) * Number(validatedBody.taxes));
             validatedBody.totalPrice = (validatedBody.totalPrice).toFixed(2);
             // validatedBody.totalPrice = parseInt(validatedBody.totalPrice);
             if (validatedBody.paymentMethod == 'WALLET' && req.user.wallet < validatedBody.totalPrice) {
@@ -698,13 +698,13 @@ export default {
             }
             //////////////////////////////////////////////////////////////////
             if (trader.type == 'INSTITUTION' && !trader.productsIncludeTaxes) {
-                let traderPrice = validatedBody.totalPrice;
+                let traderPrice = validatedBody.price;
                 validatedBody.ajamDues = (traderPrice * (Number(validatedBody.ajamTaxes) / 100)).toFixed(2);
                 validatedBody.traderDues = (traderPrice - Number(validatedBody.ajamDues)) + ((validatedBody.price / 100) * Number(validatedBody.taxes));
             }
             else {
                 let taxes = company.taxes;
-                let traderPrice = validatedBody.totalPrice - ((validatedBody.totalPrice / 100) * Number(taxes));
+                let traderPrice = validatedBody.price - ((validatedBody.price / 100) * Number(taxes));
                 validatedBody.ajamDues = (traderPrice * (Number(validatedBody.ajamTaxes) / 100)).toFixed(2);
                 validatedBody.traderDues = (traderPrice - Number(validatedBody.ajamDues)) + ((validatedBody.totalPrice / 100) * Number(taxes));
             }
