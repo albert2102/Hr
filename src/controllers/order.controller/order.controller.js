@@ -297,7 +297,7 @@ const findDriver = async (order) => {
                         coordinates: [+order.trader.geoLocation.coordinates[0], +order.trader.geoLocation.coordinates[1]]
                     },
                     distanceField: "dist.calculated",
-                    maxDistance: order.trader.country.searchDistance,
+                    maxDistance: +order.trader.country.searchDistance,
                 }
             },
             {
