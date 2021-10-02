@@ -679,7 +679,7 @@ export default {
             validatedBody.price = await calculatePrice(validatedBody.products)
             validatedBody = await getFinalPrice(validatedBody)
 
-            // console.log('validatedBody.totalPrice ',validatedBody.totalPrice);
+            console.log('validatedBody.totalPrice ',validatedBody.totalPrice);
             validatedBody.totalPrice = validatedBody.totalPrice + ((validatedBody.totalPrice / 100) * Number(validatedBody.taxes));
             validatedBody.totalPrice = (validatedBody.totalPrice).toFixed(2);
             // validatedBody.totalPrice = parseInt(validatedBody.totalPrice);
