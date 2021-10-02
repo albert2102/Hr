@@ -800,7 +800,7 @@ export default {
 
             } else {
                 if (validatedBody.status == 'ACCEPTED') {
-                    description = { en: "You are now an instituation in the Agam team", ar: "انت الآن  متجر لدي فريق أجَمْ" }
+                    description = { en: "You are now an instituation in the Ajam team", ar: "انت الآن  متجر لدي فريق أجَمْ" }
                 } else {
                     description = { en: "You request to join Ajam has been rejected", ar: "تم رفض طلبك لمشاركة أجَمْ كمتجر" }
                 }
