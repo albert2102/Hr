@@ -776,6 +776,7 @@ export default {
             ////////////////////////////////////////////////////////////////////////////////////////////
             clientOrdersCount(req.user.id);
             ////////////////////////////////////////////////////////////////////////////////////////////
+            order =  Order.schema.methods.toJSONLocalizedOnly(order, i18n.getLocale());
             await formatMailData(order,'','order-confirmation.html');
 
         } catch (err) {
