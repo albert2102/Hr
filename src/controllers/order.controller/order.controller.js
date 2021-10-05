@@ -17,7 +17,7 @@ import socketEvents from '../../socketEvents';
 import { generateVerifyCode } from '../../services/generator-code-service'
 import Company from '../../models/company.model/company.model';
 import config from '../../config';
-import { sendEmail, sendHtmlEmail, sendChangeOrderEmail } from '../../services/emailMessage.service';
+import { sendEmail, sendHtmlEmail } from '../../services/emailMessage.service';
 import { duration_time } from '../../calculateDistance'
 import schedule from 'node-schedule';
 import https from 'https';
@@ -467,6 +467,41 @@ const getCheckoutId = async (request, response, next, order, paymentBrand) => {
     }
 }
 ////////////////////////////////////////////////////////////////////////////
+
+
+let formatMailData = (order,state , templateName = 'order-status-update.html')=>{
+    try {
+        let products = order.products;
+        let transportPrice = 0;
+    
+        
+        products = products.map(p => {return {image:config.backend_endpoint+p.product.slider[0],"name":p.product.name,"quantity":p.quantity,"priceAfterOffer":p.priceAfterOffer}} )
+
+        
+        let params = {
+            "orderNumber":order.orderNumber,
+            "name":order.user.name,
+            "status":state,
+            "date":order.createdAt.toISOString().split('T')[0],
+            "products":products,
+            "subtotal":order.price,
+            "transportPrice":order.transportPrice,
+            "totalPrice":order.totalPrice,
+            "currency":order.trader.country.currency
+        };
+        if(order.orderType == 'DELIVERY'){
+            params.address = order.address.address;
+            params.region = order.address.addressName;
+        }else{
+            params.address = order.trader.address;
+            params.region = '';
+        }
+
+        sendHtmlEmail(order.user.email,templateName,params);
+    } catch (error) {
+        console.log(error);
+    }
+}
 export default {
 
     async findAll(req, res, next) {
@@ -741,7 +776,7 @@ export default {
             ////////////////////////////////////////////////////////////////////////////////////////////
             clientOrdersCount(req.user.id);
             ////////////////////////////////////////////////////////////////////////////////////////////
-           await sendHtmlEmail(req.user.email, order.orderNumber, order.products.length, order.price, order.transportPrice, order.taxes, order.address.address || '', order.address.addressName || '', order.address.buildingNumber || '', order.address.flatNumber || '', order.totalPrice);
+            await formatMailData(order,'','order-confirmation.html');
 
         } catch (err) {
             next(err);
@@ -823,10 +858,10 @@ export default {
             notificationNSP.to('room-' + updatedOrder.user.id).emit(socketEvents.ChangeOrderStatus, { order: updatedOrder });
 
             if (updatedOrder.user.language == "ar") {
-                await sendChangeOrderEmail(updatedOrder.user.email, description.ar + ' رقم ' + ' : ' + updatedOrder.orderNumber)
+                await formatMailData(updatedOrder, description.ar)
             }
             else {
-                await sendChangeOrderEmail(updatedOrder.user.email, description.en + ' : ' + updatedOrder.orderNumber)
+                await formatMailData(updatedOrder, description.en)
             }
             await traderOrdersCount(updatedOrder.trader.id)
         } catch (err) {
@@ -897,10 +932,11 @@ export default {
             notificationNSP.to('room-' + updatedOrder.trader.id).emit(socketEvents.ChangeOrderStatus, { order: updatedOrder });
 
             if (updatedOrder.user.language == "ar") {
-                await sendChangeOrderEmail(updatedOrder.user.email, description.ar + ' : ' + updatedOrder.orderNumber)
+                await formatMailData(updatedOrder, description.ar)
             }
             else {
-                await sendChangeOrderEmail(updatedOrder.user.email, description.en + ' : ' + updatedOrder.orderNumber)
+                await formatMailData(updatedOrder, description.en)
+
             }
 
             ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -937,10 +973,10 @@ export default {
                 notificationNSP.to('room-' + updatedOrder.driver.id).emit(socketEvents.ChangeOrderStatus, { order: updatedOrder });
 
             if (updatedOrder.user.language == "ar") {
-                await sendChangeOrderEmail(updatedOrder.user.email, description.ar + ' : ' + updatedOrder.orderNumber)
+                await formatMailData(updatedOrder, description.ar)
             }
             else {
-                await sendChangeOrderEmail(updatedOrder.user.email, description.en + ' : ' + updatedOrder.orderNumber)
+                await formatMailData(updatedOrder, description.en)
             }
         } catch (err) {
             next(err);
@@ -972,10 +1008,10 @@ export default {
             notificationNSP.to('room-' + updatedOrder.trader.id).emit(socketEvents.ChangeOrderStatus, { order: updatedOrder });
 
             if (updatedOrder.user.language == "ar") {
-                await sendChangeOrderEmail(updatedOrder.user.email, description.ar + ' : ' + updatedOrder.orderNumber)
+                await formatMailData(updatedOrder, description.ar)
             }
             else {
-                await sendChangeOrderEmail(updatedOrder.user.email, description.en + ' : ' + updatedOrder.orderNumber)
+                await formatMailData(updatedOrder, description.en)
             }
 
             ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////

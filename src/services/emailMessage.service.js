@@ -3,19 +3,11 @@ import config from '../config';
 import handlebars from 'handlebars';
 import fs from 'fs';
 
-var readHTMLFile = function (path, callback) {
-    fs.readFile(path, { encoding: 'utf-8' }, function (err, html) {
-        if (err) {
-            throw err;
-            callback(err);
-        }
-        else {
-            callback(null, html);
-        }
-    });
-};
+handlebars.registerHelper('concat', function(path) {
+    return config.domain + path;
+});
 
-let transporter = nodemailer.createTransport({
+let transporterConfig = {
     // pool: true,
     // host: 'smtp.gmail.com',
     // port: 465,
@@ -52,7 +44,9 @@ let transporter = nodemailer.createTransport({
         ciphers:'SSLv3'
     },
 
-});
+}
+
+let transporter = nodemailer.createTransport(transporterConfig);
 
 export function sendEmail(targetMail, text) {
 
@@ -74,24 +68,17 @@ export function sendEmail(targetMail, text) {
     return true;
 }
 
-export function sendHtmlEmail(targetMail,orderNumber,productSize,price,transportationPrice,Taxes,address,street,buildingNumber,flatNumber,totalPrice) {
-    readHTMLFile(__dirname + '/order.html', function (err, html) {
+export function sendHtmlEmail(targetMail, templateName, params) {
+    try {
+        params.domain = config.backend_endpoint
+        console.log('host name ',params.domain);
+        let html = fs.readFileSync(__dirname + `/../emails/${templateName}`, { encoding: 'utf8' });
         var template = handlebars.compile(html);
-        template = template({
-            orderNumber:orderNumber,
-            productSize:productSize,
-            price: price,
-            transportationPrice:transportationPrice,
-            Taxes: Taxes.toString(),
-            address:address,
-            street:street,
-            buildingNumber:buildingNumber,
-            flatNumber:flatNumber,
-            totalPrice:totalPrice
-        })
-       
+        console.log(params);
+        template = template({ ...params });
+
         let mailOptions = {
-            from: 'ajam@ajaminfo.com',
+            from: transporterConfig.auth.user,
             to: targetMail,
             subject: `${config.App.Name}`,
             html: template,
@@ -107,32 +94,9 @@ export function sendHtmlEmail(targetMail,orderNumber,productSize,price,transport
                 console.log(error);
             }
         });
-    })
-    return true;
-}
 
-
-
-
-export function sendChangeOrderEmail(targetMail,text) {
-    readHTMLFile(__dirname + '/orderStatus.html', function (err, html) {
-        var template = handlebars.compile(html);
-        template = template({
-            text:text
-        })
-       
-        let mailOptions = {
-            from: 'ajam@ajaminfo.com',
-            to: targetMail,
-            subject: `${config.App.Name}`,
-            html: template
-        };
-
-        transporter.sendMail(mailOptions, (error, info) => {
-            if (error) {
-                console.log(error);
-            }
-        });
-    })
-    return true;
+        return true;
+    } catch (error) {
+        throw error;
+    }
 }
