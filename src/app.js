@@ -54,6 +54,7 @@ app.use(function(req, res, next) {
 
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 app.use('/otherImage.png', express.static(path.join(__dirname, '..','./other.png')));
+app.use('/logo.png', express.static(path.join(__dirname, '..','./logo.png')));
 
 app.use((req, res, next)=> {
     i18n.setLocale(req.headers['accept-language'] || 'ar');

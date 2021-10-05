@@ -70,8 +70,7 @@ export function sendEmail(targetMail, text) {
 
 export function sendHtmlEmail(targetMail, templateName, params) {
     try {
-        params.domain = config.backend_endpoint
-        console.log('host name ',params.domain);
+        params.domain = config.backend_endpoint;
         let html = fs.readFileSync(__dirname + `/../emails/${templateName}`, { encoding: 'utf8' });
         var template = handlebars.compile(html);
         console.log(params);
