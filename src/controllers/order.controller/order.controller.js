@@ -706,7 +706,7 @@ export default {
                 let taxes = company.taxes;
                 let traderPrice = validatedBody.price - ((validatedBody.price / 100) * Number(taxes));
                 validatedBody.ajamDues = (traderPrice * (Number(validatedBody.ajamTaxes) / 100)).toFixed(2);
-                validatedBody.traderDues = (traderPrice - Number(validatedBody.ajamDues)) + ((validatedBody.totalPrice / 100) * Number(taxes));
+                validatedBody.traderDues = (traderPrice - Number(validatedBody.ajamDues)) + ((validatedBody.price / 100) * Number(taxes));
             }
 
             /////////////////////////////////////////////////////////////////////////////////////////////
