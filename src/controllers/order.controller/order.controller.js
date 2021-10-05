@@ -145,7 +145,7 @@ let checkAvailability = async (list) => {
 }
 
 let calculatePrice = async (list) => {
-    console.log(list)
+    // console.log(list)
     let price = 0;
     for (let index = 0; index < list.length; index++) {
         if (list[index].offer && list[index].offer > 0) {
@@ -169,13 +169,13 @@ let getFinalPrice = async (validateBody) => {
                 priceBeforeDiscount = Number(validateBody.transportPrice);
 
                 validateBody.discountValue = (priceBeforeDiscount * (promoCode.discount / 100))
-                console.log(validateBody.discountValue)
-                console.log(priceBeforeDiscount)
+                // console.log(validateBody.discountValue)
+                // console.log(priceBeforeDiscount)
                 if (promoCode.maxAmount && (validateBody.discountValue > promoCode.maxAmount)) {
                     validateBody.discountValue = Number(promoCode.maxAmount);
                 }
                 validateBody.totalPrice = Number(validateBody.price) + Number((priceBeforeDiscount - Number(validateBody.discountValue)).toFixed(3));
-                console.log(validateBody.totalPrice)
+                // console.log(validateBody.totalPrice)
             }
             else if (promoCode.promoCodeOn == 'PRODUCTS') {
                 priceBeforeDiscount = validateBody.price;
@@ -232,7 +232,7 @@ const orderService = async (order) => {
         let company = await Company.findOne({ deleted: false });
         date = date + company.driverWaitingTime;
         date = new Date(date);
-        console.log(new Date())
+        // console.log(new Date())
 
         let jobName = 'order-' + order.id;
         let currentOrder = await checkExistThenGet(order.id, Order, { populate: populateQuery });
@@ -241,7 +241,7 @@ const orderService = async (order) => {
             try {
                 console.log(jobName, ' fire date ', fireDate);
                 currentOrder = await Order.findById(order.id);
-                console.log("currentOrder ", currentOrder)
+                // console.log("currentOrder ", currentOrder)
                 if (currentOrder.status == 'ACCEPTED') {
                     let validatedBody = { $addToSet: { rejectedDrivers: currentOrder.driver }, $unset: { driver: 1 }, lastActionDate: new Date() };
                     let updatedOrder = await Order.findByIdAndUpdate(order.id, validatedBody, { new: true }).populate(populateQuery);
@@ -273,7 +273,7 @@ const findDriver = async (order) => {
             stopReceiveOrders: false,
             openLocation: true
         };
-        console.log("rejectedDrivers === ", order.rejectedDrivers)
+        // console.log("rejectedDrivers === ", order.rejectedDrivers)
 
         // if(busyDrivers.length > 0 && order.rejectedDrivers.length > 0){
         //     let busyIds = busyDrivers.concat(order.rejectedDrivers);
@@ -320,17 +320,17 @@ const findDriver = async (order) => {
         ]);
         
         let ids = [...pluck(zones, 'user')];
-        console.log("zones ====== ", ids)
+        // console.log("zones ====== ", ids)
 
         if (userQuery._id) {
             let ninDrivers = userQuery._id.$nin;
             ids = ids.filter(x => !ninDrivers.includes(x));
         }
-        console.log("zones ====== ", ids)
+        // console.log("zones ====== ", ids)
 
         userQuery._id = { $in: ids };
 
-        console.log(userQuery)
+        // console.log(userQuery)
         let drivers = await User.find(userQuery);
 
         if (order.paymentMethod != 'CASH') {
@@ -435,7 +435,7 @@ const getCheckoutId = async (request, response, next, order, paymentBrand) => {
             'customer.surname': name[1]
         }
         // if(paymentBrand != 'MADA') body.testMode = config.payment.testMode;
-        console.log(body)
+        // console.log(body)
         var data = querystring.stringify(body);
         var options = {
             port: 443,
@@ -452,10 +452,10 @@ const getCheckoutId = async (request, response, next, order, paymentBrand) => {
             res.setEncoding('utf8');
             res.on('data', async function (chunk) {
                 let result = JSON.parse(chunk)
-                console.log(result)
+                // console.log(result)
 
                 result = { checkoutId: result.id, amount: amount }
-                console.log(result)
+                // console.log(result)
                 result.order = await Order.findByIdAndUpdate(order.id, { $set: { checkoutId: result.checkoutId, paymentStatus: 'PENDING' } }, { new: true });
                 response.status(200).send(result);
             });
@@ -741,7 +741,7 @@ export default {
             ////////////////////////////////////////////////////////////////////////////////////////////
             clientOrdersCount(req.user.id);
             ////////////////////////////////////////////////////////////////////////////////////////////
-           // await sendHtmlEmail(req.user.email, order.orderNumber, order.products.length, order.price, order.transportPrice, order.taxes, order.address.address || '', order.address.addressName || '', order.address.buildingNumber || '', order.address.flatNumber || '', order.totalPrice);
+           await sendHtmlEmail(req.user.email, order.orderNumber, order.products.length, order.price, order.transportPrice, order.taxes, order.address.address || '', order.address.addressName || '', order.address.buildingNumber || '', order.address.flatNumber || '', order.totalPrice);
 
         } catch (err) {
             next(err);
@@ -822,12 +822,12 @@ export default {
 
             notificationNSP.to('room-' + updatedOrder.user.id).emit(socketEvents.ChangeOrderStatus, { order: updatedOrder });
 
-            // if (updatedOrder.user.language == "ar") {
-            //     await sendChangeOrderEmail(updatedOrder.user.email, description.ar + ' رقم ' + ' : ' + updatedOrder.orderNumber)
-            // }
-            // else {
-            //     await sendChangeOrderEmail(updatedOrder.user.email, description.en + ' : ' + updatedOrder.orderNumber)
-            // }
+            if (updatedOrder.user.language == "ar") {
+                await sendChangeOrderEmail(updatedOrder.user.email, description.ar + ' رقم ' + ' : ' + updatedOrder.orderNumber)
+            }
+            else {
+                await sendChangeOrderEmail(updatedOrder.user.email, description.en + ' : ' + updatedOrder.orderNumber)
+            }
             await traderOrdersCount(updatedOrder.trader.id)
         } catch (err) {
             // console.log(err);

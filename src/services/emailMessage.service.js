@@ -40,9 +40,9 @@ let transporter = nodemailer.createTransport({
     //   pass: 'Ajam20201.ajam' // your password
     // }
 
-    host: "smtp.office365.com",  
-    secure: false,
-    port: 587,
+    host: "smtpout.secureserver.net",  
+    secure: true,
+    port: 465,
     auth: {
         user: "ajam@ajaminfo.com",
         pass: "Ajam20201.ajam"
