@@ -13,7 +13,9 @@ import Category from '../../models/category.model/category.model';
 import Country from "../../models/country.model/country.model";
 import City from "../../models/city.model/city.model";
 import Region from "../../models/region.model/region.model";
-import config from '../../config'
+import config from '../../config';
+import { sendHtmlEmail } from '../../services/emailMessage.service';
+
 let populateQuery = [
     { path: 'rules', model: 'assignRule' },
     { path: 'category', model: 'category' },
@@ -794,19 +796,26 @@ export default {
             if (verifyUser.type == 'DRIVER') {
                 if (validatedBody.status == 'ACCEPTED') {
                     description = { en: "You are now a captain in the Agam team", ar: "انت الآن  كابتن لدي فريق أجَمْ" }
+                    await sendHtmlEmail(trader.email,'trader-confirmation.html',{FName:verifyUser.name,lName:''});
+
                 } else {
                     description = { en: "You request to join Ajam has been rejected", ar: "تم رفض طلبك لمشاركة أجَمْ ككابتن" }
+                    await sendHtmlEmail(verifyUser.email,'trader-rejected.html',{FName:verifyUser.name,lName:''});
+
                 }
 
             } else {
                 if (validatedBody.status == 'ACCEPTED') {
                     description = { en: "You are now an instituation in the Ajam team", ar: "انت الآن  متجر لدي فريق أجَمْ" }
+                     await sendHtmlEmail(trader.email,'trader-confirmation.html',{FName:verifyUser.name,lName:''});
                 } else {
                     description = { en: "You request to join Ajam has been rejected", ar: "تم رفض طلبك لمشاركة أجَمْ كمتجر" }
+                    await sendHtmlEmail(verifyUser.email,'trader-rejected.html',{FName:verifyUser.name,lName:''});
+
                 }
             }
-            await notificationController.create(req.user.id, validatedBody.userId, description, validatedBody.userId, 'JOIN_STATUS');
-            notificationController.pushNotification(validatedBody.userId, 'JOIN_STATUS', validatedBody.userId, description);
+            // await notificationController.create(req.user.id, validatedBody.userId, description, validatedBody.userId, 'JOIN_STATUS');
+            // notificationController.pushNotification(validatedBody.userId, 'JOIN_STATUS', validatedBody.userId, description);
 
 
 
