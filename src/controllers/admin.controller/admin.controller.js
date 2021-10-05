@@ -726,6 +726,8 @@ export default {
                     await checkExistThenGet(value, Region, { deleted: false })
                     return true;
                 }),
+                body('status').optional().not().isEmpty().withMessage(() => { return i18n.__('statusRequired') }).isIn(['ACCEPTED', 'REJECTED']),
+            
         ];
 
         return validations;
