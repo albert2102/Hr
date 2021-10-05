@@ -795,21 +795,21 @@ export default {
 
             if (verifyUser.type == 'DRIVER') {
                 if (validatedBody.status == 'ACCEPTED') {
-                    description = { en: "You are now a captain in the Agam team", ar: "انت الآن  كابتن لدي فريق أجَمْ" }
+                    // description = { en: "You are now a captain in the Agam team", ar: "انت الآن  كابتن لدي فريق أجَمْ" }
                     await sendHtmlEmail(verifyUser.email,'trader-confirmation.html',{FName:verifyUser.name,lName:''});
 
                 } else {
-                    description = { en: "You request to join Ajam has been rejected", ar: "تم رفض طلبك لمشاركة أجَمْ ككابتن" }
+                    // description = { en: "You request to join Ajam has been rejected", ar: "تم رفض طلبك لمشاركة أجَمْ ككابتن" }
                     await sendHtmlEmail(verifyUser.email,'trader-rejected.html',{FName:verifyUser.name,lName:''});
 
                 }
 
             } else {
                 if (validatedBody.status == 'ACCEPTED') {
-                    description = { en: "You are now an instituation in the Ajam team", ar: "انت الآن  متجر لدي فريق أجَمْ" }
+                    // description = { en: "You are now an instituation in the Ajam team", ar: "انت الآن  متجر لدي فريق أجَمْ" }
                      await sendHtmlEmail(verifyUser.email,'trader-confirmation.html',{FName:verifyUser.name,lName:''});
                 } else {
-                    description = { en: "You request to join Ajam has been rejected", ar: "تم رفض طلبك لمشاركة أجَمْ كمتجر" }
+                    // description = { en: "You request to join Ajam has been rejected", ar: "تم رفض طلبك لمشاركة أجَمْ كمتجر" }
                     await sendHtmlEmail(verifyUser.email,'trader-rejected.html',{FName:verifyUser.name,lName:''});
 
                 }
