@@ -36,6 +36,7 @@ export async function sendPushNotification(notifi) {
                     payload.data.badge = notifi.image;
                     payload.notification.image = notifi.image;
                 }
+                if(notifi.subjectType == 'ORDER') payload.data.soundName = 'alert.mp3'
                 // console.log(payload)
                 admin.messaging().send(payload)
                     .then(response => {
@@ -48,7 +49,7 @@ export async function sendPushNotification(notifi) {
                 let payload = {
                     notification: {
                         title: notifi.title.toString(),
-			image: 'https://www.borsetelgomla.com/Borsa-Backend/otherImage.png',
+			            image: '',
                         body: notifi.text,
                         sound: 'default',
                         badge: '1'
@@ -59,7 +60,13 @@ export async function sendPushNotification(notifi) {
                         subjectType: notifi.subjectType,
                     }
                 };
-                if (notifi.trip) payload.data.trip = notifi.trip.toString();
+                if(notifi.image && notifi.image != ''){
+                    payload.data.image = notifi.image;
+                    payload.data.badge = notifi.image;
+                    payload.notification.image = notifi.image;
+                }
+                if(notifi.subjectType == 'ORDER') payload.notification.sound = 'alert.mp3';
+
                 admin.messaging().sendToDevice(userToken, payload)
                     .then(response => {
                         console.log('Successfully sent a message');
