@@ -52,7 +52,7 @@ const orderSchema = new Schema({
     },
     status: {
         type: String,
-        enum: ['WAITING','ACCEPTED','DRIVER_ACCEPTED','REJECTED', 'CANCELED','DRIVER_SHIPPED' ,'SHIPPED', 'DELIVERED','NOT_ASSIGN'],
+        enum: ['WAITING','ACCEPTED','DRIVER_ACCEPTED','REJECTED', 'CANCELED','PREPARED','SHIPPED','DRIVER_SHIPPED' , 'DELIVERED','NOT_ASSIGN'],
         default: 'WAITING'
     },
     price: {
@@ -163,6 +163,9 @@ const orderSchema = new Schema({
     driverShippedDate:{
         type: Date
     },
+    preparedDate:{
+        type: Date
+    },
     shippedDate:{
         type: Date
     },
@@ -185,6 +188,14 @@ const orderSchema = new Schema({
     lastActionDate:{
         type: Date,
         default: new Date()
+    },
+    notifiedTrader:{
+        type: Boolean,
+        default: false
+    },
+    notifiedClient:{
+        type: Boolean,
+        default: false
     }
 }, { timestamps: true });
 orderSchema.set('toJSON', {

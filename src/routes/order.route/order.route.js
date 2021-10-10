@@ -40,6 +40,7 @@ router.route('/:orderId/accepteOrReject').put(requireAuth, orderController.valid
 router.route('/:orderId/driverAccepteOrReject').put(requireAuth, orderController.validateDriverAcceptOrReject(), orderController.driverAcceptOrReject)
 router.route('/:orderId/driverShipped').put(requireAuth, orderController.driverShipped)
 router.route('/:orderId/shipped').put(requireAuth, orderController.shipped)
+router.route('/:orderId/prepared').put(requireAuth, orderController.prepared)
 router.route('/:orderId/delivered').put(requireAuth, orderController.delivered)
 router.route('/:orderId/canceled').put(requireAuth, orderController.canceled)
 
