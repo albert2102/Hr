@@ -465,7 +465,7 @@ export default {
             let page = +req.query.page || 1, limit = +req.query.limit || 20;
             let query = {
                 deleted: false,
-                messageType: { $ne: 'SUPPORT' },
+                // messageType: { $ne: 'SUPPORT' },
                 $or: [
                     { lastMessage: true, complaint: null, order: null, $or: [{ sender: +user }, { 'reciver.user': +user }] },
                     { lastMessage: true, complaint: { $ne: null }, order: null, $or: [{ sender: +user }, { 'reciver.user': +user }] },
