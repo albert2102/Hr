@@ -153,6 +153,10 @@ const CompanySchema = new Schema({
         type: Number,
         default: 180000
     },
+    activeDistance:{
+        type:Number, // meter
+        default: 10000
+    }
 }, { timestamps: true });
 
 CompanySchema.set('toJSON', {

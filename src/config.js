@@ -1,6 +1,6 @@
 const config = {};
-// config.mongoUrl = 'mongodb://ajam:ajam2021@cluster0-shard-00-00.4csul.mongodb.net:27017,cluster0-shard-00-01.4csul.mongodb.net:27017,cluster0-shard-00-02.4csul.mongodb.net:27017/ajam?ssl=true&replicaSet=atlas-3wwdb8-shard-0&authSource=admin&w=majority';
-config.mongoUrl = 'mongodb://127.0.0.1:27017/ajam'
+config.mongoUrl = 'mongodb://ajam:ajam2021@cluster0-shard-00-00.4csul.mongodb.net:27017,cluster0-shard-00-01.4csul.mongodb.net:27017,cluster0-shard-00-02.4csul.mongodb.net:27017/ajam?ssl=true&replicaSet=atlas-3wwdb8-shard-0&authSource=admin&w=majority';
+// config.mongoUrl = 'mongodb://127.0.0.1:27017/ajam'
 config.jwtSecret = 'Ajam';
 config.confirmMessage = 'verify code: ';
 config.App = {Name:'Ajam'}

@@ -171,6 +171,8 @@ export default {
                 body('notifyTraderTime').optional().not().isEmpty().withMessage(() => { return i18n.__('notifyTraderTimeRequired') }),
                 body('notifyClientTime').optional().not().isEmpty().withMessage(() => { return i18n.__('notifyClientTimeRequired') }),
                 
+                body('activeDistance').optional().not().isEmpty().withMessage(() => { return i18n.__('activeDistanceRequired') }),
+                
 
             ];
         }
