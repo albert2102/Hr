@@ -36,7 +36,10 @@ export async function sendPushNotification(notifi) {
                     payload.data.badge = notifi.image;
                     payload.notification.image = notifi.image;
                 }
-                if(notifi.subjectType == 'ORDER') payload.data.soundName = 'alert'
+                if(notifi.subjectType == 'ORDER') {
+                    payload.data.soundName = 'alert';
+                    payload.data.sound = 'alert';
+                }
                 console.log(payload)
 		//console.log(payload.data)
                 admin.messaging().send(payload)
