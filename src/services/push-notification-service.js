@@ -37,7 +37,7 @@ export async function sendPushNotification(notifi) {
                     payload.notification.image = notifi.image;
                 }
                 if(notifi.subjectType == 'ORDER') payload.data.soundName = 'alert'
-                //console.log(payload)
+                console.log(payload)
 		//console.log(payload.data)
                 admin.messaging().send(payload)
                     .then(response => {
@@ -67,7 +67,7 @@ export async function sendPushNotification(notifi) {
                     payload.notification.image = notifi.image;
                 }
                 if(notifi.subjectType == 'ORDER') payload.notification.sound = 'alert';
-		//console.log(payload)
+		        console.log(payload)
 		//console.log(payload.notification)
 
                 admin.messaging().sendToDevice(userToken, payload)

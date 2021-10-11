@@ -151,9 +151,9 @@ export default {
                 body('name.en').optional().not().isEmpty().withMessage(() => { return i18n.__('englishName') }),
                 body('name.ar').not().isEmpty().withMessage(() => { return i18n.__('arabicName') }),
 
-                body('description').not().isEmpty().withMessage(() => { return i18n.__('descriptionRequired') }),
+                body('description').optional().not().isEmpty().withMessage(() => { return i18n.__('descriptionRequired') }),
                 body('description.en').optional().not().isEmpty().withMessage(() => { return i18n.__('descriptionRequired') }),
-                body('description.ar').not().isEmpty().withMessage(() => { return i18n.__('descriptionRequired') }),
+                body('description.ar').optional().not().isEmpty().withMessage(() => { return i18n.__('descriptionRequired') }),
 
                 body('slider').not().isEmpty().withMessage(() => { return i18n.__('sliderRequired') }).isArray()
                     .withMessage(() => { return i18n.__('mustBeArray') }),
@@ -190,6 +190,9 @@ export default {
 
                 body('slider').optional().not().isEmpty().withMessage(() => { return i18n.__('sliderRequired') }).isArray()
                     .withMessage(() => { return i18n.__('mustBeArray') }),
+
+                body('removeDescription').optional().not().isEmpty().withMessage(() => { return i18n.__('removeDescriptionRequired') }).isBoolean()
+                
             ];
         }
         return validations;
@@ -258,14 +261,17 @@ export default {
                 return next(new ApiError(404, i18n.__('nameRequired')));
             }
 
-            if (validatedBody.description && !(validatedBody.description.en || validatedBody.description.ar)) {
-                return next(new ApiError(404, i18n.__('descriptionRequired')));
-            }
+            // if (validatedBody.description && !(validatedBody.description.en || validatedBody.description.ar)) {
+            //     return next(new ApiError(404, i18n.__('descriptionRequired')));
+            // }
 
             let data = {};
             if (validatedBody.slider) {
                 data.slider = validatedBody.slider;
                 delete validatedBody.slider;
+            }
+            if(validatedBody.removeDescription){
+                data['$unset'] = {"description.ar": '',"description.en": ''};
             }
             validatedBody = dotObject.dot(validatedBody);
 

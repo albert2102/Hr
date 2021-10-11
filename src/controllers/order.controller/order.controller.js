@@ -918,7 +918,7 @@ export default {
     async driverShipped(req, res, next) {
         try {
             let { orderId } = req.params;
-            let order = await checkExistThenGet(orderId, Order, { deleted: false, status: "DRIVER_ACCEPTED", orderType: "DELIVERY" });
+            let order = await checkExistThenGet(orderId, Order, { deleted: false/*, status: "DRIVER_ACCEPTED"*/, orderType: "DELIVERY" });
             let updatedQuery = { status: 'DRIVER_SHIPPED', driverShippedDate: new Date() };
             
             let updatedOrder = await Order.findByIdAndUpdate(orderId, updatedQuery, { new: true }).populate(populateQuery);
