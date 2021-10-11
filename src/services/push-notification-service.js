@@ -36,8 +36,9 @@ export async function sendPushNotification(notifi) {
                     payload.data.badge = notifi.image;
                     payload.notification.image = notifi.image;
                 }
-                if(notifi.subjectType == 'ORDER') payload.data.soundName = 'alert.mp3'
-                // console.log(payload)
+                if(notifi.subjectType == 'ORDER') payload.data.soundName = 'alert'
+                //console.log(payload)
+		//console.log(payload.data)
                 admin.messaging().send(payload)
                     .then(response => {
                         console.log('Successfully sent a message');
@@ -65,7 +66,9 @@ export async function sendPushNotification(notifi) {
                     payload.data.badge = notifi.image;
                     payload.notification.image = notifi.image;
                 }
-                if(notifi.subjectType == 'ORDER') payload.notification.sound = 'alert.mp3';
+                if(notifi.subjectType == 'ORDER') payload.notification.sound = 'alert';
+		//console.log(payload)
+		//console.log(payload.notification)
 
                 admin.messaging().sendToDevice(userToken, payload)
                     .then(response => {

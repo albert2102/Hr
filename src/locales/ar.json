@@ -237,5 +237,7 @@
 	"ibanNumberRequired": "ibanNumberRequired",
 	"cardAlreadyUsed": "هذا الكارت مستخدم بالفعل",
 	"invalidUserType": "invalidUserType",
-	"searchDistanceRequired": "searchDistanceRequired"
+	"searchDistanceRequired": "searchDistanceRequired",
+	"traderRequired": "traderRequired",
+	"regionRequired": "regionRequired"
 }
