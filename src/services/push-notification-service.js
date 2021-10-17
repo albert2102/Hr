@@ -39,6 +39,8 @@ export async function sendPushNotification(notifi) {
                 if(notifi.subjectType == 'ORDER') {
                     payload.data.soundName = 'alert';
                     payload.data.sound = 'alert';
+		    //payload.notification.soundName = 'alert';
+                    //payload.notification.sound = 'alert';
                 }
                 console.log(payload)
 		//console.log(payload.data)
