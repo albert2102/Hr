@@ -253,6 +253,9 @@ export default {
             if (!promoCode) {
                 return next(new ApiError(400, i18n.__('promoCodeInvalid')));
             }
+            if(promoCode.country && promoCode.country != user.country){
+                return next(new ApiError(400, i18n.__('promoCodeInvalid')));
+            }
 
             let count = await Order.count({ deleted: false, user: user.id, promoCode: promoCode.id });
             if (count >= promoCode.numberOfUse) {
