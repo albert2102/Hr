@@ -103,6 +103,7 @@ export default {
                       'PREPARED'
                     ]
                   },
+                  $or: [{ paymentMethod: 'DIGITAL', paymentStatus: 'SUCCESSED' }, { paymentMethod: { $in: ['CASH', 'WALLET'] } }]
             }));
             const ordersTraderNotResponse = createPromise(Order.count({ deleted: false,traderNotResponse:false }));
             const ordersTraderResponse = createPromise(Order.count({ deleted: false,traderNotResponse:true }));
