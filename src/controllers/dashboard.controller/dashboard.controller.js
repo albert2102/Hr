@@ -89,7 +89,7 @@ export default {
             const rejectedDrivers = createPromise(User.count({ deleted: false, type: 'DRIVER',status:'REJECTED' }));
             const rejectedInstitutions = createPromise(User.count({ deleted: false, type: 'INSTITUTION',status:'REJECTED' }));
 
-            const orders = createPromise(Order.count({ deleted: false }));
+            const orders = createPromise(Order.count({ deleted: false, $or: [{ paymentMethod: 'DIGITAL', paymentStatus: 'SUCCESSED' }, { paymentMethod: { $in: ['CASH', 'WALLET'] } }]  }));
             const ordersTraderNotResponse = createPromise(Order.count({ deleted: false,traderNotResponse:false }));
             const ordersTraderResponse = createPromise(Order.count({ deleted: false,traderNotResponse:true }));
             const ordersNotAssign = createPromise(Order.count({ deleted: false,status:'NOT_ASSIGN'}));
@@ -101,7 +101,7 @@ export default {
                 waitingDrivers,waitingInstitutions,
                 acceptedDrivers,acceptedInstitutions,
                 rejectedDrivers,rejectedInstitutions,
-                orders
+                orders,ordersTraderNotResponse,ordersTraderResponse,ordersNotAssign
             ]
             let result = await Promise.all(counts);
 
