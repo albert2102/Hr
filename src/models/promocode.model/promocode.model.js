@@ -56,6 +56,9 @@ const promocodeSchema = new Schema({
     deletedDate:{
         type: Date
     },
+    country:{
+        type: Number
+    }
 }, { timestamps: true });
 
 promocodeSchema.set('toJSON', {
