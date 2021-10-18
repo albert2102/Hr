@@ -262,15 +262,15 @@ export default {
             if (authUser.type != 'ADMIN' && authUser.type != 'SUB_ADMIN') {
                 return next(new ApiError(403, ('admin.auth')));
             }
-            let user = await checkExistThenGet(validatedBody.userId, User, { deleted: false });
+            let user = await checkExistThenGet(validatedBody.userId, User, { deleted: false,populate:[{path:'country',model:'country'}] });
 
             user.wallet = user.wallet + Number(validatedBody.value);
             await user.save();
             res.status(200).send({ user: user });
-            let description = { ar: ' تم  إضافة  مبلغ بمحفظتك بقيمة' + ' : ' + validatedBody.value + ' ريال ', en: 'This amount has been added to your wallet : ' + validatedBody.value + ' SR' };
+            let description = { ar: ' تم  إضافة  مبلغ بمحفظتك بقيمة' + ' : ' + validatedBody.value +' ' +user.country.currency.ar, en: 'This amount has been added to your wallet : ' + validatedBody.value + ' '+user.country.currency.ar };
 
             if(Number(validatedBody.value) < 0){
-                description = { ar: ' تم  خصم  مبلغ من محفظتك بقيمة' + ' : ' + validatedBody.value+ ' ريال ', en: 'This amount has been deducted from your wallet : ' + validatedBody.value+ ' SR' };
+                description = { ar: ' تم  خصم  مبلغ من محفظتك بقيمة' + ' : ' + validatedBody.value+' ' +user.country.currency.ar, en: 'This amount has been deducted from your wallet : ' + validatedBody.value+ ' '+user.country.currency.en };
             }
             await notifyController.create(req.user.id, user.id, description, user.id, 'ADDED_TO_WALLET');
             notifyController.pushNotification(user.id, 'ADDED_TO_WALLET', user.id, description);

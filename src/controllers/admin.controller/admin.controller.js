@@ -563,6 +563,9 @@ export default {
                     await checkExistThenGet(value, Region, { deleted: false })
                     return true;
                 }),
+            body('stopReceiveOrders').optional().not().isEmpty().withMessage(() => { return i18n.__('coverImageRequired') }),
+            body('currentAppAmount').optional().not().isEmpty().withMessage(() => { return i18n.__('coverImageRequired') }),
+
         ];
 
         return validations;
