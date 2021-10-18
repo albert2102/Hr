@@ -105,9 +105,8 @@ export default {
                   },
                   $or: [{ paymentMethod: 'DIGITAL', paymentStatus: 'SUCCESSED' }, { paymentMethod: { $in: ['CASH', 'WALLET'] } }]
             }));
-            const ordersTraderNotResponse = createPromise(Order.count({ deleted: false,traderNotResponse:false }));
-            const ordersTraderResponse = createPromise(Order.count({ deleted: false,traderNotResponse:true }));
-            const ordersNotAssign = createPromise(Order.count({ deleted: false,status:'NOT_ASSIGN'}));
+            const ordersTraderNotResponse = createPromise(Order.count({ deleted: false,traderNotResponse:true , $or: [{ paymentMethod: 'DIGITAL', paymentStatus: 'SUCCESSED' }, { paymentMethod: { $in: ['CASH', 'WALLET'] } }]}));
+            const ordersNotAssign = createPromise(Order.count({ deleted: false,status:'NOT_ASSIGN', $or: [{ paymentMethod: 'DIGITAL', paymentStatus: 'SUCCESSED' }, { paymentMethod: { $in: ['CASH', 'WALLET'] } }]}));
             let counts = [
                 users,drivers,institutions,
                 acttiveUsers,inacttiveUsers,
@@ -116,7 +115,7 @@ export default {
                 waitingDrivers,waitingInstitutions,
                 acceptedDrivers,acceptedInstitutions,
                 rejectedDrivers,rejectedInstitutions,
-                orders,ordersTraderNotResponse,ordersTraderResponse,ordersNotAssign
+                orders,ordersTraderNotResponse,ordersNotAssign
             ]
             let result = await Promise.all(counts);
 
@@ -146,8 +145,7 @@ export default {
 
                     orders: result[15],
                     ordersTraderNotResponse:result[16],
-                    ordersTraderResponse:result[17],
-                    ordersNotAssign:[18]
+                    ordersNotAssign:[17]
                 });
         } catch (err) {
             next(err);
