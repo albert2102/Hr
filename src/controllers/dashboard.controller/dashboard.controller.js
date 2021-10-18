@@ -89,7 +89,21 @@ export default {
             const rejectedDrivers = createPromise(User.count({ deleted: false, type: 'DRIVER',status:'REJECTED' }));
             const rejectedInstitutions = createPromise(User.count({ deleted: false, type: 'INSTITUTION',status:'REJECTED' }));
 
-            const orders = createPromise(Order.count({ deleted: false,traderNotResponse:false,$in: ['WAITING', 'ACCEPTED', 'DRIVER_ACCEPTED', 'REJECTED', 'CANCELED', 'SHIPPED', 'DELIVERED', 'DRIVER_SHIPPED', 'PREPARED'] }));
+            const orders = createPromise(Order.count({ deleted: false,traderNotResponse:false,
+                status: {
+                    '$in': [
+                      'WAITING',
+                      'ACCEPTED',
+                      'DRIVER_ACCEPTED',
+                      'REJECTED',
+                      'CANCELED',
+                      'SHIPPED',
+                      'DELIVERED',
+                      'DRIVER_SHIPPED',
+                      'PREPARED'
+                    ]
+                  },
+            }));
             const ordersTraderNotResponse = createPromise(Order.count({ deleted: false,traderNotResponse:false }));
             const ordersTraderResponse = createPromise(Order.count({ deleted: false,traderNotResponse:true }));
             const ordersNotAssign = createPromise(Order.count({ deleted: false,status:'NOT_ASSIGN'}));
