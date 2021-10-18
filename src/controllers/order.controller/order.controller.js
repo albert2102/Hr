@@ -1020,7 +1020,9 @@ export default {
     async delivered(req, res, next) {
         try {
             let { orderId } = req.params;
-            let order = await checkExistThenGet(orderId, Order, { deleted: false, $or: [{ status: "ACCEPTED", orderType: "FROM_STORE" }, { status: "SHIPPED", orderType: "DELIVERY" }] });
+            let order = await checkExistThenGet(orderId, Order, { deleted: false, 
+                // $or: [{ status: "ACCEPTED", orderType: "FROM_STORE" }, { status: "SHIPPED", orderType: "DELIVERY" }] 
+            });
             let updatedQuery = { status: 'DELIVERED', deliveredDate: new Date() };
             if (order.orderType == 'DELIVERY' && order.driver) {
                 let driver = await User.findById(order.driver);

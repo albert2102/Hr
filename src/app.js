@@ -27,7 +27,7 @@ i18n.configure({
 });
 
 mongoose.Promise = global.Promise;
-mongoose.connect(config.mongoUrl, { useNewUrlParser: true });
+mongoose.connect(config.mongoUrl, { });
 
 autoIncrement.initialize(mongoose.connection);
 
