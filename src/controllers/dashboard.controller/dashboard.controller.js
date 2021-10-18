@@ -90,8 +90,9 @@ export default {
             const rejectedInstitutions = createPromise(User.count({ deleted: false, type: 'INSTITUTION',status:'REJECTED' }));
 
             const orders = createPromise(Order.count({ deleted: false }));
-
-
+            const ordersTraderNotResponse = createPromise(Order.count({ deleted: false,traderNotResponse:false }));
+            const ordersTraderResponse = createPromise(Order.count({ deleted: false,traderNotResponse:true }));
+            const ordersNotAssign = createPromise(Order.count({ deleted: false,status:'NOT_ASSIGN'}));
             let counts = [
                 users,drivers,institutions,
                 acttiveUsers,inacttiveUsers,
@@ -128,7 +129,10 @@ export default {
                     rejectedDrivers: result[13],
                     rejectedInstitutions: result[14],
 
-                    orders: result[15]
+                    orders: result[15],
+                    ordersTraderNotResponse:result[16],
+                    ordersTraderResponse:result[17],
+                    ordersNotAssign:[18]
                 });
         } catch (err) {
             next(err);
