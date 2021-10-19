@@ -89,9 +89,26 @@ export default {
             const rejectedDrivers = createPromise(User.count({ deleted: false, type: 'DRIVER',status:'REJECTED' }));
             const rejectedInstitutions = createPromise(User.count({ deleted: false, type: 'INSTITUTION',status:'REJECTED' }));
 
-            const orders = createPromise(Order.count({ deleted: false }));
-
-
+            const orders = createPromise(Order.count({ deleted: false,traderNotResponse:false,
+                status: {
+                    '$in': [
+                      'WAITING',
+                      'ACCEPTED',
+                      'DRIVER_ACCEPTED',
+                      'REJECTED',
+                      'CANCELED',
+                      'SHIPPED',
+                      'DELIVERED',
+                      'DRIVER_SHIPPED',
+                      'PREPARED'
+                    ]
+                  },
+                  $or: [{ paymentMethod: 'DIGITAL', paymentStatus: 'SUCCESSED' }, { paymentMethod: { $in: ['CASH', 'WALLET'] } }]
+            }));
+            const ordersTraderNotResponse = createPromise(Order.count({ deleted: false, status: 'WAITING'
+                ,traderNotResponse:true , $or: [{ paymentMethod: 'DIGITAL', paymentStatus: 'SUCCESSED' }, { paymentMethod: { $in: ['CASH', 'WALLET'] } }]}));
+            const ordersNotAssign = createPromise(Order.count({ deleted: false, status: 'NOT_ASSIGN',
+             $or: [{ paymentMethod: 'DIGITAL', paymentStatus: 'SUCCESSED' }, { paymentMethod: { $in: ['CASH', 'WALLET'] } }]}));
             let counts = [
                 users,drivers,institutions,
                 acttiveUsers,inacttiveUsers,
@@ -100,7 +117,7 @@ export default {
                 waitingDrivers,waitingInstitutions,
                 acceptedDrivers,acceptedInstitutions,
                 rejectedDrivers,rejectedInstitutions,
-                orders
+                orders,ordersTraderNotResponse,ordersNotAssign
             ]
             let result = await Promise.all(counts);
 
@@ -128,7 +145,9 @@ export default {
                     rejectedDrivers: result[13],
                     rejectedInstitutions: result[14],
 
-                    orders: result[15]
+                    orders: result[15],
+                    ordersTraderNotResponse:result[16],
+                    ordersNotAssign:result[17]
                 });
         } catch (err) {
             next(err);

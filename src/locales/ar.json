@@ -239,5 +239,7 @@
 	"invalidUserType": "invalidUserType",
 	"searchDistanceRequired": "searchDistanceRequired",
 	"traderRequired": "traderRequired",
-	"regionRequired": "regionRequired"
+	"regionRequired": "regionRequired",
+	"arCommissionAgreementRequired": "arCommissionAgreementRequired",
+	"enCommissionAgreementRequired": "enCommissionAgreementRequired"
 }

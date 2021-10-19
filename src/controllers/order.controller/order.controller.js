@@ -598,7 +598,7 @@ export default {
                 query.createdAt = { $gte: new Date(startOfDate), $lte: new Date(endOfDate) }
             }
 
-            //console.log(query)
+             console.log(query)
             let orders = await Order.find(query).populate(populateQuery).sort({ createdAt: -1 }).limit(limit).skip((page - 1) * limit);
             orders = Order.schema.methods.toJSONLocalizedOnly(orders, i18n.getLocale());
             let ordersCount = await Order.count(query);
@@ -1033,7 +1033,9 @@ export default {
     async delivered(req, res, next) {
         try {
             let { orderId } = req.params;
-            let order = await checkExistThenGet(orderId, Order, { deleted: false, $or: [{ status: "ACCEPTED", orderType: "FROM_STORE" }, { status: "SHIPPED", orderType: "DELIVERY" }] });
+            let order = await checkExistThenGet(orderId, Order, { deleted: false, 
+                // $or: [{ status: "ACCEPTED", orderType: "FROM_STORE" }, { status: "SHIPPED", orderType: "DELIVERY" }] 
+            });
             let updatedQuery = { status: 'DELIVERED', deliveredDate: new Date() };
             if (order.orderType == 'DELIVERY' && order.driver) {
                 let driver = await User.findById(order.driver);
