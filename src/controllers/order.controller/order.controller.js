@@ -421,6 +421,7 @@ const getCheckoutId = async (request, response, next, order, paymentBrand) => {
             'merchantTransactionId': order.orderNumber,
             'entityId': cardEntityId,
             'amount': Number(amount).toFixed(2),
+            // 'amount': Number(Math.round(amount)),
             'currency': config.payment.Currency,
             'paymentType': config.payment.PaymentType,
             'notificationUrl': config.payment.notificationUrl,
@@ -669,7 +670,7 @@ export default {
                     return true;
                 }),
             body('durationDelivery').optional().not().isEmpty().withMessage(() => { return i18n.__('durationDeliveryRequired') }).isNumeric().withMessage('must be a numeric'),
-            body('order').optional().not().isEmpty().withMessage(() => { return i18n.__('orderRequired') }),
+            body('madaPayment').optional().not().isEmpty().withMessage(() => { return i18n.__('madaPaymentRequired') }),
         ];
     },
 
@@ -751,7 +752,11 @@ export default {
             order.orderNumber = order.orderNumber + order.id;
             await order.save();
             if (validatedBody.paymentMethod == 'DIGITAL') {
-                await getCheckoutId(req, res, next, order, 'VISA');
+                if(validatedBody.madaPayment)
+                    await getCheckoutId(req, res, next, order, 'MADA');
+                else
+                    await getCheckoutId(req, res, next, order, 'VISA');
+
             } else {
                 res.status(200).send(order);
             }
