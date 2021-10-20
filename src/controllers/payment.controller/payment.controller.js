@@ -101,8 +101,8 @@ export default {
             console.log('============current========================');
             console.log(currentOrder);
             console.log('====================================');
-            if (currentOrder && currentOrder.madaPayment);
-            entityId = config.payment.Entity_ID_Mada;
+            if (currentOrder && currentOrder.madaPayment)
+           { entityId = config.payment.Entity_ID_Mada;}
             var path = '/v1/checkouts/' + validatedBody.resourcePath + '/payment';
             path += '?entityId=' + entityId;
           console.log('============path========================');
