@@ -411,6 +411,9 @@ const getCheckoutId = async (request, response, next, order, paymentBrand) => {
         } else {
             cardEntityId = config.payment.Entity_ID_Card;
         }
+        console.log('====================================');
+        console.log(paymentBrand,cardEntityId);
+        console.log('====================================');
         let address = 'From Store';
         // console.log(request.address)
         // if (order.orderType == 'DELIVERY' && request) {
@@ -677,6 +680,9 @@ export default {
         try {
             let user = req.user;
             let validatedBody = checkValidations(req);
+            console.log('====================================');
+            console.log(validatedBody.madaPayment);
+            console.log('====================================');
             validatedBody.orderNumber = '' + (new Date()).getTime();
             validatedBody.user = user.id;
             let resuktCheckAval = await checkAvailability(validatedBody.products);
