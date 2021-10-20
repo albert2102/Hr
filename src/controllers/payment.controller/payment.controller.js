@@ -97,12 +97,17 @@ export default {
         try {
             const validatedBody = checkValidations(request);
             let entityId = config.payment.Entity_ID_Card;
-let currentOrder = await Order.findOne({ checkoutId: validatedBody.resourcePath });
-if(currentOrder && currentOrder.madaPayment)
- entityId= config.payment.Entity_ID_Mada;
+            let currentOrder = await Order.findOne({ checkoutId: validatedBody.resourcePath });
+            console.log('============current========================');
+            console.log(currentOrder);
+            console.log('====================================');
+            if (currentOrder && currentOrder.madaPayment);
+            entityId = config.payment.Entity_ID_Mada;
             var path = '/v1/checkouts/' + validatedBody.resourcePath + '/payment';
             path += '?entityId=' + entityId;
-            // console.log(path)
+          console.log('============path========================');
+          console.log(path,entityId);
+          console.log('====================================');
             var options = {
                 port: 443,
                 host: config.payment.host,
