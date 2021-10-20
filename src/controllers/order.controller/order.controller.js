@@ -457,7 +457,6 @@ const getCheckoutId = async (request, response, next, order, paymentBrand) => {
                 result = { checkoutId: result.id, amount: amount }
                 // console.log(result)
                 result.order = await Order.findByIdAndUpdate(order.id, { $set: { checkoutId: result.checkoutId, paymentStatus: 'PENDING' } }, { new: true });
-               console.log(result);
                 response.status(200).send(result);
             });
         });
@@ -752,10 +751,8 @@ export default {
             order.orderNumber = order.orderNumber + order.id;
             await order.save();
             if (validatedBody.paymentMethod == 'DIGITAL') {
-
                 await getCheckoutId(req, res, next, order, 'VISA');
             } else {
-                console.log(order);
                 res.status(200).send(order);
             }
             order = await Order.populate(order, populateQuery)

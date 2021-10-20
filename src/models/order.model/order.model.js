@@ -196,6 +196,9 @@ const orderSchema = new Schema({
     notifiedClient:{
         type: Boolean,
         default: false
+    },
+    madaPayment:{
+        type: Boolean
     }
 }, { timestamps: true });
 orderSchema.set('toJSON', {
