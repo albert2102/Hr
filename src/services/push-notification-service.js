@@ -25,7 +25,7 @@ export async function sendPushNotification(notifi) {
                     priority: "max",
                     visibility: "public",
                     importance: "max",
-
+                     
                 }
                 payload.notification = {
                     title: notifi.title.toString(),
