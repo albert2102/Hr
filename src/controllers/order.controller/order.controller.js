@@ -704,10 +704,10 @@ export default {
                 // let durationPrice = duration * Number(trader.deliveryPricePerSecond);
                 // validatedBody.durationDelivery = duration;
                 // validatedBody.durationDelivery = Math.round(validatedBody.durationDelivery / 60 ) // client update to be by minutes
-                console.log(validatedBody.durationDelivery)
+                // console.log(validatedBody.durationDelivery)
                 // validatedBody.durationDelivery = Math.round(validatedBody.durationDelivery);
                 let durationPrice = Math.floor(Number(validatedBody.durationDelivery) * Number(trader.deliveryPricePerSecond)); // per minutes
-                console.log(durationPrice)
+                // console.log(durationPrice)
                 if (durationPrice < Number(trader.minDeliveryPrice)) {
                     validatedBody.transportPrice = Number(trader.minDeliveryPrice);
                 } else {
