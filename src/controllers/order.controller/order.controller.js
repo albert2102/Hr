@@ -751,7 +751,11 @@ export default {
             order.orderNumber = order.orderNumber + order.id;
             await order.save();
             if (validatedBody.paymentMethod == 'DIGITAL') {
+                if(validatedBody.madaPayment)
+                await getCheckoutId(req, res, next, order, 'MADA');
+            else
                 await getCheckoutId(req, res, next, order, 'VISA');
+
             } else {
                 res.status(200).send(order);
             }
