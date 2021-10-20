@@ -673,6 +673,9 @@ export default {
                 }),
             body('durationDelivery').optional().not().isEmpty().withMessage(() => { return i18n.__('durationDeliveryRequired') }).isNumeric().withMessage('must be a numeric'),
             body('order').optional().not().isEmpty().withMessage(() => { return i18n.__('orderRequired') }),
+            body('madaPayment').optional().not().isEmpty().withMessage(() => { return i18n.__('madaPaymentRequired') }),
+
+
         ];
     },
 
@@ -680,7 +683,7 @@ export default {
         try {
             let user = req.user;
             let validatedBody = checkValidations(req);
-            console.log('====================================');
+            console.log('==================madaPayment==================');
             console.log(validatedBody.madaPayment);
             console.log('====================================');
             validatedBody.orderNumber = '' + (new Date()).getTime();
@@ -758,9 +761,9 @@ export default {
             await order.save();
             if (validatedBody.paymentMethod == 'DIGITAL') {
                 if(validatedBody.madaPayment)
-                await getCheckoutId(req, res, next, order, 'MADA');
+               { await getCheckoutId(req, res, next, order, 'MADA');}
             else
-                await getCheckoutId(req, res, next, order, 'VISA');
+              {  await getCheckoutId(req, res, next, order, 'VISA');}
 
             } else {
                 res.status(200).send(order);
