@@ -96,8 +96,12 @@ export default {
     async getPaymentStatus(request, response, next) {
         try {
             const validatedBody = checkValidations(request);
+            let entityId = config.payment.Entity_ID_Card;
+let currentOrder = await Order.findOne({ checkoutId: validatedBody.resourcePath });
+if(currentOrder && currentOrder.madaPayment)
+ entityId= config.payment.Entity_ID_Mada;
             var path = '/v1/checkouts/' + validatedBody.resourcePath + '/payment';
-            path += '?entityId=' + config.payment.Entity_ID_Card;
+            path += '?entityId=' + entityId;
             // console.log(path)
             var options = {
                 port: 443,
