@@ -36,6 +36,10 @@ const shippingCardSchema = new Schema({
         enum:['ORANGE','BLUE'],
         default: 'ORANGE'
     },
+    country:{
+        type:Number,
+        ref: 'country'
+    },
     deleted:{
         type:Boolean,
         default:false

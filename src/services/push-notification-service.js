@@ -25,12 +25,19 @@ export async function sendPushNotification(notifi) {
                     priority: "max",
                     visibility: "public",
                     importance: "max",
-                     
+                    soundName : 'alert',
+                    sound : 'default',
                 }
                 payload.notification = {
                     title: notifi.title.toString(),
                     body: notifi.text,
+                   
+
                 }
+                payload.android={
+                    notification: {
+                        click_action:"OPEN_ACTIVITY_1",
+                    }}
                 if(notifi.image && notifi.image != ''){
                     payload.data.image = notifi.image;
                     payload.data.badge = notifi.image;
@@ -42,6 +49,7 @@ export async function sendPushNotification(notifi) {
 		    //payload.notification.soundName = 'alert';
                     //payload.notification.sound = 'alert';
                 }
+                
                 console.log(payload)
 		//console.log(payload.data)
                 admin.messaging().send(payload)

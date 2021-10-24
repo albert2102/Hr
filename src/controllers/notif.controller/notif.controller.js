@@ -10,6 +10,7 @@ import i18n from 'i18n';
 import socketEvents from '../../socketEvents';
 import config from '../../config';
 import Country from '../../models/country.model/country.model';
+import schedule from "node-schedule";
 const populateQuery = [
     { path: 'resource', model: 'user' },
     { path: 'target', model: 'user' },
@@ -228,6 +229,8 @@ export default {
     },
     async adminSendToAllSpecificUsers(req, res, next) {
         try {
+
+           
             let validatedBody = checkValidations(req);
             if (req.file) {
                 let image = await handleImg(req, { attributeName: 'image', isUpdate: false });
@@ -255,6 +258,24 @@ export default {
                 notificationNSP.to('room-'+user.id).emit(socketEvents.NotificationsCount, { count:await Notif.count({$or:[{target: user.id},{users:user.id}],informed: { $ne: user.id },deleted: false,usersDeleted: { $ne: user.id }}) });
 
             });
+            const job = schedule.scheduleJob('* * 21 10 *', function(){
+                console.log('====================================');
+                console.log('heeeeeeer');
+                console.log('====================================');
+                allUsers.forEach(async (user) => {
+                    if (user.notification) {
+                        sendPushNotification(
+                            {
+                                targetUser: user,
+                                subjectType: "ADMIN",
+                                subjectId: 1,
+                                text: validatedBody.text[user.language],
+                                title: validatedBody.titleOfNotification[user.language],
+                                image: (validatedBody.image) ? url + validatedBody.image : ''
+                            });
+                    }});
+              });
+              job.cancel();
             res.status(200).send("Successfully send to user");
 
         } catch (error) {
