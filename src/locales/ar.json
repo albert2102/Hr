@@ -241,5 +241,6 @@
 	"traderRequired": "traderRequired",
 	"regionRequired": "regionRequired",
 	"arCommissionAgreementRequired": "arCommissionAgreementRequired",
-	"enCommissionAgreementRequired": "enCommissionAgreementRequired"
+	"enCommissionAgreementRequired": "enCommissionAgreementRequired",
+	"notvaild":"الكرت غير مصرح به في دولتك"
 }

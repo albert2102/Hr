@@ -38,7 +38,8 @@ const shippingCardSchema = new Schema({
     },
     country:{
         type:Number,
-        ref: 'country'
+        ref: 'country',
+        default:9
     },
     deleted:{
         type:Boolean,

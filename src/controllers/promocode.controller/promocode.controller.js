@@ -15,8 +15,8 @@ import config from '../../config';
 import Country from '../../models/country.model/country.model';
 
 const populateQuery = [
-    { path: 'users', model: 'user' }
-
+    { path: 'users', model: 'user' },
+    {path:'country',model:'country'}
 ];
 export default {
     async findAll(req, res, next) {
@@ -140,6 +140,7 @@ export default {
             data.endDate = new Date(moment(data.endDate).endOf('day'));
 
             let promocode = await Promocode.create(data);
+            
             var desc = {
                 ar: ' لديك كود خصم جديد ' + promocode.code,
                 en: ' You have a new discount code ' + promocode.code

@@ -57,7 +57,8 @@ const promocodeSchema = new Schema({
         type: Date
     },
     country:{
-        type: Number
+        type: Number,
+        ref: 'country',
     }
 }, { timestamps: true });
 

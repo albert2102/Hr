@@ -159,5 +159,6 @@
 	"workingTimeTextRequired": "workingTimeTextRequired",
 	"complaintRequired": "complaintRequired",
 	"traderBusy": "The store is not available now.",
-	"firebaseTokenRequired": "firebaseTokenRequired"
+	"firebaseTokenRequired": "firebaseTokenRequired",
+	"notvaild":"card is not vaild in your country"
 }
