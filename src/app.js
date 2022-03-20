@@ -14,8 +14,6 @@ import ApiError from './helpers/ApiError';
 var logger = require('morgan');
 import config from './config';
 
-import advertismentsController from '../src/controllers/advertisments.controller/advertisments.controller';
-advertismentsController.advertismentJob();
 
 
 var i18n = require("i18n"); 
